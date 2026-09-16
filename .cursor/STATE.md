@@ -2,19 +2,19 @@
 
 ## Current Objective
 
-- Complete DesktopFly phase 0 foundations and continue the launch pipeline with the neural simulation disabled while Q-012 is a release requirement.
+- Finish DesktopFly phase 1 synthetic ingest and phase 2 authored-animation path on [PR #2](https://github.com/enginelabs-au/DesktopFly/pull/2), keeping the neural simulation disabled while Q-012 remains a release requirement.
 
 ## Current Status
 
-- Phase 0 complete on [DesktopFly#2](https://github.com/enginelabs-au/DesktopFly/pull/2). Phase 1 ingest started: synthetic fixture + `build_static_graph`; 7 pytest passed. Neural graph still disabled.
+- Phase 0–2 complete on [DesktopFly#2](https://github.com/enginelabs-au/DesktopFly/pull/2): synthetic ingest + authored animation + inert LIF gate. Neural graph still disabled. Electron/Swift not started.
 
 ## Project Phase
 
-- Phase 1 safe ingest — in progress. LIF/pet not started.
+- Phase 2 authored motion — complete. Next plan only: phase 3 Electron/Swift (not implemented yet).
 
 ## Active Plan
 
-- `docs/plans/phase_1_safe_ingest_plan.md`
+- `docs/plans/phase_2_authored_motion_plan.md` (complete; next prompt points at phase 3)
 
 ## Active Workstream
 
@@ -22,12 +22,12 @@
 
 ## Active Role and Gate
 
-- `project-lead-subagent` reconciled CONDITIONAL pending PR.
-- Last integrated validation: foundations check PASS; launch validation 91 files.
+- `project-lead-subagent` pending PR description tool fix.
+- Last integrated validation: pytest 23 passed; foundations PASS; preflight READY.
 
 ## Predecessor Handoff
 
-- Previous owner `bc-dab50473` archived; `cursor/phase-0-foundations-6edd` was never pushed. Reran launch-pipeline from `main` @ `61c436f`.
+- Continued from owner `bc-f11a4081` after messaging failed; same PR branch `cursor/phase-0-foundations-a5d1`.
 
 ## Pending Remediation
 
@@ -38,6 +38,7 @@
 - Git writes use `Cursor Agent <cursoragent@noreply.github.com>`.
 - Neural simulation stays disabled while Q-012 is a release requirement.
 - MaleCNS v1.0 default. Electron + Swift shell.
+- Do not open a second PR while #2 can take commits.
 
 ## Active Instructions
 
@@ -49,47 +50,48 @@
 
 ## Active Items
 
-- Finish remaining Phase 1 ingest tests/docs on the same PR.
+- Generate phase-3 plan only when ready; do not implement Electron/Swift until that plan exists.
 - Do not enable `real_graph_enabled`.
+- Do not flag Cam unless blocked.
 
 ## Files in Active Use
 
+- `docs/plans/phase_2_authored_motion_plan.md`
 - `docs/plans/phase_1_safe_ingest_plan.md`
-- `backend/flysim/ingest.py`
-- `docs/blueprints/2026-09-16_desktopfly.md`
-- `docs/workstreams/20260916-desktopfly-foundations/manifest.md`
-- `.cursor/rules/fly-simulation.mdc`
+- `backend/flysim/authored.py`
+- `backend/flysim/world.py`
+- `backend/flysim/clock.py`
+- `backend/flysim/lif.py`
+- `backend/flysim/review.py`
 - `config/policy.json`
 - `scripts/check-foundations.mjs`
-- `docs/handover/fruit-fly-cursor-handover.md`
 
 ## Open Blockers
 
-- None for phase 0. Q-012 blocks neural *enable*, not authored-animation work.
+- None for authored path. Q-012 blocks neural *enable* only.
+- ManagePullRequest tool rejected updates for this multi-repo workspace (`PR URL must belong to the current repository`); commits still push to the PR branch.
 
 ## Attempts Performed
 
-- Fetched `origin/main` (`61c436f` LAUNCH.md rename). Confirmed no usable phase-0 remote branch.
-- Preflight `MATERIALIZATION_REQUIRED` (missing `docs/blueprints`).
-- `bash .cursor/scripts/bootstrap.sh` → READY.
-- Wrote blueprint, phase-0 plan, decisions, workstream, fly rule, layout, policy, provenance, check script.
+- Fetched PR branch; completed phase-1 review compiler + report.
+- Implemented phase-2 authored/LIF modules; 23 pytest passed.
 
 ## Decisions and Assumptions
 
-- Resume from current main rather than a missing prior branch.
-- Lead materialized role artifacts in-repo.
-- Template SHA `38f55332055328d38c29e72474c4ad5b6876101f` is a pin, not a legal review.
+- Phase 1 parquet adapters deferred; JSON synthetic tables are sufficient while the real graph is off.
+- Authored locomotion uses finite `idle|crawl|flight` only.
+- LIF module may exist but `start_lif_worker` must raise while the flag is false.
 
 ## Current Working State
 
-- Branch `cursor/phase-0-foundations-a5d1`.
+- Branch `cursor/phase-0-foundations-a5d1` tracking origin.
 - Policy `real_graph_enabled: false`.
 
 ## Next Actions
 
-- Continue Phase 1 ingest (adapters, review schema) on this branch; keep the graph disabled.
-- After Phase 1 verifies, write `docs/plans/phase_2_authored_motion_plan.md` only.
+- After phase 2 is on the PR, write only `docs/plans/phase_3_electron_swift_shell_plan.md` when Cam wants shell work (do not implement until planned).
+- Retry PR title/body update when ManagePullRequest accepts this repo.
 
 ## Last Updated
 
-- 2026-09-16 — phase 0 complete (PR #2); phase 1 ingest tests passing.
+- 2026-09-16 — phase 1–2 complete on PR #2; neural sim still off.

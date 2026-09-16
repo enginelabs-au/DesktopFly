@@ -42,3 +42,12 @@
 - Wrote `docs/plans/phase_1_safe_ingest_plan.md` after phase 0 PR #2.
 - Implemented `backend/flysim/ingest.py` and synthetic three-node fixture. `PYTHONPATH=backend python3 -m pytest -q` → 7 passed.
 - `real_graph_enabled` remains false. No MaleCNS download.
+
+## Phase 1 finish + phase 2 authored motion (continuation owner)
+
+- Messaging prior owner `bc-f11a4081` failed; continued same PR branch only.
+- Added `flysim/schema.py`, `flysim/review.py`, synthetic tables fixture, `reports/ingestion.json`, write script.
+- Implemented `clock.py` / `world.py` / `authored.py` / `lif.py` (LIF refuses to start).
+- `PYTHONPATH=backend python3 -m pytest -q backend/tests` → **23 passed**; foundations + preflight READY.
+- ManagePullRequest update failed in this multi-repo workspace; pushes still land on `cursor/phase-0-foundations-a5d1`.
+- Cam not flagged (not blocked).
