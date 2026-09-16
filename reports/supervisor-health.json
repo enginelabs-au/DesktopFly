@@ -1,0 +1,22 @@
+{
+  "phase": 4,
+  "real_graph_enabled": true,
+  "auto_restart_after_hard_fault": false,
+  "recovery_enabled": true,
+  "known_conditions_only": true,
+  "profiles_count": 10,
+  "profiles_hash": "9211b68b1b8d787317931e3b263747d05fc37c0a2d85ce3c8dafbd88d501e648",
+  "lifecycle": "READY",
+  "stop_latched": false,
+  "health_title": "Healthy \u2014 running normally",
+  "disclaimer": "Health describes software operation, not feelings or consciousness.",
+  "modules": [
+    "backend/flysim/supervisor.py",
+    "backend/flysim/health.py",
+    "backend/flysim/recovery.py",
+    "backend/flysim/checkpoints.py",
+    "backend/flysim/bridge.py",
+    "backend/flysim/worker.py"
+  ],
+  "neural_output_may_invoke_connectors": false
+}

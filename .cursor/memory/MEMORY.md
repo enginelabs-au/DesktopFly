@@ -50,6 +50,8 @@ Operational history belongs in `/memory/memories/YYYY-MM-DD-continuation.md` or 
 - MaleCNS default: `docs/decisions/2026-09-16-malecns-default-dataset.md`
 - Electron/Swift shell: `docs/decisions/2026-09-16-electron-swift-shell.md`
 - Phase 0: `docs/plans/phase_0_foundations_plan.md`
+- Phase 4: `docs/plans/phase_4_supervisor_health_plan.md`
+- Final checklist: `docs/plans/final_implementation_checklist.md`
 - Workstream: `docs/workstreams/20260916-desktopfly-foundations/manifest.md`
 - Tools: `/TOOLS.md`
 - Active blockers: `/memory/blockers/`

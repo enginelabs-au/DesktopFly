@@ -1,6 +1,6 @@
 ---
 plan: phase_4_supervisor_health
-status: planned
+status: complete
 created: 2026-09-16
 updated: 2026-09-16
 owner: lead-agent
@@ -14,45 +14,21 @@ workstream: docs/workstreams/20260916-desktopfly-foundations/manifest.md
 
 Implement the independent supervisor, plain-language health mapping, stop latch, and bounded recovery recipes from the handover. Neural / LIF remains **enabled** (`real_graph_enabled: true`). Neural output still must not authorize connectors.
 
-## 2. Entry criteria
+## 2. Completion evidence
 
-- Phase 3 complete: Electron modules + Swift scaffold + host lease; Linux unit tests green.
-- Cam neural enable in force.
+- Modules: `backend/flysim/supervisor.py`, `health.py`, `recovery.py`, `checkpoints.py`, `bridge.py`, `worker.py`
+- Config: `config/recovery-profiles.json` (10 fixed recipes), `config/state-contract.json` (ledger outside agent state)
+- Recipe stubs: `reports/recovery/*.md`
+- Report: `reports/supervisor-health.json`
+- Tests: `backend/tests/test_supervisor_health.py` (12 passed) — latch permanent, known recover, unknown → review, budgets excluded from checkpoints
+- Full suite: pytest backend/tests green; node desktop+pet green; foundations check green
+- Final checklist: `docs/plans/final_implementation_checklist.md`
 
-## 3. Scope
+## 3. Deviations
 
-- `backend/flysim/supervisor.py`, `health.py`, `recovery.py`, `checkpoints.py`, `bridge.py`, `worker.py` (handover contracts)
-- `config/recovery-profiles.json`, `config/state-contract.json` already present — wire them
-- Plain-language operator strings (“Healthy — checks look normal”)
-- Hard fault → latched stop; no auto-restart
-- Bounded known-condition recovery only
-- Reports under `reports/`
+- Bridge is a validated envelope + stop/host-lease handler for CI; full asyncio WebSocket server deferred to Mac integration
+- Worker uses in-process numpy LIF handle on Linux; spawn+MPS remains Mac follow-up
 
-## 4. Non-goals
+## 4. Next
 
-- Inventing affect/reward/needs
-- Relaxing connector authority
-- Claiming Mac MPS certification from Linux
-- Downloading MaleCNS without recording hash (do that as a technical prerequisite if needed)
-
-## 5. Technical blockers to surface
-
-- Missing MaleCNS feather under `data/raw/`
-- Torch/MPS availability on target Mac
-- AppKit compile / Accessibility permission on Cam’s machine
-
-## 6. Acceptance criteria
-
-- Supervisor owns stop latch independently of Electron renderer
-- Health copy is plain language; no sentience claims
-- Recovery budgets outside restorable agent state
-- Tests for latch, known recovery, unknown → review-required
-- Foundations + pytest + node checks remain green
-
-## 7. Completion evidence
-
-_Not started — plan only._
-
-## 8. Next
-
-After verification, create `docs/plans/final_implementation_checklist.md` for remaining Mac-only and human actions.
+Closure items are in `docs/plans/final_implementation_checklist.md` (MaleCNS download, Mac Electron/Swift/MPS). No further numbered phase plan required unless Cam opens a new scope.

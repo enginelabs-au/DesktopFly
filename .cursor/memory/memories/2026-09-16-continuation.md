@@ -59,3 +59,11 @@
 - LIF starts on synthetic graph; MaleCNS feather missing = technical blocker only.
 - Validation: pytest 28; node 10; foundations PASS.
 - Phase 4 plan written (`phase_4_supervisor_health_plan.md`), not implemented.
+
+## Phase 4 supervisor/health + PR retitle
+
+- Updated PR #2 title/body: phases 0–3 with neural LIF enabled (no longer “neural sim off”).
+- Implemented supervisor, health, recovery, checkpoints, bridge, worker; recovery profiles + state-contract.
+- `reports/supervisor-health.json`; `docs/plans/final_implementation_checklist.md`.
+- Validation: pytest 40; node 10; foundations PASS.
+- Phase 4 complete → final checklist (Mac/human remaining).

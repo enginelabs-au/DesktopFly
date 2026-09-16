@@ -2,21 +2,22 @@
 
 ## Current Objective
 
-- Own DesktopFly (P-011) on [DesktopFly#2](https://github.com/enginelabs-au/DesktopFly/pull/2). Neural / LIF **enabled** (Cam override). Continue launch pipeline.
+- Own DesktopFly (P-011) on [DesktopFly#2](https://github.com/enginelabs-au/DesktopFly/pull/2). Neural / LIF **enabled**. Phase 4 complete; final checklist open for Mac/human items.
 
 ## Current Status
 
-- Phase 0–3 complete on branch `cursor/phase-0-foundations-a5d1`. Phase 4 supervisor/health plan written (not implemented).
+- Phases 0–4 complete on branch `cursor/phase-0-foundations-a5d1`.
+- PR title/body updated for neural-enabled phases 0–3; Phase 4 commit follows.
 
 ## Project Phase
 
-- Phase 3 Electron/Swift shell — complete.
-- Next: `docs/plans/phase_4_supervisor_health_plan.md` (plan only until implementing).
+- Phase 4 supervisor/health — complete.
+- Closure: `docs/plans/final_implementation_checklist.md`
 
 ## Active Plan
 
-- Completed: `docs/plans/phase_3_electron_swift_shell_plan.md`
-- Planned: `docs/plans/phase_4_supervisor_health_plan.md`
+- Completed: `docs/plans/phase_4_supervisor_health_plan.md`
+- Checklist: `docs/plans/final_implementation_checklist.md`
 
 ## Active Workstream
 
@@ -25,14 +26,13 @@
 ## Active Role and Gate
 
 - Sole DesktopFly owner: `bc-a5af2fcb` (ignore archived chats).
-- Last validation: pytest 28; node 10; foundations PASS.
+- Last validation: pytest 40; node 10; foundations PASS.
 
 ## Owner Decision
 
 - Git: `Cursor Agent <cursoragent@noreply.github.com>`.
-- **Neural enabled** — Cam overruled Q-012 keep-off gate (`docs/decisions/2026-09-16-neural-sim-enabled-cam-override.md`).
-- MaleCNS v1.0; Electron + Swift.
-- Phase-transition pings required before implement / after complete.
+- **Neural enabled** — Cam overruled Q-012 keep-off gate.
+- Phase-transition pings required.
 
 ## Active Instructions
 
@@ -41,37 +41,31 @@
 
 ## Active Items
 
-- Implement phase 4 when continuing.
-- MaleCNS feather download is a **technical** blocker for full connectome, not a policy lock — synthetic LIF OK in CI.
+- Mac/human checklist items (MaleCNS download, Electron GUI, AppKit, MPS).
 - Do not wait on archived DesktopFly agents.
 
 ## Files in Active Use
 
-- `config/policy.json` (`real_graph_enabled: true`)
-- `desktop/**`
-- `native/DesktopContext/**`
-- `backend/flysim/lif.py`
-- `reports/desktop-shell.json`
-- `docs/plans/phase_3_electron_swift_shell_plan.md`
-- `docs/plans/phase_4_supervisor_health_plan.md`
+- `backend/flysim/supervisor.py`, `health.py`, `recovery.py`, `checkpoints.py`, `bridge.py`, `worker.py`
+- `config/policy.json`, `recovery-profiles.json`, `state-contract.json`
+- `reports/supervisor-health.json`
+- `docs/plans/final_implementation_checklist.md`
 
 ## Open Blockers
 
 - Technical: MaleCNS weights file not present under `data/raw/`.
-- Technical: Electron GUI / AppKit not executable on this Linux host (scaffold + unit tests only).
+- Technical: Electron GUI / AppKit not executable on this Linux host.
 - No Cam policy blocker.
 
 ## Attempts Performed
 
-- Applied Cam neural enable; removed Q-012 refuse-start lock.
-- Implemented Electron shell modules + Swift scaffold + tests.
-- Regenerated reports; foundations check updated for enabled flag.
+- Updated PR #2 title/body for neural-enabled phases 0–3.
+- Implemented Phase 4 supervisor/health/recovery; tests green.
 
 ## Decisions and Assumptions
 
-- Synthetic graph is acceptable for CI LIF until weights land.
-- Authored animation remains Find-fly / presentation fallback.
-- Neural output still cannot invoke connectors.
+- Synthetic graph acceptable for CI LIF until weights land.
+- Bridge/worker Mac asyncio+MPS deferred; Linux scaffolds + unit tests ship now.
 
 ## Current Working State
 
@@ -80,10 +74,9 @@
 
 ## Next Actions
 
-- Push phase-3 + neural-enable commit to PR #2.
-- Status ping: phase 3 complete → phase 4 plan ready.
-- On next turn: implement phase 4 after a planning→implementing ping.
+- Commit/push Phase 4; update PR body for phases 0–4.
+- Status ping: Phase 4 complete → final checklist.
 
 ## Last Updated
 
-- 2026-09-16 — phase 3 complete; neural enabled per Cam.
+- 2026-09-16 — phase 4 complete; neural enabled.

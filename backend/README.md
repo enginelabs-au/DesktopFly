@@ -1,8 +1,8 @@
 # backend
 
-Python 3.12 flysim package. `flysim/__init__.py` is empty so importing the supervisor later does not initialize PyTorch.
+Python 3.12 flysim package. `flysim/__init__.py` is empty so importing the supervisor does not initialize PyTorch.
 
-Neural enabled: `real_graph_enabled: true`. LIF starts with a provided `StaticGraph` (synthetic in CI). MaleCNS feather load fails with `FileNotFoundError` until downloaded.
+Neural enabled: `real_graph_enabled: true`. LIF starts with a provided `StaticGraph` (synthetic in CI). Supervisor owns the stop latch and recovery budgets; bridge binds `127.0.0.1` only.
 
 ```bash
 python3 -m venv .venv

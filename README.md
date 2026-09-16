@@ -11,7 +11,8 @@ Default dataset: **MaleCNS v1.0**. Shell: **Electron + Swift helper**, not Paper
 - Product spec: [`docs/handover/fruit-fly-cursor-handover.md`](docs/handover/fruit-fly-cursor-handover.md)
 - Blueprint: [`docs/blueprints/2026-09-16_desktopfly.md`](docs/blueprints/2026-09-16_desktopfly.md)
 - Phase 3: [`docs/plans/phase_3_electron_swift_shell_plan.md`](docs/plans/phase_3_electron_swift_shell_plan.md)
-- Phase 4 plan: [`docs/plans/phase_4_supervisor_health_plan.md`](docs/plans/phase_4_supervisor_health_plan.md)
+- Phase 4: [`docs/plans/phase_4_supervisor_health_plan.md`](docs/plans/phase_4_supervisor_health_plan.md) (complete)
+- Final checklist: [`docs/plans/final_implementation_checklist.md`](docs/plans/final_implementation_checklist.md)
 - Agent entry: [`AGENTS.md`](AGENTS.md)
 - Lifecycle: `/launch-pipeline`
 

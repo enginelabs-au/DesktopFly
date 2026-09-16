@@ -2,5 +2,113 @@
   "schema_version": 1,
   "mutable_owner": "worker",
   "ui_may_write_weights": false,
-  "real_graph_enabled_must_match_policy": true
+  "real_graph_enabled_must_match_policy": true,
+  "fields": [
+    {
+      "name": "membrane_voltage",
+      "owner": "worker",
+      "shape": "n_neurons",
+      "type": "float32",
+      "units": "a.u.",
+      "bounds": [-4.0, 4.0],
+      "influences_neural_input": true,
+      "history_limit": 0,
+      "reset_rule": "checkpoint_or_initial"
+    },
+    {
+      "name": "refractory",
+      "owner": "worker",
+      "shape": "n_neurons",
+      "type": "float32",
+      "units": "s",
+      "bounds": [0.0, 1.0],
+      "influences_neural_input": true,
+      "history_limit": 0,
+      "reset_rule": "checkpoint_or_initial"
+    },
+    {
+      "name": "rate_ema",
+      "owner": "worker",
+      "shape": "n_neurons",
+      "type": "float32",
+      "units": "Hz",
+      "bounds": [0.0, 100.0],
+      "influences_neural_input": false,
+      "history_limit": 0,
+      "reset_rule": "checkpoint_or_initial"
+    },
+    {
+      "name": "body_pose",
+      "owner": "worker",
+      "shape": "pose2d",
+      "type": "float64",
+      "units": "points",
+      "bounds": null,
+      "influences_neural_input": true,
+      "history_limit": 0,
+      "reset_rule": "checkpoint_or_initial"
+    },
+    {
+      "name": "sensory_filter",
+      "owner": "worker",
+      "shape": "feature_vector",
+      "type": "float32",
+      "units": "normalized",
+      "bounds": [0.0, 1.0],
+      "influences_neural_input": true,
+      "history_limit": 32,
+      "reset_rule": "clear_on_source_fallback"
+    },
+    {
+      "name": "host_lease",
+      "owner": "supervisor",
+      "shape": "scalar",
+      "type": "bool",
+      "units": null,
+      "bounds": null,
+      "influences_neural_input": false,
+      "history_limit": 0,
+      "reset_rule": "session"
+    },
+    {
+      "name": "stop_latch",
+      "owner": "supervisor",
+      "shape": "scalar",
+      "type": "bool",
+      "units": null,
+      "bounds": null,
+      "influences_neural_input": false,
+      "history_limit": 0,
+      "reset_rule": "never_clear_in_session"
+    },
+    {
+      "name": "recovery_ledger",
+      "owner": "supervisor",
+      "shape": "ledger",
+      "type": "object",
+      "units": null,
+      "bounds": null,
+      "influences_neural_input": false,
+      "history_limit": "session",
+      "reset_rule": "outside_restorable_agent_state"
+    },
+    {
+      "name": "committed_tick",
+      "owner": "worker",
+      "shape": "scalar",
+      "type": "int",
+      "units": "ticks",
+      "bounds": [0, null],
+      "influences_neural_input": false,
+      "history_limit": 0,
+      "reset_rule": "segment"
+    }
+  ],
+  "forbidden_needs_or_rewards": [
+    "hunger",
+    "fatigue",
+    "reward_prediction_error",
+    "caretaking_debt",
+    "novelty_requirement"
+  ]
 }
