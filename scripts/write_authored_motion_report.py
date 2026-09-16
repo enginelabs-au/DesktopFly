@@ -62,8 +62,8 @@ def main() -> None:
         "lif_error": lif_error,
         "snapshot": ctrl.snapshot(),
         "notes": (
-            "Cam enabled neural sim. Authored motion remains for presentation/Find fly. "
-            "LIF starts on synthetic graph in CI; MaleCNS feather download is still pending."
+            "Cam enabled neural sim. Pet motion uses connectome LIF→motor when the MaleCNS "
+            "reviewed subset or derived export is present; authored wander is not the primary path."
         ),
     }
     out = ROOT / "reports" / "authored-motion.json"

@@ -92,19 +92,49 @@ test("desktop session find fly works and exposes LIF controller", () => {
   assert.equal(validatePoseFrame(frame).controller, "lif");
 });
 
-test("tickPresentation moves pet when neural policy is on", () => {
+test("tickPresentation moves pet from connectome motor (not neuralWander)", async () => {
   let t = 1_000_000;
-  const session = createDesktopSession({ now: () => t });
-  session.status();
+  let phase = 0;
+  const connectomeDriver = {
+    async step(dtS) {
+      phase += dtS;
+      const speed = 40 + 10 * Math.sin(phase);
+      return {
+        motor: { dx: speed, dy: 2, heading: 0, speed },
+        transition_source: "connectome",
+        technical: {
+          connectome_mode: true,
+          neuron_count: 4,
+          synapse_count: 4,
+          graph_source: "malecns-reviewed-subset",
+          motion_driver: "connectome-lif",
+        },
+      };
+    },
+    status() {
+      return {
+        connectome_mode: true,
+        neuron_count: 4,
+        synapse_count: 4,
+        graph_source: "malecns-reviewed-subset",
+        motion_driver: "connectome-lif",
+      };
+    },
+  };
+  const session = createDesktopSession({ now: () => t, connectomeDriver });
+  await session.attachConnectomeDriver(connectomeDriver);
   session.lease.beat();
   const x0 = session.status().pose.x;
+  assert.equal(session.status().motionDriver, "connectome-lif");
+  assert.equal(session.status().connectome_mode, true);
   for (let i = 0; i < 40; i += 1) {
     t += 50;
     session.lease.beat();
-    session.tickPresentation();
+    await session.tickPresentation();
   }
-  const x1 = session.status().pose.x;
-  assert.ok(Math.abs(x1 - x0) > 5);
+  const pose = session.status().pose;
+  assert.ok(Math.abs(pose.x - x0) > 5);
+  assert.equal(pose.transitionSource, "connectome");
 });
 
 test("menu template requires typed actions", () => {

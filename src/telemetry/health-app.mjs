@@ -27,7 +27,17 @@ function render(view) {
 const seed = {
   lifecycle: "RUNNING",
   quiet: false,
-  health: { technical: { source: "local-seed", real_graph_enabled: true } },
+  health: {
+    technical: {
+      source: "local-seed",
+      real_graph_enabled: true,
+      connectome_mode: true,
+      motion_driver: "connectome-lif",
+      graph_source: "malecns-reviewed-subset",
+      neuron_count: 4,
+      synapse_count: 4,
+    },
+  },
 };
 
 render(buildHealthDashboard(seed));

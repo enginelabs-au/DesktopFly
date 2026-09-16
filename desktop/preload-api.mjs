@@ -36,7 +36,7 @@ export function validatePoseFrame(frame) {
   if (!["authored-animation", "lif"].includes(frame.controller)) {
     throw new Error("unknown controller");
   }
-  if (!["stopped", "running", "unavailable"].includes(frame.neuralWorker)) {
+  if (!["stopped", "running", "unavailable", "starting"].includes(frame.neuralWorker)) {
     throw new Error("invalid neuralWorker status");
   }
   return frame;

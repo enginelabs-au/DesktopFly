@@ -80,6 +80,20 @@ export function buildHealthDashboard(supervisorStatus) {
   const approachingLimit = Boolean(supervisorStatus?.approaching_limit);
   const status = mapLifecycleToStatus(lifecycle, { quiet, approachingLimit });
   const copy = STATUS_COPY[status];
+  const connectomeMode = Boolean(technical.connectome_mode);
+  const motionLabel =
+    technical.motion_driver === "connectome-lif" || connectomeMode
+      ? quiet
+        ? "connectome idle"
+        : "connectome-driven"
+      : technical.motion_driver === "authored-animation"
+        ? quiet
+          ? "authored idle"
+          : "authored animation"
+        : quiet
+          ? "quietly idle"
+          : "moving as intended";
+
   return {
     status,
     title: copy.title,
@@ -89,8 +103,10 @@ export function buildHealthDashboard(supervisorStatus) {
     quiet_note: copy.quiet_note || null,
     disclaimer: HEALTH_DISCLAIMER,
     cards: {
-      signal_activity: "within limits",
-      movement: quiet ? "quietly idle" : "moving as intended",
+      signal_activity: connectomeMode
+        ? `LIF on ${technical.graph_source || "reviewed subset"} (${technical.neuron_count ?? "?"} neurons, ${technical.synapse_count ?? "?"} synapses)`
+        : "within limits",
+      movement: motionLabel,
       surroundings: "input current",
       keeping_up: "on time",
       rules_intact: "checked",

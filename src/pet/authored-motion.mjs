@@ -362,6 +362,28 @@ export class AuthoredAnimationController {
     return this._depthFrom + (this._depthTo - this._depthFrom) * easeSmoothstep(t);
   }
 
+  _applyConnectomeMotor(dtS, motor, transitionSource = "connectome") {
+    const dx = Number(motor?.dx) || 0;
+    const dy = Number(motor?.dy) || 0;
+    const speed = Math.hypot(dx, dy);
+    let heading = this.pose.headingRad;
+    if (speed > 1e-3) {
+      heading = Math.atan2(dy, dx);
+    }
+    const locomotion = speed > 2 ? "flight" : speed > 0.2 ? "crawl" : "idle";
+    this.pose = integratePose(this.pose, {
+      dtS,
+      speedPointsS: speed,
+      turnRateRadS: wrapHeading(heading - this.pose.headingRad) / Math.max(dtS, 1e-6),
+      bounds: this.bounds,
+      locomotion,
+      depth01: this.pose.depth01,
+      transitionSource,
+    });
+    const hostSurfaceId = this._hostRect ? "host-window" : null;
+    this.pose.hostSurfaceId = hostSurfaceId;
+  }
+
   _cursorYieldVelocity() {
     const cfg = this.config;
     const now = this.clock.simTimeS;
@@ -394,17 +416,43 @@ export function createPetMotionController({
   bounds,
   mode = "follow_my_window",
   now = () => Date.now(),
+  connectomeDriver = null,
 } = {}) {
+  const useAuthoredWander = controllerKind === "lif" && !connectomeDriver;
   const motion = new AuthoredAnimationController({
     clock: new PresentationClock({ now }),
     config: AuthoredMotionConfig.fromDesktopPet(petConfig),
     bounds: bounds || { x: 0, y: 0, width: 1440, height: 900 },
     mode,
-    neuralWander: controllerKind === "lif",
+    neuralWander: useAuthoredWander,
   });
 
+  let lastConnectomeMotor = null;
+
   return {
-    step() {
+    async step() {
+      if (connectomeDriver) {
+        const dt = motion.clock.advance();
+        motion._accumulatorS += dt;
+        while (motion._accumulatorS >= motion.config.physicsDtS) {
+          const block = motion.config.physicsDtS;
+          motion._accumulatorS -= block;
+          try {
+            const msg = await connectomeDriver.step(block);
+            lastConnectomeMotor = msg.motor;
+            motion._applyConnectomeMotor(block, msg.motor, msg.transition_source || "connectome");
+          } catch {
+            lastConnectomeMotor = null;
+            motion.pose = {
+              ...motion.pose,
+              speedPointsS: 0,
+              locomotion: "idle",
+              transitionSource: "connectome-error",
+            };
+          }
+        }
+        return motion.pose;
+      }
       return motion.step();
     },
     findFly() {
@@ -438,6 +486,12 @@ export function createPetMotionController({
     },
     wingPhase() {
       return motion.wingPhase();
+    },
+    getConnectomeTechnical() {
+      return connectomeDriver?.status?.() ?? null;
+    },
+    getLastConnectomeMotor() {
+      return lastConnectomeMotor;
     },
   };
 }

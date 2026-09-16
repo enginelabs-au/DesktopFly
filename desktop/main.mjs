@@ -10,6 +10,7 @@ import {
   createPetMotionController,
   scaleForDepth,
 } from "../src/pet/authored-motion.mjs";
+import { startConnectomeDriver } from "../src/neural/connectome-driver.mjs";
 import { FocusTracker, LayerCoordinator, SceneBuilder } from "./focus.mjs";
 import { HostLease } from "./host-lease.mjs";
 import { buildApplicationMenuTemplate, buildTrayMenuTemplate } from "./menus.mjs";
@@ -41,18 +42,36 @@ export function createDesktopSession({
   policy = loadPolicy(),
   petConfig = loadDesktopPetConfig(),
   now = () => Date.now(),
+  connectomeDriver = null,
 } = {}) {
   assertDesktopPetDefaults(petConfig);
   const controller = defaultControllerKind(policy);
   let neuralStatus = "unavailable";
   let neuralError = null;
+  let motionDriver = controller === "lif" ? "connectome-pending" : "authored-animation";
+  let connectomeTechnical = null;
   try {
     assertNeuralWorkerMayStart(policy);
-    neuralStatus = "running";
+    neuralStatus = connectomeDriver ? "running" : "starting";
   } catch (err) {
     neuralStatus = "unavailable";
     neuralError = err instanceof Error ? err.message : String(err);
+    motionDriver = "unavailable";
   }
+
+  const driverRef = { current: connectomeDriver };
+  const driverProxy =
+    controller === "lif"
+      ? {
+          step: (dtS) => {
+            if (!driverRef.current) {
+              return Promise.reject(new Error("connectome worker not ready"));
+            }
+            return driverRef.current.step(dtS);
+          },
+          status: () => driverRef.current?.status?.() ?? connectomeTechnical,
+        }
+      : null;
 
   const lease = new HostLease({
     staleAfterMs: Math.round((policy.host_stale_after_s || 0.25) * 1000),
@@ -76,6 +95,7 @@ export function createDesktopSession({
     bounds: presentationBounds,
     mode: petConfig.default_mode || "follow_my_window",
     now,
+    connectomeDriver: driverProxy,
   });
   let pose = motion.getPose();
 
@@ -99,10 +119,13 @@ export function createDesktopSession({
       return { path: join(root, "docs/handover/operator-runbook.md") };
     },
     exportDiagnostics() {
+      connectomeTechnical = motion.getConnectomeTechnical?.() ?? connectomeTechnical;
       return {
         controller,
         neuralStatus,
         neuralError,
+        motionDriver,
+        connectome: connectomeTechnical,
         real_graph_enabled: policy.real_graph_enabled,
         lease: lease.status(),
       };
@@ -139,6 +162,7 @@ export function createDesktopSession({
 
   function status() {
     const leaseStatus = lease.tick();
+    connectomeTechnical = motion.getConnectomeTechnical?.() ?? connectomeTechnical;
     return {
       controller,
       mode,
@@ -146,7 +170,10 @@ export function createDesktopSession({
       lease: leaseStatus,
       neuralWorker: neuralStatus,
       neuralError,
+      motionDriver,
+      connectome: connectomeTechnical,
       real_graph_enabled: policy.real_graph_enabled === true,
+      connectome_mode: Boolean(connectomeTechnical?.connectome_mode),
       focus: focus.snapshot(),
       scene: scene.snapshot(),
       layer: layers.planPlacement({}),
@@ -193,7 +220,7 @@ export function createDesktopSession({
       motion.setBounds(presentationBounds);
       return presentationBounds;
     },
-    tickPresentation() {
+    async tickPresentation() {
       const leaseStatus = lease.tick();
       if (paused || leaseStatus.paused) {
         return pose;
@@ -201,8 +228,29 @@ export function createDesktopSession({
       motion.setBounds(presentationBounds);
       motion.setMode(mode);
       motion.syncFocusSnapshot(focus.snapshot());
-      pose = motion.step();
+      pose = await motion.step();
       return pose;
+    },
+    async attachConnectomeDriver(driver) {
+      driverRef.current = driver;
+      connectomeTechnical = driver.status?.() ?? null;
+      motionDriver = connectomeTechnical?.motion_driver || "connectome-lif";
+      neuralStatus = "running";
+      neuralError = null;
+    },
+    async startConnectomeWorker() {
+      if (controller !== "lif" || driverRef.current) {
+        return status();
+      }
+      try {
+        const driver = await startConnectomeDriver();
+        await this.attachConnectomeDriver(driver);
+      } catch (err) {
+        neuralStatus = "unavailable";
+        neuralError = err instanceof Error ? err.message : String(err);
+        motionDriver = "connectome-unavailable";
+      }
+      return status();
     },
     getPresentationBounds() {
       return presentationBounds;
@@ -253,6 +301,7 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   const { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, screen } =
     electron;
   const session = createDesktopSession();
+  await session.startConnectomeWorker();
   const preloadPath = join(__dirname, "preload.cjs");
   const overlaySize = session.petConfig.overlay_size_points || 256;
   /** @type {import('electron').BrowserWindow | null} */
@@ -401,10 +450,11 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   );
   const timer = setInterval(() => {
     session.lease.beat();
-    session.tickPresentation();
-    if (!win.isDestroyed()) {
-      syncPetWindow(win);
-    }
+    void session.tickPresentation().then(() => {
+      if (!win.isDestroyed()) {
+        syncPetWindow(win);
+      }
+    });
   }, tickMs);
 
   app.on("before-quit", () => clearInterval(timer));
