@@ -34,3 +34,9 @@ coverage/
 .vercel/
 .turbo/
 *.log
+data/raw/*
+!data/raw/.gitkeep
+data/derived/*
+!data/derived/.gitkeep
+*.feather
+*.safetensors

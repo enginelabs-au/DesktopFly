@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "default_mode": "follow_my_window",
+  "modes": ["follow_my_window", "explore_and_hide"],
+  "click_through": true,
+  "steal_focus": false,
+  "open_workbench_by_default": false,
+  "open_health_by_default": false,
+  "find_fly_available_without_neural_worker": true,
+  "authored_animation_when_graph_disabled": true
+}

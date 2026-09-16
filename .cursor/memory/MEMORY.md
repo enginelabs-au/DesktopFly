@@ -2,6 +2,12 @@
 
 ## Durable directives
 
+- DesktopFly default dataset is MaleCNS v1.0. FlyWire v783 is a separate adapter.
+- Neural / LIF simulation stays disabled while Q-012 is a release requirement. Live path: anatomy + authored animation.
+- Desktop shell is Electron + Swift helper, not Papership Tauri.
+- Product spec: `docs/handover/fruit-fly-cursor-handover.md`. Blueprint: `docs/blueprints/2026-09-16_desktopfly.md`.
+
+
 - Execute agent-capable work directly; do not delegate routine implementation or investigation to the user.
 - Use the sequential planning lifecycle for new projects and major implementations: phase 0 maps the full project, each later phase plan is generated only after the previous phase is implemented and verified, and closure produces `docs/plans/final_implementation_checklist.md`.
 - Defer non-blocking human-only actions and missing credential values to the final phase while completing all possible code, configuration, adapters, tests, documentation, and environment-variable wiring first.

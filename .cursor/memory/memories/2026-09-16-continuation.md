@@ -28,3 +28,11 @@
 - Owner superseded the old keep-the-misspelled-filename rule.
 - `git mv` the launch-pipeline instruction file to `.cursor/instructions/LAUNCH.md` and updated every path/string that pointed at the old name.
 - Validation: `node .cursor/skills/launch-pipeline/scripts/preflight.mjs` and launch/config validators after the rename.
+
+## Phase 0 foundations (P-011 relaunch)
+
+- Previous owner branch `cursor/phase-0-foundations-6edd` was never on origin. Continued from `main` @ `61c436f`.
+- Preflight `MATERIALIZATION_REQUIRED` (missing `docs/blueprints`). Bootstrap `bash .cursor/scripts/bootstrap.sh` → READY.
+- Wrote blueprint, phase-0 plan, Q-012 / MaleCNS / Electron decisions, workstream `20260916-desktopfly-foundations`, fly-simulation rule, layout, `config/policy.json` (`real_graph_enabled: false`), template pin `38f55332055328d38c29e72474c4ad5b6876101f`.
+- Validation: `node scripts/check-foundations.mjs` passed; preflight READY; launch validation 91 files.
+- Neural sim remains disabled. Next: PR, then phase 1 ingest plan only.

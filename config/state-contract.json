@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "mutable_owner": "worker",
+  "ui_may_write_weights": false,
+  "real_graph_enabled_must_match_policy": true
+}

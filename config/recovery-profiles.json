@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "profiles": [],
+  "allow_runtime_weight_updates": false,
+  "allow_threshold_relaxation": false,
+  "allow_automatic_resume_after_hard_fault": false
+}
