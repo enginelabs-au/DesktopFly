@@ -20,3 +20,20 @@ export function trayIconPathOrThrow(desktopDir = __dirname) {
   }
   return path;
 }
+
+/** @param {typeof import("electron").nativeImage} nativeImage */
+export function createTrayNativeImage(nativeImage, desktopDir = __dirname) {
+  const path = trayIconPathOrThrow(desktopDir);
+  const retinaPath = join(desktopDir, "assets", "tray-fly@2x.png");
+  const loadPath =
+    process.platform === "darwin" && existsSync(retinaPath) ? retinaPath : path;
+  let image = nativeImage.createFromPath(loadPath);
+  if (image.isEmpty()) {
+    throw new Error(`tray icon failed to load: ${loadPath}`);
+  }
+  if (process.platform === "darwin") {
+    image.setTemplateImage(true);
+    image = image.resize({ width: 18, height: 18 });
+  }
+  return image;
+}

@@ -16,7 +16,12 @@ import {
   showPetInactive,
 } from "./pet-window.mjs";
 import { overlayBoundsForPose, normalizeScreenBounds } from "./pet-placement.mjs";
-import { trayIconPathOrThrow } from "./tray-icon.mjs";
+import { createTrayNativeImage, trayIconPathOrThrow } from "./tray-icon.mjs";
+
+/** Strong refs — macOS drops Tray if garbage-collected (handover §3.4c). */
+let desktopTray = null;
+/** @type {import("electron").BrowserWindow | null} */
+let desktopPetWindow = null;
 import {
   assertDesktopPetDefaults,
   assertNeuralWorkerMayStart,
@@ -297,19 +302,17 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   screen.on("display-metrics-changed", () => refreshPresentationBounds());
 
   const win = new BrowserWindow(petWindowOptions(preloadPath, overlaySize));
+  desktopPetWindow = win;
   applyPetWindowChrome(win);
   await win.loadFile(join(__dirname, "renderer", "pet.html"));
 
   Menu.setApplicationMenu(
     Menu.buildFromTemplate(buildApplicationMenuTemplate(guiActions)),
   );
-  const trayIcon = nativeImage.createFromPath(trayIconPathOrThrow(__dirname));
-  if (process.platform === "darwin" && trayIcon.isEmpty() === false) {
-    trayIcon.setTemplateImage(true);
-  }
-  const tray = new Tray(trayIcon);
-  tray.setToolTip("Fly");
-  tray.setContextMenu(
+  const trayImage = createTrayNativeImage(nativeImage, __dirname);
+  desktopTray = new Tray(trayImage);
+  desktopTray.setToolTip("Fly");
+  desktopTray.setContextMenu(
     Menu.buildFromTemplate(
       buildTrayMenuTemplate(guiActions, {
         exploreHide: session.status().mode === "explore_and_hide",
@@ -330,7 +333,12 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   ipcMain.handle(IPC.OPEN_WORKBENCH, () => session.actions.openWorkbench());
   ipcMain.on(IPC.HOST_LEASE_BEAT, () => session.lease.beat());
 
-  findFlyAndShow(win);
+  win.once("ready-to-show", () => {
+    findFlyAndShow(win);
+  });
+  if (win.isVisible() || win.webContents.isLoading() === false) {
+    findFlyAndShow(win);
+  }
 
   const timer = setInterval(() => {
     session.lease.beat();
@@ -352,7 +360,7 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
     }, Math.min(autoQuitMs, 2500));
   }
 
-  return { app, win, tray, session, root, openHealthWindow };
+  return { app, win, tray: desktopTray, session, root, openHealthWindow };
 }
 
 // Electron loads package.json "main" with argv[1] === "." — do not require argv path match.
@@ -368,7 +376,7 @@ if (isElectronMain || isNodeDirect) {
   const petConfig = loadDesktopPetConfig();
   const openHealthOnStart =
     process.env.DESKTOPFLY_OPEN_HEALTH === "1" ||
-    (process.env.DESKTOPFLY_OPEN_HEALTH !== "0" &&
+    (process.env.DESKTOPFLY_OPEN_HEALTH === undefined &&
       petConfig.open_health_by_default === true);
   launchElectronApp({ autoQuitMs })
     .then(({ openHealthWindow }) => {
