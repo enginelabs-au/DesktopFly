@@ -43,6 +43,11 @@ Operational history belongs in `/memory/memories/YYYY-MM-DD-continuation.md` or 
 - Agent workspace layout: `/memory/runbooks/agent-workspace.md`
 - Bootstrap procedure: `/memory/runbooks/agent-config-bootstrap.md`
 
+## Repository
+
+- Git remote: `https://github.com/enginelabs-au/DesktopFly.git`
+- Product spec: `docs/fruit-fly-cursor-handover.md`
+
 ## Existing workflow references
 
 - Vercel: `/skills/vercel-deploy-workflow/SKILL.md` and `/memory/runbooks/vercel-workflow.md`

@@ -11,3 +11,4 @@
 - Removed `.DS_Store` files that orphaned launch validation.
 - Bootstrap and preflight: `READY`. Launch validation: 77 control-plane files.
 - Assumption: init covers git remotes and control-plane materialization, not product implementation.
+- First push was rejected by GitHub GH007 (private email). Rewrote the unpushed root commit with `132057194+cam-douglas@users.noreply.github.com` and pushed `main` as `579b284`.
