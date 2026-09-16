@@ -87,10 +87,9 @@
 
 ## Next Actions
 
-- Commit, push, open PR.
-- Mark phase 0 complete after PR + recorded evidence.
-- Generate phase 1 ingest plan; keep the graph disabled.
+- Continue Phase 1 ingest (adapters, review schema) on this branch; keep the graph disabled.
+- After Phase 1 verifies, write `docs/plans/phase_2_authored_motion_plan.md` only.
 
 ## Last Updated
 
-- 2026-09-16 — phase 0 foundations implemented after authorized bootstrap.
+- 2026-09-16 — phase 0 complete (PR #2); phase 1 ingest tests passing.
