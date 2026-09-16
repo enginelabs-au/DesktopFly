@@ -6,15 +6,15 @@
 
 ## Current Status
 
-- Phase 0 planning and foundations are implemented on `cursor/phase-0-foundations-a5d1`. Bootstrap followed; preflight `READY`; `node scripts/check-foundations.mjs` passed.
+- Phase 0 complete on [DesktopFly#2](https://github.com/enginelabs-au/DesktopFly/pull/2). Phase 1 ingest started: synthetic fixture + `build_static_graph`; 7 pytest passed. Neural graph still disabled.
 
 ## Project Phase
 
-- Phase 0 foundations — implementing / verifying. Product pet/LIF code has not started.
+- Phase 1 safe ingest — in progress. LIF/pet not started.
 
 ## Active Plan
 
-- `docs/plans/phase_0_foundations_plan.md`
+- `docs/plans/phase_1_safe_ingest_plan.md`
 
 ## Active Workstream
 
@@ -49,13 +49,13 @@
 
 ## Active Items
 
-- Open PR for phase-0 foundations.
-- After phase 0 is marked complete, generate `docs/plans/phase_1_safe_ingest_plan.md` only.
+- Finish remaining Phase 1 ingest tests/docs on the same PR.
 - Do not enable `real_graph_enabled`.
 
 ## Files in Active Use
 
-- `docs/plans/phase_0_foundations_plan.md`
+- `docs/plans/phase_1_safe_ingest_plan.md`
+- `backend/flysim/ingest.py`
 - `docs/blueprints/2026-09-16_desktopfly.md`
 - `docs/workstreams/20260916-desktopfly-foundations/manifest.md`
 - `.cursor/rules/fly-simulation.mdc`

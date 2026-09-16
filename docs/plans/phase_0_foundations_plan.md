@@ -1,6 +1,6 @@
 ---
 plan: phase_0_foundations
-status: in_progress
+status: complete
 created: 2026-09-16
 updated: 2026-09-16
 owner: lead-agent
@@ -118,7 +118,8 @@ Blueprint (done), this plan, three product decisions (done), workstream, fly rul
 - **Status:** complete
 
 ### T0.7 Commit, push, PR
-- **Status:** in progress
+- **Status:** complete
+- **Evidence:** https://github.com/enginelabs-au/DesktopFly/pull/2
 
 ## 13. Adaptive role and delegation map
 
@@ -182,7 +183,7 @@ Revert the feature branch. Policy and rule are additive. Do not `git reset` user
 - [x] Template SHA recorded
 - [x] Foundations check passes on Linux
 - [x] STATE/memory match reality
-- [ ] PR opened from this branch
+- [x] PR opened from this branch
 
 ## 20. Completion evidence
 

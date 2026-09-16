@@ -36,3 +36,9 @@
 - Wrote blueprint, phase-0 plan, Q-012 / MaleCNS / Electron decisions, workstream `20260916-desktopfly-foundations`, fly-simulation rule, layout, `config/policy.json` (`real_graph_enabled: false`), template pin `38f55332055328d38c29e72474c4ad5b6876101f`.
 - Validation: `node scripts/check-foundations.mjs` passed; preflight READY; launch validation 91 files.
 - Neural sim remains disabled. Next: PR, then phase 1 ingest plan only.
+
+## Phase 1 ingest start
+
+- Wrote `docs/plans/phase_1_safe_ingest_plan.md` after phase 0 PR #2.
+- Implemented `backend/flysim/ingest.py` and synthetic three-node fixture. `PYTHONPATH=backend python3 -m pytest -q` → 7 passed.
+- `real_graph_enabled` remains false. No MaleCNS download.
