@@ -15,6 +15,8 @@ Everything below is prepared on the branch; Cam runs it on a Mac.
 cd backend
 uv sync --frozen --group dev
 uv run python ../scripts/download_malecns.py   # if data/raw empty
+uv run python ../scripts/build_malecns_full.py   # fills data/derived (~200k neurons; first run is slow)
+uv run python -c "from flysim.presentation import ConnectomePresentationEngine; from flysim.config import load_policy_dict; e=ConnectomePresentationEngine.create(load_policy_dict()); print(e.status())"
 uv run python -c "from flysim.device import report_device; from flysim.config import load_policy_dict; print(report_device(load_policy_dict()))"
 PYTHONPATH=. uv run pytest -q
 ```

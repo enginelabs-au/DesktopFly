@@ -16,6 +16,9 @@ from flysim.adapters.malecns import MaleCNSAdapter, REPO_ROOT as ADAPTER_ROOT
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DERIVED = REPO_ROOT / "data" / "derived"
 FULL_META = DEFAULT_DERIVED / "malecns-full-meta.json"
+FULL_NEURONS = DEFAULT_DERIVED / "malecns-full-neurons.parquet"
+FULL_EDGES = DEFAULT_DERIVED / "malecns-full-edges.parquet"
+FULL_REVIEW = DEFAULT_DERIVED / "malecns-full-review.parquet"
 
 MODULATORY_NT = frozenset({"dopamine", "serotonin", "octopamine", "histamine"})
 
@@ -195,38 +198,69 @@ def build_full_tables(raw_dir: Path | None = None) -> dict[str, Any]:
     }
 
 
+def raw_malecns_available(raw_dir: Path | None = None) -> bool:
+    from flysim.adapters.malecns import resolve_malecns_paths
+
+    try:
+        resolve_malecns_paths(raw_dir)
+        return True
+    except FileNotFoundError:
+        return False
+
+
 def write_full_derived(
     raw_dir: Path | None = None,
     derived_dir: Path | None = None,
 ) -> Path:
     derived = derived_dir or DEFAULT_DERIVED
     derived.mkdir(parents=True, exist_ok=True)
+    print("malecns-full: building derived connectome from data/raw (one-time)…", flush=True)
     tables = build_full_tables(raw_dir)
     neurons = pa.Table.from_pylist(tables["neurons"])
     edges = pa.Table.from_pylist(tables["edges"])
-    pq.write_table(neurons, derived / "malecns-full-neurons.parquet")
-    pq.write_table(edges, derived / "malecns-full-edges.parquet")
+    review = pa.Table.from_pylist(tables["review"])
+    pq.write_table(neurons, derived / FULL_NEURONS.name)
+    pq.write_table(edges, derived / FULL_EDGES.name)
+    pq.write_table(review, derived / FULL_REVIEW.name)
     meta = {
         "dataset": tables["dataset"],
         "source_annotation_revision": tables["source_annotation_revision"],
         "fixture_kind": "malecns-full",
         "neuron_count": neurons.num_rows,
         "edge_count": edges.num_rows,
-        "review": tables["review"],
         "sensory_map": tables["sensory_map"],
         "motor_map": tables["motor_map"],
         "provenance": MaleCNSAdapter(raw_dir).provenance(),
     }
-    meta_path = derived / "malecns-full-meta.json"
+    meta_path = derived / FULL_META.name
     meta_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+    print(
+        f"malecns-full: wrote {meta_path} "
+        f"neuron_count={neurons.num_rows} edge_count={edges.num_rows}",
+        flush=True,
+    )
     return meta_path
+
+
+def ensure_full_derived_from_raw(raw_dir: Path | None = None) -> Path | None:
+    """Create data/derived full export when raw feathers exist and derived is missing."""
+    if not raw_malecns_available(raw_dir):
+        return None
+    if FULL_META.is_file() and FULL_NEURONS.is_file() and FULL_EDGES.is_file():
+        return FULL_META
+    return write_full_derived(raw_dir)
 
 
 def tables_from_full_meta(meta_path: Path = FULL_META) -> dict[str, Any]:
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     derived = meta_path.parent
-    neurons = pq.read_table(derived / "malecns-full-neurons.parquet").to_pylist()
-    edges = pq.read_table(derived / "malecns-full-edges.parquet").to_pylist()
+    neurons = pq.read_table(derived / FULL_NEURONS.name).to_pylist()
+    edges = pq.read_table(derived / FULL_EDGES.name).to_pylist()
+    review_path = derived / FULL_REVIEW.name
+    if review_path.is_file():
+        review = pq.read_table(review_path).to_pylist()
+    else:
+        review = meta.get("review") or []
     return {
         "fixture_kind": "malecns-full",
         "dataset": meta.get("dataset", "male-cns:v1.0"),
@@ -235,7 +269,7 @@ def tables_from_full_meta(meta_path: Path = FULL_META) -> dict[str, Any]:
         ),
         "neurons": neurons,
         "edges": edges,
-        "review": meta.get("review") or [],
+        "review": review,
         "sensory_map": meta.get("sensory_map") or [],
         "motor_map": meta.get("motor_map") or [],
     }

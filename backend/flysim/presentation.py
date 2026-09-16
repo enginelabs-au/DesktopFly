@@ -118,12 +118,14 @@ class ConnectomePresentationEngine:
         backend = "numpy-lif"
         if hasattr(self.worker.lif, "device"):
             backend = f"torch-{self.worker.lif.device.type}"
+        input_n = int(self.report.get("input_neuron_count", n))
         return {
             "graph_source": self.graph_source,
             "connectome_mode": bool(self.report.get("connectome_mode")),
             "motion_driver": self.report.get("motion_driver", "connectome-lif"),
             "lif_backend": backend,
-            "neuron_count": n,
+            "neuron_count": input_n,
+            "sim_neuron_count": n,
             "synapse_count": e,
             "dataset": self.report.get("dataset"),
             "fixture_kind": self.report.get("fixture_kind"),

@@ -153,8 +153,21 @@ def compile_reviewed_graph(tables: dict[str, Any], policy: dict[str, Any] | None
 
         review = review_by_id.get(neuron_id)
         if review is None:
-            exclusion_counts["missing_review"] += 1
-            continue
+            if (
+                tables.get("fixture_kind") == "malecns-full"
+                and policy.get("require_reviewed_subset") is False
+            ):
+                review = {
+                    "neuron_id": neuron_id,
+                    "decision": "include",
+                    "modulatory_status": "no",
+                    "fixed_sign": 1,
+                    "role": "interneuron",
+                    "evidence": "full-graph runtime auto-review",
+                }
+            else:
+                exclusion_counts["missing_review"] += 1
+                continue
         if review["decision"] not in DECISIONS:
             raise ValueError("invalid review decision")
         if review["modulatory_status"] not in MODULATORY:

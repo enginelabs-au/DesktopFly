@@ -22,7 +22,7 @@ export function connectomePythonCommand() {
  *   shutdown: () => void;
  * }>}
  */
-export async function startConnectomeDriver({ timeoutMs = 120000 } = {}) {
+export async function startConnectomeDriver({ timeoutMs = 600000 } = {}) {
   const { cmd, args, cwd } = connectomePythonCommand();
   const child = spawn(cmd, args, {
     cwd,

@@ -62,16 +62,33 @@ def _tables_from_full_meta(meta_path: Path) -> tuple[dict[str, Any], str]:
     return tables_from_full_meta(meta_path), "malecns-full"
 
 
-def _try_build_full_from_raw() -> tuple[dict[str, Any], str] | None:
-    from flysim.adapters.malecns import resolve_malecns_paths
-    from flysim.malecns_full_build import build_full_tables
+def _load_full_graph_tables() -> tuple[dict[str, Any], str]:
+    from flysim.malecns_full_build import (
+        FULL_EDGES,
+        FULL_NEURONS,
+        ensure_full_derived_from_raw,
+        raw_malecns_available,
+        tables_from_full_meta,
+    )
 
-    try:
-        resolve_malecns_paths()
-    except FileNotFoundError:
-        return None
-    tables = build_full_tables()
-    return tables, "malecns-full"
+    if (
+        DERIVED_FULL_META.is_file()
+        and FULL_NEURONS.is_file()
+        and FULL_EDGES.is_file()
+    ):
+        return tables_from_full_meta(DERIVED_FULL_META), "malecns-full"
+    if raw_malecns_available():
+        try:
+            meta_path = ensure_full_derived_from_raw()
+        except Exception as exc:
+            raise RuntimeError(
+                "MaleCNS raw feathers are present but full derived export failed: "
+                f"{exc}. Run: python scripts/build_malecns_full.py"
+            ) from exc
+        if meta_path is None:
+            raise RuntimeError("MaleCNS raw present but ensure_full_derived returned None")
+        return tables_from_full_meta(meta_path), "malecns-full"
+    raise RuntimeError("full graph requested but no raw feathers or derived meta found")
 
 
 def resolve_runtime_tables(
@@ -85,11 +102,10 @@ def resolve_runtime_tables(
 
     graph_mode = str(policy.get("graph_mode", "full")).lower()
     if graph_mode == "full":
-        if DERIVED_FULL_META.is_file():
-            return _tables_from_full_meta(DERIVED_FULL_META)
-        built = _try_build_full_from_raw()
-        if built is not None:
-            return built
+        from flysim.malecns_full_build import raw_malecns_available
+
+        if raw_malecns_available() or DERIVED_FULL_META.is_file():
+            return _load_full_graph_tables()
         if MALECNS_FULL_DEV_FIXTURE.is_file():
             tables = _load_tables(MALECNS_FULL_DEV_FIXTURE)
             return tables, str(tables.get("fixture_kind", "malecns-full"))
