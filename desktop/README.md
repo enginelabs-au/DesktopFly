@@ -17,4 +17,12 @@ cd desktop && npm install
 npm start
 ```
 
+After pulling tray/pet fixes, quit DesktopFly completely (tray **Quit** or `Cmd+Q`), then restart:
+
+```bash
+cd desktop && npm start
+```
+
+You should see a **Fly** silhouette in the menu bar and the desktop pet overlay (not Health by default). Use tray or menu **Find fly** if the pet is off-screen. Open **Health…** from the menu when you need the dashboard.
+
 Not Papership Tauri.

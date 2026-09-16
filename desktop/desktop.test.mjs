@@ -1,9 +1,14 @@
 import test from "node:test";
+import { readFileSync, existsSync } from "node:fs";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { createDesktopSession } from "./main.mjs";
 import { HostLease } from "./host-lease.mjs";
 import { FocusTracker, SceneBuilder } from "./focus.mjs";
 import { petWindowOptions, applyPetWindowChrome } from "./pet-window.mjs";
+import { overlayBoundsForPose } from "./pet-placement.mjs";
+import { trayIconPathOrThrow } from "./tray-icon.mjs";
 import { buildApplicationMenuTemplate } from "./menus.mjs";
 import {
   assertNeuralWorkerMayStart,
@@ -24,6 +29,7 @@ test("pet window options are click-through and non-focusable", () => {
   assert.equal(opts.frame, false);
   assert.equal(opts.transparent, true);
   assert.equal(opts.focusable, false);
+  assert.equal(opts.alwaysOnTop, true);
   assert.equal(opts.webPreferences.contextIsolation, true);
   assert.equal(opts.webPreferences.nodeIntegration, false);
   let ignored = null;
@@ -93,4 +99,22 @@ test("scene builder caps windows", () => {
     { id: "c", rect: { x: 0, y: 0, width: 1, height: 1 } },
   ]);
   assert.equal(scene.snapshot().windows.length, 2);
+});
+
+test("overlay bounds center pose on screen", () => {
+  const bounds = overlayBoundsForPose(
+    { x: 500, y: 300 },
+    256,
+    { x: 0, y: 0, width: 1440, height: 900 },
+  );
+  assert.equal(bounds.width, 256);
+  assert.equal(bounds.x, 500 - 128);
+  assert.equal(bounds.y, 300 - 128);
+});
+
+test("tray icon asset exists", () => {
+  const desktopDir = dirname(fileURLToPath(import.meta.url));
+  const path = trayIconPathOrThrow(desktopDir);
+  assert.ok(existsSync(path));
+  assert.ok(readFileSync(path).length > 100);
 });

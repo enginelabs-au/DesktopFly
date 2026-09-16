@@ -15,6 +15,8 @@ import {
   petWindowOptions,
   showPetInactive,
 } from "./pet-window.mjs";
+import { overlayBoundsForPose, normalizeScreenBounds } from "./pet-placement.mjs";
+import { trayIconPathOrThrow } from "./tray-icon.mjs";
 import {
   assertDesktopPetDefaults,
   assertNeuralWorkerMayStart,
@@ -54,9 +56,15 @@ export function createDesktopSession({
 
   let mode = petConfig.default_mode || "follow_my_window";
   let paused = false;
+  let presentationBounds = normalizeScreenBounds({
+    x: 0,
+    y: 0,
+    width: 1440,
+    height: 900,
+  });
   let pose = findFlyPose({
     hostRect: null,
-    bounds: { x: 0, y: 0, width: 1440, height: 900 },
+    bounds: presentationBounds,
   });
 
   const actions = {
@@ -97,7 +105,7 @@ export function createDesktopSession({
               height: host.rect.height,
             }
           : null,
-        bounds: { x: 0, y: 0, width: 1440, height: 900 },
+        bounds: presentationBounds,
         headingRad: pose.headingRad,
       });
       return pose;
@@ -175,6 +183,13 @@ export function createDesktopSession({
       mode = validateMode(next);
       return mode;
     },
+    setPresentationBounds(bounds) {
+      presentationBounds = normalizeScreenBounds(bounds);
+      return presentationBounds;
+    },
+    getPresentationBounds() {
+      return presentationBounds;
+    },
     menuTemplate: () => buildApplicationMenuTemplate(actions),
     trayTemplate: () =>
       buildTrayMenuTemplate(actions, {
@@ -218,11 +233,32 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
     );
   }
 
-  const { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage } = electron;
+  const { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, screen } =
+    electron;
   const session = createDesktopSession();
   const preloadPath = join(__dirname, "preload.cjs");
+  const overlaySize = session.petConfig.overlay_size_points || 256;
   /** @type {import('electron').BrowserWindow | null} */
   let healthWin = null;
+
+  function refreshPresentationBounds() {
+    const primary = screen.getPrimaryDisplay();
+    session.setPresentationBounds(primary.bounds);
+    return primary.bounds;
+  }
+
+  function syncPetWindow(petWin) {
+    if (!petWin || petWin.isDestroyed()) return null;
+    const bounds = overlayBoundsForPose(
+      session.status().pose,
+      overlaySize,
+      session.getPresentationBounds(),
+    );
+    petWin.setBounds(bounds);
+    showPetInactive(petWin);
+    petWin.webContents.send(IPC.POSE_FRAME, session.poseFrame());
+    return bounds;
+  }
 
   function openHealthWindow() {
     const meta = session.actions.openHealth();
@@ -240,27 +276,38 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
     return meta;
   }
 
+  function findFlyAndShow(petWin) {
+    session.actions.findFly();
+    return syncPetWindow(petWin);
+  }
+
   const guiActions = {
     ...session.actions,
     openHealth: openHealthWindow,
+    findFly() {
+      return findFlyAndShow(win);
+    },
     quit() {
       app.quit();
     },
   };
 
   await app.whenReady();
-  const win = new BrowserWindow(
-    petWindowOptions(preloadPath, session.petConfig.overlay_size_points || 256),
-  );
+  refreshPresentationBounds();
+  screen.on("display-metrics-changed", () => refreshPresentationBounds());
+
+  const win = new BrowserWindow(petWindowOptions(preloadPath, overlaySize));
   applyPetWindowChrome(win);
   await win.loadFile(join(__dirname, "renderer", "pet.html"));
-  showPetInactive(win);
 
   Menu.setApplicationMenu(
     Menu.buildFromTemplate(buildApplicationMenuTemplate(guiActions)),
   );
-  const icon = nativeImage.createEmpty();
-  const tray = new Tray(icon);
+  const trayIcon = nativeImage.createFromPath(trayIconPathOrThrow(__dirname));
+  if (process.platform === "darwin" && trayIcon.isEmpty() === false) {
+    trayIcon.setTemplateImage(true);
+  }
+  const tray = new Tray(trayIcon);
   tray.setToolTip("Fly");
   tray.setContextMenu(
     Menu.buildFromTemplate(
@@ -272,12 +319,18 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   );
 
   ipcMain.handle(IPC.GET_STATUS, () => session.status());
-  ipcMain.handle(IPC.FIND_FLY, () => session.actions.findFly());
+  ipcMain.handle(IPC.FIND_FLY, () => {
+    session.actions.findFly();
+    syncPetWindow(win);
+    return session.status().pose;
+  });
   ipcMain.handle(IPC.FIND_CURSOR, () => session.actions.findCursor());
   ipcMain.handle(IPC.SET_MODE, (_e, mode) => session.setMode(mode));
   ipcMain.handle(IPC.OPEN_HEALTH, () => openHealthWindow());
   ipcMain.handle(IPC.OPEN_WORKBENCH, () => session.actions.openWorkbench());
   ipcMain.on(IPC.HOST_LEASE_BEAT, () => session.lease.beat());
+
+  findFlyAndShow(win);
 
   const timer = setInterval(() => {
     session.lease.beat();
@@ -292,7 +345,7 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
     setTimeout(() => {
       try {
         openHealthWindow();
-        session.actions.findFly();
+        findFlyAndShow(win);
       } finally {
         setTimeout(() => app.quit(), 750);
       }
@@ -312,13 +365,16 @@ const isNodeDirect =
   fileURLToPath(import.meta.url) === process.argv[1];
 if (isElectronMain || isNodeDirect) {
   const autoQuitMs = Number(process.env.DESKTOPFLY_AUTO_QUIT_MS || 0);
-  const openHealthOnStart = process.env.DESKTOPFLY_OPEN_HEALTH !== "0";
+  const petConfig = loadDesktopPetConfig();
+  const openHealthOnStart =
+    process.env.DESKTOPFLY_OPEN_HEALTH === "1" ||
+    (process.env.DESKTOPFLY_OPEN_HEALTH !== "0" &&
+      petConfig.open_health_by_default === true);
   launchElectronApp({ autoQuitMs })
-    .then(({ openHealthWindow, session }) => {
-      session.actions.findFly();
+    .then(({ openHealthWindow }) => {
       if (openHealthOnStart) openHealthWindow();
       console.error(
-        "DesktopFly pet running — tray tooltip Fly; menu View → Health… / Find fly",
+        "DesktopFly pet running — menu-bar Fly icon; tray/menu Find fly recenters the pet",
       );
     })
     .catch((err) => {

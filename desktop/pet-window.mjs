@@ -25,8 +25,8 @@ export function petWindowOptions(preloadPath, overlaySizePoints = 256) {
     minimizable: false,
     maximizable: false,
     fullscreenable: false,
-    alwaysOnTop: false,
-    skipTaskbar: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,
@@ -44,6 +44,12 @@ export function applyPetWindowChrome(pet) {
     throw new Error("invalid pet window");
   }
   pet.setIgnoreMouseEvents(true, { forward: true });
+  if (typeof pet.setAlwaysOnTop === "function") {
+    pet.setAlwaysOnTop(true, "floating");
+  }
+  if (typeof pet.setVisibleOnAllWorkspaces === "function") {
+    pet.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  }
   if (typeof pet.setHiddenInMissionControl === "function") {
     pet.setHiddenInMissionControl(true);
   }
