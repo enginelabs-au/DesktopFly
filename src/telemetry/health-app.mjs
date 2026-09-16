@@ -33,9 +33,9 @@ const seed = {
       real_graph_enabled: true,
       connectome_mode: true,
       motion_driver: "connectome-lif",
-      graph_source: "malecns-reviewed-subset",
-      neuron_count: 4,
-      synapse_count: 4,
+      graph_source: "malecns-full",
+      neuron_count: 200000,
+      synapse_count: 12000000,
     },
   },
 };

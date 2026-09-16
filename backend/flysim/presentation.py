@@ -8,7 +8,8 @@ from typing import Any, Mapping
 
 import numpy as np
 
-from flysim.lif import FrozenLIF, LifWorkerHandle, start_lif_worker
+from flysim.lif import LifWorkerHandle, start_lif_worker
+from flysim.lif_torch import prefer_torch_for_graph, start_torch_lif_worker
 from flysim.motor import MotorCommand
 from flysim.runtime_loader import load_compiled_runtime
 from flysim.sensory import FixedSensoryEncoder, build_sensory_map
@@ -78,11 +79,19 @@ class ConnectomePresentationEngine:
     def create(cls, policy: dict[str, Any] | None = None) -> ConnectomePresentationEngine:
         policy = policy or {}
         compiled, tables, graph_source, report = load_compiled_runtime(policy)
-        lif = start_lif_worker(
-            policy,
-            graph=compiled.graph,
-            graph_source=graph_source,
-        )
+        n = len(compiled.selected_ids)
+        if prefer_torch_for_graph(n, policy):
+            lif = start_torch_lif_worker(
+                policy,
+                graph=compiled.graph,
+                graph_source=graph_source,
+            )
+        else:
+            lif = start_lif_worker(
+                policy,
+                graph=compiled.graph,
+                graph_source=graph_source,
+            )
         sensory = build_sensory_map(compiled.selected_ids, tables.get("sensory_map", []))
         encoder = FixedSensoryEncoder(sensory, external_max=float(policy.get("external_input_max", 2.0)))
         steps = int(policy.get("neural_steps_per_block", 5))
@@ -97,13 +106,23 @@ class ConnectomePresentationEngine:
             external_max=float(policy.get("external_input_max", 2.0)),
         )
 
+    def _rate_ema_numpy(self) -> np.ndarray:
+        state = self.worker.state
+        if hasattr(state, "as_numpy"):
+            return state.as_numpy().rate_ema
+        return np.asarray(state.rate_ema, dtype=np.float32)
+
     def status(self) -> dict[str, Any]:
         n = len(self.neuron_ids)
         e = int(len(self.worker.lif._src))
+        backend = "numpy-lif"
+        if hasattr(self.worker.lif, "device"):
+            backend = f"torch-{self.worker.lif.device.type}"
         return {
             "graph_source": self.graph_source,
             "connectome_mode": bool(self.report.get("connectome_mode")),
             "motion_driver": self.report.get("motion_driver", "connectome-lif"),
+            "lif_backend": backend,
             "neuron_count": n,
             "synapse_count": e,
             "dataset": self.report.get("dataset"),
@@ -126,8 +145,8 @@ class ConnectomePresentationEngine:
         external = self.encoder.encode(feat)
         diag_last: dict[str, Any] = {}
         for _ in range(self.steps_per_block):
-            self.worker.state, diag_last = self.worker.lif.candidate(self.worker.state, external)
-        activity = self.worker.state.rate_ema
+            self.worker.state, diag_last = self.worker.step(external)
+        activity = self._rate_ema_numpy()
         motor = decode_schema_motor(
             self.neuron_ids,
             self.motor_rows,

@@ -7,6 +7,8 @@ import math
 from pathlib import Path
 from typing import Any, Literal
 
+GraphMode = Literal["full", "reviewed_subset"]
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -54,8 +56,10 @@ class Policy(BaseModel):
     dataset: str
     real_graph_enabled: bool
     require_reviewed_subset: bool
-    max_neurons_initial: int = Field(ge=1, le=2048)
-    max_edges_initial: int = Field(ge=1, le=100_000)
+    graph_mode: GraphMode = "full"
+    max_neurons_initial: int = Field(ge=1, le=500_000)
+    max_edges_initial: int = Field(ge=1, le=50_000_000)
+    torch_lif_min_neurons: int = Field(ge=1, default=256)
     device: Literal["mps", "cpu"]
     allow_cpu_fallback: bool
     runtime_dtype: Literal["float32"]

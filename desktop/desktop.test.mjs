@@ -104,9 +104,9 @@ test("tickPresentation moves pet from connectome motor (not neuralWander)", asyn
         transition_source: "connectome",
         technical: {
           connectome_mode: true,
-          neuron_count: 4,
-          synapse_count: 4,
-          graph_source: "malecns-reviewed-subset",
+          neuron_count: 200000,
+          synapse_count: 12000000,
+          graph_source: "malecns-full",
           motion_driver: "connectome-lif",
         },
       };
@@ -114,9 +114,9 @@ test("tickPresentation moves pet from connectome motor (not neuralWander)", asyn
     status() {
       return {
         connectome_mode: true,
-        neuron_count: 4,
-        synapse_count: 4,
-        graph_source: "malecns-reviewed-subset",
+        neuron_count: 200000,
+        synapse_count: 12000000,
+        graph_source: "malecns-full",
         motion_driver: "connectome-lif",
       };
     },

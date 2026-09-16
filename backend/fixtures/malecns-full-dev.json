@@ -1,0 +1,116 @@
+{
+  "comment": "CI/dev fallback only when data/derived/malecns-full-meta.json and data/raw feathers are absent. Production: download + build_malecns_full.py (~200k neurons).",
+  "fixture_kind": "malecns-full",
+  "dataset": "male-cns:v1.0",
+  "source_annotation_revision": "male-cns-v1.0-minconf-0.5",
+  "neurons": [
+    {
+      "dataset": "male-cns:v1.0",
+      "neuron_id": "male-cns:1730100001",
+      "cell_type": "full-dev-sensory",
+      "region": "optic",
+      "source_annotation_revision": "male-cns-v1.0-minconf-0.5"
+    },
+    {
+      "dataset": "male-cns:v1.0",
+      "neuron_id": "male-cns:1730100002",
+      "cell_type": "full-dev-interneuron",
+      "region": "central",
+      "source_annotation_revision": "male-cns-v1.0-minconf-0.5"
+    },
+    {
+      "dataset": "male-cns:v1.0",
+      "neuron_id": "male-cns:1730100003",
+      "cell_type": "full-dev-readout",
+      "region": "motor",
+      "source_annotation_revision": "male-cns-v1.0-minconf-0.5"
+    },
+    {
+      "dataset": "male-cns:v1.0",
+      "neuron_id": "male-cns:1730100004",
+      "cell_type": "full-dev-readout",
+      "region": "motor",
+      "source_annotation_revision": "male-cns-v1.0-minconf-0.5"
+    }
+  ],
+  "edges": [
+    {"pre_id": "male-cns:1730100001", "post_id": "male-cns:1730100002", "synapse_count": 24},
+    {"pre_id": "male-cns:1730100001", "post_id": "male-cns:1730100003", "synapse_count": 6},
+    {"pre_id": "male-cns:1730100002", "post_id": "male-cns:1730100003", "synapse_count": 16},
+    {"pre_id": "male-cns:1730100002", "post_id": "male-cns:1730100004", "synapse_count": 12},
+    {"pre_id": "male-cns:1730100003", "post_id": "male-cns:1730100004", "synapse_count": 2}
+  ],
+  "review": [
+    {
+      "neuron_id": "male-cns:1730100001",
+      "decision": "include",
+      "modulatory_status": "no",
+      "fixed_sign": 1,
+      "role": "sensory",
+      "evidence": "full-graph dev fixture"
+    },
+    {
+      "neuron_id": "male-cns:1730100002",
+      "decision": "include",
+      "modulatory_status": "no",
+      "fixed_sign": 1,
+      "role": "interneuron",
+      "evidence": "full-graph dev fixture"
+    },
+    {
+      "neuron_id": "male-cns:1730100003",
+      "decision": "include",
+      "modulatory_status": "no",
+      "fixed_sign": 1,
+      "role": "readout",
+      "evidence": "full-graph dev fixture"
+    },
+    {
+      "neuron_id": "male-cns:1730100004",
+      "decision": "include",
+      "modulatory_status": "no",
+      "fixed_sign": 1,
+      "role": "readout",
+      "evidence": "full-graph dev fixture"
+    }
+  ],
+  "sensory_map": [
+    {
+      "feature_name": "ambient_drive",
+      "neuron_id": "male-cns:1730100001",
+      "fixed_gain": 1.0,
+      "evidence": "engineered map",
+      "mapping_kind": "engineered"
+    },
+    {
+      "feature_name": "turn_bias",
+      "neuron_id": "male-cns:1730100001",
+      "fixed_gain": 0.25,
+      "evidence": "engineered map",
+      "mapping_kind": "engineered"
+    }
+  ],
+  "motor_map": [
+    {
+      "neuron_id": "male-cns:1730100003",
+      "output_channel": "forward",
+      "fixed_gain": 95.0,
+      "evidence": "readout to forward",
+      "mapping_kind": "engineered"
+    },
+    {
+      "neuron_id": "male-cns:1730100004",
+      "output_channel": "right",
+      "fixed_gain": 55.0,
+      "evidence": "readout to right",
+      "mapping_kind": "engineered"
+    },
+    {
+      "neuron_id": "male-cns:1730100004",
+      "output_channel": "left",
+      "fixed_gain": 35.0,
+      "evidence": "readout to left",
+      "mapping_kind": "engineered"
+    }
+  ]
+}

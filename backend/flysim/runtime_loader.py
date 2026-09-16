@@ -9,14 +9,15 @@ from typing import Any
 from flysim.review import compile_reviewed_graph, load_policy
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+DERIVED_FULL_META = REPO_ROOT / "data" / "derived" / "malecns-full-meta.json"
 DERIVED_META = REPO_ROOT / "data" / "derived" / "malecns-subset-meta.json"
-MALECNS_SUBSET_FIXTURE = REPO_ROOT / "backend" / "fixtures" / "malecns-motor-circuit-subset.json"
+MALECNS_FULL_DEV_FIXTURE = REPO_ROOT / "backend" / "fixtures" / "malecns-full-dev.json"
 SYNTHETIC_FIXTURE = (
     REPO_ROOT / "backend" / "tests" / "fixtures" / "synthetic-tables.json"
 )
 
 ALLOWED_FIXTURE_KINDS = frozenset(
-    {"synthetic", "malecns-reviewed-subset", "malecns-derived"}
+    {"synthetic", "malecns-reviewed-subset", "malecns-derived", "malecns-full"}
 )
 
 
@@ -55,14 +56,43 @@ def _tables_from_derived_meta(meta_path: Path) -> tuple[dict[str, Any], str]:
     return tables, "malecns-derived"
 
 
+def _tables_from_full_meta(meta_path: Path) -> tuple[dict[str, Any], str]:
+    from flysim.malecns_full_build import tables_from_full_meta
+
+    return tables_from_full_meta(meta_path), "malecns-full"
+
+
+def _try_build_full_from_raw() -> tuple[dict[str, Any], str] | None:
+    from flysim.adapters.malecns import resolve_malecns_paths
+    from flysim.malecns_full_build import build_full_tables
+
+    try:
+        resolve_malecns_paths()
+    except FileNotFoundError:
+        return None
+    tables = build_full_tables()
+    return tables, "malecns-full"
+
+
 def resolve_runtime_tables(
     policy: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], str]:
-    """Pick tables for the live loop. Never silently label synthetic as MaleCNS."""
+    """Pick tables for the live loop. Default is full MaleCNS, not a motor subset."""
     policy = policy or load_policy()
     if policy.get("real_graph_enabled") is not True:
         tables = _load_tables(SYNTHETIC_FIXTURE)
         return tables, "authored-policy-off"
+
+    graph_mode = str(policy.get("graph_mode", "full")).lower()
+    if graph_mode == "full":
+        if DERIVED_FULL_META.is_file():
+            return _tables_from_full_meta(DERIVED_FULL_META)
+        built = _try_build_full_from_raw()
+        if built is not None:
+            return built
+        if MALECNS_FULL_DEV_FIXTURE.is_file():
+            tables = _load_tables(MALECNS_FULL_DEV_FIXTURE)
+            return tables, str(tables.get("fixture_kind", "malecns-full"))
 
     if DERIVED_META.is_file():
         try:
@@ -70,14 +100,10 @@ def resolve_runtime_tables(
         except FileNotFoundError:
             pass
 
-    if MALECNS_SUBSET_FIXTURE.is_file():
-        tables = _load_tables(MALECNS_SUBSET_FIXTURE)
-        kind = tables.get("fixture_kind", "malecns-reviewed-subset")
-        return tables, str(kind)
-
     raise RuntimeError(
-        "real_graph_enabled but no MaleCNS reviewed subset found "
-        f"(expected {MALECNS_SUBSET_FIXTURE} or {DERIVED_META})"
+        "real_graph_enabled but no full MaleCNS graph found. "
+        f"Run: python scripts/download_malecns.py && python scripts/build_malecns_full.py "
+        f"(expected {DERIVED_FULL_META} or raw feathers under data/raw/)"
     )
 
 
@@ -91,7 +117,8 @@ def load_compiled_runtime(policy: dict[str, Any] | None = None):
     report["graph_source"] = graph_source
     report["motion_driver"] = (
         "connectome-lif"
-        if graph_source in {"malecns-reviewed-subset", "malecns-derived"}
+        if graph_source
+        in {"malecns-reviewed-subset", "malecns-derived", "malecns-full"}
         else "synthetic-lif-ci-only"
         if graph_source == "synthetic"
         else "unavailable"
@@ -99,5 +126,6 @@ def load_compiled_runtime(policy: dict[str, Any] | None = None):
     report["connectome_mode"] = graph_source in {
         "malecns-reviewed-subset",
         "malecns-derived",
+        "malecns-full",
     }
     return compiled, tables, graph_source, report

@@ -279,7 +279,9 @@ def compile_reviewed_graph(tables: dict[str, Any], policy: dict[str, Any] | None
         "review_hash": _hash_payload(reviews),
         "fixture_kind": tables.get("fixture_kind", "synthetic"),
     }
-    allowed_kinds = frozenset({"synthetic", "malecns-reviewed-subset", "malecns-derived"})
+    allowed_kinds = frozenset(
+        {"synthetic", "malecns-reviewed-subset", "malecns-derived", "malecns-full"}
+    )
     if report["fixture_kind"] not in allowed_kinds:
         raise ValueError(f"unsupported fixture_kind for ingest report: {report['fixture_kind']!r}")
 
