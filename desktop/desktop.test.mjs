@@ -56,6 +56,13 @@ test("host lease pauses when stale and ignores dashboard close", () => {
   assert.equal(lease.tick().reason, "host_lease_stale");
 });
 
+test("host lease beat clears missing-before-first-beat latch", () => {
+  const lease = new HostLease({ staleAfterMs: 250 });
+  assert.equal(lease.tick().reason, "host_lease_missing");
+  lease.beat();
+  assert.equal(lease.tick().paused, false);
+});
+
 test("focus epoch increments on host change", () => {
   const focus = new FocusTracker();
   focus.setFocusedHost({
@@ -88,6 +95,7 @@ test("desktop session find fly works and exposes LIF controller", () => {
 test("tickPresentation moves pet when neural policy is on", () => {
   let t = 1_000_000;
   const session = createDesktopSession({ now: () => t });
+  session.status();
   session.lease.beat();
   const x0 = session.status().pose.x;
   for (let i = 0; i < 40; i += 1) {

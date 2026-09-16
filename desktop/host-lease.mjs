@@ -18,7 +18,11 @@ export class HostLease {
   /** Main-process heartbeat from the desktop host (not the renderer WebSocket). */
   beat() {
     this._lastBeatMs = this.now();
-    if (this._paused && this._reason === "host_lease_stale") {
+    if (
+      this._paused &&
+      (this._reason === "host_lease_stale" ||
+        this._reason === "host_lease_missing")
+    ) {
       this._paused = false;
       this._reason = null;
     }
