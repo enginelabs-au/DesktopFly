@@ -29,9 +29,9 @@ Neural / LIF **enabled**. Agent closeout finished everything that does not need 
 
 ## Cam-only remaining
 
-- [ ] Run Mac Electron pet GUI per runbook (click-through, host lease, tray Stop)
-- [ ] Build/run `native/DesktopContext` with AppKit; Accessibility when geometry enabled
-- [ ] Confirm Torch **MPS** probe on Cam’s Mac (`reports/mac-verification.json`)
+- [x] Run Mac Electron pet GUI per runbook (click-through, host lease, tray Stop) — verified 2026-09-16; reports/mac-verification.json
+- [x] Build/run `native/DesktopContext` with AppKit — `swift build`/`swift run` PASS; AX off until geometry profile enabled
+- [x] Confirm Torch **MPS** probe on Cam’s Mac (`reports/mac-verification.json`) — mps selected, probe_ok
 - [ ] Optional: Screen Recording only if screen-vision profile enabled later
 - [ ] Legal/license review of cobanov template (recorded, not lawyer-reviewed)
 - [ ] Owner merge of [DesktopFly#2](https://github.com/enginelabs-au/DesktopFly/pull/2)

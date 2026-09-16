@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-09-16T13:35:43.555458+00:00",
+  "git_sha": "81d0b4f7b3dbb449cfee19513ed29331d6f52ef6",
+  "branch": "cursor/phase-0-foundations-a5d1",
+  "macos": {
+    "product": "26.6.2",
+    "build": "25G83",
+    "machine": "arm64",
+    "chip": "Apple M2 Max"
+  },
+  "electron": {
+    "version": "34.5.8",
+    "launch": "desktop: npx electron .",
+    "health_window": "wired to src/telemetry/health.html",
+    "find_fly": "menu/tray + session.actions.findFly on start",
+    "click_through": true,
+    "host_lease_survives_health_close": true,
+    "running_now": true,
+    "pid_hint": "tmux session desktopfly-electron; Electron.app under desktop/node_modules",
+    "startup_log": "DesktopFly pet running \u2014 tray tooltip Fly; menu View \u2192 Health\u2026 / Find fly"
+  },
+  "swift_desktop_context": {
+    "build": "swift build PASS (arm64 Mach-O)",
+    "run_stderr": "DesktopContext ready protocol=1",
+    "appkit": "compiled with canImport(AppKit) on macOS",
+    "accessibility_enabled_in_config": false,
+    "screen_capture_enabled_in_config": false
+  },
+  "mps": {
+    "requested": "mps",
+    "selected": "mps",
+    "mps_built": true,
+    "mps_available": true,
+    "allow_cpu_fallback": false,
+    "probe_ok": true,
+    "detail": "edge operator probe passed",
+    "torch": "2.14.0",
+    "python": "3.12.9"
+  },
+  "malecns": {
+    "weights_present": true,
+    "weights_bytes": 1051241946,
+    "provenance": "provenance/malecns-v1.0.json",
+    "license": "CC-BY (Janelia MaleCNS download page)",
+    "hash_verified_local": true
+  },
+  "permissions": {
+    "accessibility_prompt_expected": false,
+    "screen_recording_prompt_expected": false,
+    "note": "desktop-pet.json keeps accessibility_read_enabled and screen_capture_enabled false"
+  },
+  "cam_only_remaining": [
+    "Legal/license review of cobanov template (recorded, not lawyer-reviewed)",
+    "Owner merge of DesktopFly#2",
+    "Optional Accessibility approval only if geometry profile is later enabled"
+  ],
+  "how_to_see": [
+    "Look for tray icon tooltip \"Fly\" (menu bar)",
+    "Menu: View \u2192 Health\u2026 (plain-language dashboard)",
+    "Menu/tray: Find fly",
+    "Pet is frameless transparent click-through overlay",
+    "Restart: cd /Users/camdouglas/DesktopFly/desktop && npx electron ."
+  ],
+  "status": "READY_FOR_CAM_REVIEW"
+}

@@ -1,9 +1,9 @@
 {
   "requested": "mps",
-  "selected": "none",
-  "mps_built": false,
-  "mps_available": false,
+  "selected": "mps",
+  "mps_built": true,
+  "mps_available": true,
   "allow_cpu_fallback": false,
-  "probe_ok": false,
-  "detail": "MPS unavailable: choose an explicit verified CPU profile"
+  "probe_ok": true,
+  "detail": "edge operator probe passed"
 }

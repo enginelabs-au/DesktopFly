@@ -41,3 +41,6 @@ data/derived/*
 !data/derived/.gitkeep
 *.feather
 *.safetensors
+
+native/DesktopContext/.build/
+desktop/node_modules/

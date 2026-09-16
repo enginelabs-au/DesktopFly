@@ -184,7 +184,28 @@ export function createDesktopSession({
   };
 }
 
-export async function launchElectronApp() {
+function dashboardWindowOptions(title) {
+  return {
+    width: 720,
+    height: 640,
+    show: true,
+    title,
+    frame: true,
+    transparent: false,
+    focusable: true,
+    resizable: true,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      // Health/workbench are ordinary documents; pet preload is not attached.
+      backgroundThrottling: true,
+      devTools: false,
+    },
+  };
+}
+
+export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   const require = createRequire(import.meta.url);
   let electron;
   try {
@@ -200,6 +221,32 @@ export async function launchElectronApp() {
   const { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage } = electron;
   const session = createDesktopSession();
   const preloadPath = join(__dirname, "preload.cjs");
+  /** @type {import('electron').BrowserWindow | null} */
+  let healthWin = null;
+
+  function openHealthWindow() {
+    const meta = session.actions.openHealth();
+    if (healthWin && !healthWin.isDestroyed()) {
+      healthWin.focus();
+      return meta;
+    }
+    healthWin = new BrowserWindow(dashboardWindowOptions("DesktopFly Health"));
+    healthWin.on("closed", () => {
+      healthWin = null;
+      // Closing Health must not revoke the host lease (handover §3.3).
+      session.lease.onDashboardClosed?.();
+    });
+    healthWin.loadFile(meta.path);
+    return meta;
+  }
+
+  const guiActions = {
+    ...session.actions,
+    openHealth: openHealthWindow,
+    quit() {
+      app.quit();
+    },
+  };
 
   await app.whenReady();
   const win = new BrowserWindow(
@@ -209,17 +256,26 @@ export async function launchElectronApp() {
   await win.loadFile(join(__dirname, "renderer", "pet.html"));
   showPetInactive(win);
 
-  Menu.setApplicationMenu(Menu.buildFromTemplate(session.menuTemplate()));
+  Menu.setApplicationMenu(
+    Menu.buildFromTemplate(buildApplicationMenuTemplate(guiActions)),
+  );
   const icon = nativeImage.createEmpty();
   const tray = new Tray(icon);
   tray.setToolTip("Fly");
-  tray.setContextMenu(Menu.buildFromTemplate(session.trayTemplate()));
+  tray.setContextMenu(
+    Menu.buildFromTemplate(
+      buildTrayMenuTemplate(guiActions, {
+        exploreHide: session.status().mode === "explore_and_hide",
+        canResume: session.status().paused,
+      }),
+    ),
+  );
 
   ipcMain.handle(IPC.GET_STATUS, () => session.status());
   ipcMain.handle(IPC.FIND_FLY, () => session.actions.findFly());
   ipcMain.handle(IPC.FIND_CURSOR, () => session.actions.findCursor());
   ipcMain.handle(IPC.SET_MODE, (_e, mode) => session.setMode(mode));
-  ipcMain.handle(IPC.OPEN_HEALTH, () => session.actions.openHealth());
+  ipcMain.handle(IPC.OPEN_HEALTH, () => openHealthWindow());
   ipcMain.handle(IPC.OPEN_WORKBENCH, () => session.actions.openWorkbench());
   ipcMain.on(IPC.HOST_LEASE_BEAT, () => session.lease.beat());
 
@@ -231,13 +287,42 @@ export async function launchElectronApp() {
   }, 50);
 
   app.on("before-quit", () => clearInterval(timer));
-  return { app, win, tray, session, root };
+
+  if (autoQuitMs > 0) {
+    setTimeout(() => {
+      try {
+        openHealthWindow();
+        session.actions.findFly();
+      } finally {
+        setTimeout(() => app.quit(), 750);
+      }
+    }, Math.min(autoQuitMs, 2500));
+  }
+
+  return { app, win, tray, session, root, openHealthWindow };
 }
 
-const isDirect = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
-if (isDirect) {
-  launchElectronApp().catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+// Electron loads package.json "main" with argv[1] === "." — do not require argv path match.
+// Node unit tests import this module without process.versions.electron.
+const isElectronMain =
+  Boolean(process.versions?.electron) && process.type === "browser";
+const isNodeDirect =
+  !process.versions?.electron &&
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === process.argv[1];
+if (isElectronMain || isNodeDirect) {
+  const autoQuitMs = Number(process.env.DESKTOPFLY_AUTO_QUIT_MS || 0);
+  const openHealthOnStart = process.env.DESKTOPFLY_OPEN_HEALTH !== "0";
+  launchElectronApp({ autoQuitMs })
+    .then(({ openHealthWindow, session }) => {
+      session.actions.findFly();
+      if (openHealthOnStart) openHealthWindow();
+      console.error(
+        "DesktopFly pet running — tray tooltip Fly; menu View → Health… / Find fly",
+      );
+    })
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
 }
