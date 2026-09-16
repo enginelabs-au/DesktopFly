@@ -50,7 +50,7 @@ const requiredFiles = [
   ".cursor/instructions/STRATEGY.md",
   ".cursor/instructions/SUBAGENTS.md",
   ".cursor/instructions/ROLES.md",
-  ".cursor/instructions/LAUCH.md",
+  ".cursor/instructions/LAUNCH.md",
   ".cursor/skills/launch-pipeline/SKILL.md",
   ".cursor/skills/git-safety/SKILL.md",
   ".cursor/skills/git-safety/scripts/git-safety.mjs",
@@ -224,7 +224,7 @@ for (const [relativePath, terms] of [
   ["AGENTS.md", [".cursor/AGENTS.md", ".cursor/instructions/ROLES.md", "/launch-pipeline"]],
   [
     ".cursor/INSTRUCTIONS.md",
-    ["/instructions/ROLES.md", "/instructions/LAUCH.md", "docs/workstreams/"],
+    ["/instructions/ROLES.md", "/instructions/LAUNCH.md", "docs/workstreams/"],
   ],
   [
     ".cursor/instructions/SUBAGENTS.md",

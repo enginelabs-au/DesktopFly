@@ -22,3 +22,9 @@
 - Broken `policy.mjs` import blocked fail-closed hooks; owner repaired import to `/skills/git-safety/scripts/git-safety.mjs`.
 - Validation: 16/16 tests in both trees; DesktopFly bootstrap complete; preflight `READY`; later 90 control-plane files classified.
 - Owner requested push of the git-safety controls.
+
+## Rename launch instruction filename
+
+- Owner superseded the old keep-the-misspelled-filename rule.
+- `git mv` the launch-pipeline instruction file to `.cursor/instructions/LAUNCH.md` and updated every path/string that pointed at the old name.
+- Validation: `node .cursor/skills/launch-pipeline/scripts/preflight.mjs` and launch/config validators after the rename.
