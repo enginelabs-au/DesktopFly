@@ -50,3 +50,12 @@
 - `src/pet/authored-motion.mjs` + node tests; `reports/authored-motion.json`.
 - Validation: pytest 26 passed; node 3 passed; foundations check passed. Neural sim still off (Q-012).
 - Next: phase-3 Electron/Swift plan only when starting that phase.
+
+## Phase 3 + Cam neural enable
+
+- Cam: sole DesktopFly owner; enable neural/LIF; phase-transition status pings.
+- `real_graph_enabled: true`; decision `docs/decisions/2026-09-16-neural-sim-enabled-cam-override.md`.
+- Electron shell modules + Swift DesktopContext scaffold; `reports/desktop-shell.json`.
+- LIF starts on synthetic graph; MaleCNS feather missing = technical blocker only.
+- Validation: pytest 28; node 10; foundations PASS.
+- Phase 4 plan written (`phase_4_supervisor_health_plan.md`), not implemented.

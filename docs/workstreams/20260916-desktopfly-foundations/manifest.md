@@ -58,8 +58,8 @@ Non-goals: LIF enable, template vendor, Mac certification, public launch.
 | DF-P02 | Transparent click-through | handover | UX | UX charter | specified |
 | DF-P03 | Follow window, no focus steal | handover | UX / SWE | later phase 3 | deferred |
 | DF-P04 | MaleCNS v1.0 default | decision | SWE | decision file | accepted |
-| DF-P05 | Neural sim disabled | Q-012 / Cam | PM / SEC | `real_graph_enabled: false` | implementing |
-| DF-P06 | Authored animation live path | blueprint | SWE | phase 2 controller + report | verified |
+| DF-P05 | Neural sim enabled (Cam override) | Cam 2026-09-16 | PM / SEC | `real_graph_enabled: true` | verified |
+| DF-P06 | Authored animation available | blueprint | SWE | phase 2 controller + report | verified |
 | DF-P07 | No affect/needs/learning | handover rule | SEC | fly-simulation.mdc | implementing |
 | DF-P08 | Supervisor latch; no neural tool auth | handover | SEC | rule + architecture | specified |
 | DF-P09 | 2048 / 100000 caps | handover policy | SWE | policy.json | implementing |

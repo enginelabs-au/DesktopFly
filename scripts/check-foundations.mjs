@@ -29,7 +29,7 @@ for (const rel of [
   "provenance/template.json",
   "docs/blueprints/2026-09-16_desktopfly.md",
   "docs/plans/phase_0_foundations_plan.md",
-  "docs/decisions/2026-09-16-neural-sim-disabled-q012.md",
+  "docs/decisions/2026-09-16-neural-sim-enabled-cam-override.md",
   "backend/flysim/__init__.py",
   "backend/flysim/ingest.py",
   "backend/flysim/review.py",
@@ -40,9 +40,22 @@ for (const rel of [
   "backend/tests/fixtures/synthetic-tables.json",
   "reports/ingestion.json",
   "reports/authored-motion.json",
+  "reports/desktop-shell.json",
   "docs/plans/phase_2_authored_motion_plan.md",
   "docs/plans/phase_3_electron_swift_shell_plan.md",
+  "docs/plans/phase_4_supervisor_health_plan.md",
   "src/pet/authored-motion.mjs",
+  "desktop/main.mjs",
+  "desktop/preload.cjs",
+  "desktop/pet-window.mjs",
+  "desktop/host-lease.mjs",
+  "desktop/menus.mjs",
+  "desktop/focus.mjs",
+  "desktop/policy-gate.mjs",
+  "desktop/renderer/pet.html",
+  "native/DesktopContext/Package.swift",
+  "native/DesktopContext/ipc-protocol.json",
+  "native/DesktopContext/Sources/DesktopContext/DesktopContextMain.swift",
   "backend/README.md",
   "src/README.md",
   "desktop/README.md",
@@ -57,8 +70,8 @@ for (const rel of [
 
 const policy = readJson("config/policy.json");
 if (policy) {
-  if (policy.real_graph_enabled !== false) {
-    errors.push("config/policy.json real_graph_enabled must be false while Q-012 is a release requirement");
+  if (policy.real_graph_enabled !== true) {
+    errors.push("config/policy.json real_graph_enabled must be true (Cam neural enable override)");
   }
   if (policy.dataset !== "male-cns:v1.0") errors.push("dataset must be male-cns:v1.0");
   if (policy.screen_capture_enabled !== false) errors.push("screen_capture_enabled must be false");
@@ -78,8 +91,9 @@ if (capabilities && capabilities.neural_output_may_invoke_connectors !== false) 
 const pet = readJson("config/desktop-pet.json");
 if (pet) {
   if (pet.steal_focus !== false) errors.push("desktop-pet steal_focus must be false");
-  if (pet.authored_animation_when_graph_disabled !== true) {
-    errors.push("authored animation must be the live path when the graph is disabled");
+  if (pet.click_through !== true) errors.push("desktop-pet click_through must be true");
+  if (pet.find_fly_available_without_neural_worker !== true) {
+    errors.push("Find fly must remain available without a neural worker");
   }
 }
 
@@ -89,6 +103,13 @@ if (provenance) {
     errors.push("provenance/template.json git_sha must be a 40-char commit");
   }
   if (provenance.vendored !== false) errors.push("template must not be marked vendored in phase 0");
+}
+
+const decision = existsSync(join(root, "docs/decisions/2026-09-16-neural-sim-enabled-cam-override.md"))
+  ? readFileSync(join(root, "docs/decisions/2026-09-16-neural-sim-enabled-cam-override.md"), "utf8")
+  : "";
+if (decision && !decision.includes("real_graph_enabled: true")) {
+  errors.push("neural enable decision must record real_graph_enabled: true");
 }
 
 const rule = existsSync(join(root, ".cursor/rules/fly-simulation.mdc"))

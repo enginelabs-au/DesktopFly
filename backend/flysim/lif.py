@@ -1,7 +1,7 @@
-"""Inert LIF surface while Q-012 keeps the real graph disabled.
+"""Frozen LIF kernel and worker start gate.
 
-The mathematical kernel may exist for unit checks, but the worker must not start
-and must not claim connectome control while ``real_graph_enabled`` is false.
+Cam enabled neural simulation (2026-09-16). Start is refused only when
+``real_graph_enabled`` is false or a hard technical prerequisite fails.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from flysim.ingest import StaticGraph
 
 
 class LifStartRefused(RuntimeError):
-    """Raised when a caller attempts to start LIF while the graph is disabled."""
+    """Raised when LIF cannot start for config or technical reasons."""
 
 
 def load_policy(path: Path | None = None) -> dict[str, Any]:
@@ -27,20 +27,22 @@ def load_policy(path: Path | None = None) -> dict[str, Any]:
     return json.loads(policy_path.read_text(encoding="utf-8"))
 
 
-def refuse_lif_start(policy: dict[str, Any] | None = None, *, reason: str = "worker") -> None:
+def assert_lif_may_start(policy: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Allow start when the graph flag is true. No Q-012 policy lock."""
     policy = policy if policy is not None else load_policy()
-    if policy.get("real_graph_enabled") is True:
+    if policy.get("real_graph_enabled") is not True:
         raise LifStartRefused(
-            f"{reason} start is gated until Q-012 is withdrawn and real_graph_enabled is reviewed"
+            "LIF worker cannot start while real_graph_enabled is false "
+            "(set true in config/policy.json)"
         )
-    raise LifStartRefused(
-        f"{reason} cannot start while real_graph_enabled is false (Q-012); use authored animation"
-    )
+    return policy
 
 
-def assert_lif_may_not_run(policy: dict[str, Any] | None = None) -> None:
-    """Idempotent gate used by supervisors and tests."""
-    refuse_lif_start(policy, reason="LIF")
+# Backward-compatible name used by older call sites; now means "assert may start".
+def refuse_lif_start(policy: dict[str, Any] | None = None, *, reason: str = "worker") -> None:
+    """Deprecated alias: raises only when start is not allowed."""
+    del reason
+    assert_lif_may_start(policy)
 
 
 @dataclass(frozen=True)
@@ -75,16 +77,16 @@ class NeuralState:
 
 
 class FrozenLIF:
-    """Numpy reference LIF for offline unit checks only.
+    """Numpy LIF reference suitable for synthetic fixtures and CPU CI.
 
-    Construction and ``candidate`` are available for tests. Production start
-    paths must call ``refuse_lif_start`` first and never publish these states
-    as live connectome control while the graph flag is false.
+    Torch/MPS acceleration remains a later Mac gate. This kernel is a live
+    mathematical controller when started under an enabled policy.
     """
 
     def __init__(self, graph: StaticGraph, policy: LIFPolicy | None = None):
         self.p = policy or LIFPolicy()
         self.n = len(graph.ids)
+        self.ids = graph.ids
         self._src = np.asarray(graph.src, dtype=np.int64).copy()
         self._dst = np.asarray(graph.dst, dtype=np.int64).copy()
         self._w = np.asarray(graph.weights, dtype=np.float32).copy()
@@ -134,12 +136,49 @@ class FrozenLIF:
         rate_ema = np.where(self._allowed, rate_ema, 0.0)
         diag = {
             "spike_count": int(spikes.sum()),
-            "inert_reference": True,
-            "not_live_controller": True,
+            "live_controller": True,
         }
         return NeuralState(v=v, refractory=refractory, spikes=spikes, rate_ema=rate_ema), diag
 
 
-def start_lif_worker(policy: dict[str, Any] | None = None) -> None:
-    """Production entry: always refuse while the graph flag is false."""
-    refuse_lif_start(policy, reason="LIF worker")
+@dataclass
+class LifWorkerHandle:
+    policy: dict[str, Any]
+    lif: FrozenLIF
+    state: NeuralState
+    graph_source: str
+    running: bool = True
+
+    def step(self, external: np.ndarray | None = None) -> tuple[NeuralState, dict[str, Any]]:
+        if not self.running:
+            raise RuntimeError("LIF worker is stopped")
+        if external is None:
+            external = np.zeros(self.lif.n, dtype=np.float32)
+        self.state, diag = self.lif.candidate(self.state, external)
+        return self.state, diag
+
+    def stop(self) -> None:
+        self.running = False
+
+
+def start_lif_worker(
+    policy: dict[str, Any] | None = None,
+    *,
+    graph: StaticGraph | None = None,
+    graph_source: str = "synthetic-fixture",
+) -> LifWorkerHandle:
+    """Start an in-process LIF worker when the policy flag is true."""
+    policy = assert_lif_may_start(policy)
+    if graph is None:
+        raise LifStartRefused(
+            "LIF worker technical blocker: no StaticGraph provided "
+            "(MaleCNS weights not loaded; pass synthetic fixture for CI)"
+        )
+    lif = FrozenLIF(graph)
+    return LifWorkerHandle(
+        policy=policy,
+        lif=lif,
+        state=lif.initial_state(),
+        graph_source=graph_source,
+        running=True,
+    )

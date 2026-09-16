@@ -32,22 +32,39 @@ def load_policy(path: Path | None = None) -> dict[str, Any]:
 
 
 def refuse_real_graph_load(kind: str, policy: dict[str, Any] | None = None) -> None:
+    """Legacy helper: prefer ``require_weights_file`` for technical blockers."""
     policy = policy or load_policy()
-    if policy.get("real_graph_enabled") is True:
-        raise RuntimeError(f"{kind} load is gated until Q-012 is withdrawn")
+    if policy.get("real_graph_enabled") is not True:
+        raise RuntimeError(
+            f"{kind} is not loaded while real_graph_enabled is false; enable the flag or use a synthetic fixture"
+        )
     raise RuntimeError(
-        f"{kind} is not loaded while real_graph_enabled is false; use the synthetic fixture"
+        f"{kind} technical blocker: file not provided (download MaleCNS weights under data/raw/)"
     )
 
 
-def load_malecns_weights(path: Path, policy: dict[str, Any] | None = None) -> None:
-    del path
-    refuse_real_graph_load("MaleCNS weights", policy)
+def require_weights_file(path: Path, kind: str = "MaleCNS weights") -> Path:
+    path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"{kind} technical blocker: missing file at {path} "
+            "(real_graph_enabled is true; place the feather under data/raw/ or use synthetic LIF)"
+        )
+    return path
 
 
-def load_flywire_adapter(path: Path, policy: dict[str, Any] | None = None) -> None:
-    del path
-    refuse_real_graph_load("FlyWire adapter", policy)
+def load_malecns_weights(path: Path, policy: dict[str, Any] | None = None) -> Path:
+    policy = policy or load_policy()
+    if policy.get("real_graph_enabled") is not True:
+        raise RuntimeError("MaleCNS weights require real_graph_enabled true")
+    return require_weights_file(path, "MaleCNS weights")
+
+
+def load_flywire_adapter(path: Path, policy: dict[str, Any] | None = None) -> Path:
+    policy = policy or load_policy()
+    if policy.get("real_graph_enabled") is not True:
+        raise RuntimeError("FlyWire adapter require real_graph_enabled true")
+    return require_weights_file(path, "FlyWire adapter")
 
 
 def assert_namespace(neuron_id: str, dataset: str) -> None:
@@ -95,8 +112,8 @@ class CompiledIngest:
 
 def compile_reviewed_graph(tables: dict[str, Any], policy: dict[str, Any] | None = None) -> CompiledIngest:
     policy = policy or load_policy()
-    if policy.get("real_graph_enabled") is not False:
-        raise ValueError("compile_reviewed_graph requires real_graph_enabled false in this phase")
+    # Synthetic and reviewed tables may compile whether or not the live flag is true.
+    _ = policy.get("real_graph_enabled")
 
     expected_dataset = tables.get("dataset") or policy["dataset"]
     expected_revision = tables.get("source_annotation_revision")
@@ -238,7 +255,8 @@ def compile_reviewed_graph(tables: dict[str, Any], policy: dict[str, Any] | None
     report = {
         "dataset": expected_dataset,
         "source_annotation_revision": expected_revision,
-        "real_graph_enabled": False,
+        "real_graph_enabled": bool(policy.get("real_graph_enabled")),
+        "fixture_kind": tables.get("fixture_kind") or "reviewed",
         "input_neuron_count": len(neurons),
         "input_edge_count": len(edges),
         "output_neuron_count": len(ids),

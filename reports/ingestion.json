@@ -1,7 +1,8 @@
 {
   "dataset": "synthetic:phase1",
   "source_annotation_revision": "synthetic-review-1",
-  "real_graph_enabled": false,
+  "real_graph_enabled": true,
+  "fixture_kind": "synthetic",
   "input_neuron_count": 6,
   "input_edge_count": 4,
   "output_neuron_count": 4,
@@ -31,6 +32,5 @@
     "weight_max": 1.100000023841858
   },
   "source_hash": "bb8f7da509f2af593a4164bf03bcaabc4098a2095169ed4a495b933475369c59",
-  "review_hash": "502b9494dc95c2633ec9fd72cc769dac6bd7989185f3dcb6b5ca67129748a4a4",
-  "fixture_kind": "synthetic"
+  "review_hash": "502b9494dc95c2633ec9fd72cc769dac6bd7989185f3dcb6b5ca67129748a4a4"
 }

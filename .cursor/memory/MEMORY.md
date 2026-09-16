@@ -3,7 +3,9 @@
 ## Durable directives
 
 - DesktopFly default dataset is MaleCNS v1.0. FlyWire v783 is a separate adapter.
-- Neural / LIF simulation stays disabled while Q-012 is a release requirement. Live path: anatomy + authored animation.
+- Neural / LIF simulation is **enabled** (Cam override 2026-09-16 of the prior Q-012 keep-off gate). Refuse start only for hard technical blockers (missing weights, crash). Decision: `docs/decisions/2026-09-16-neural-sim-enabled-cam-override.md`.
+- This agent (`bc-a5af2fcb`) is the sole DesktopFly worker; ignore archived DesktopFly chats.
+- Before leaving planning→implementation and when a phase finishes, report a short status ping to the parent.
 - Desktop shell is Electron + Swift helper, not Papership Tauri.
 - Product spec: `docs/handover/fruit-fly-cursor-handover.md`. Blueprint: `docs/blueprints/2026-09-16_desktopfly.md`.
 - Execute agent-capable work directly; do not delegate routine implementation or investigation to the user.

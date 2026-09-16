@@ -23,9 +23,9 @@ def _tables():
     return json.loads(TABLES.read_text())
 
 
-def test_policy_keeps_real_graph_disabled():
+def test_policy_enables_real_graph():
     policy = json.loads((REPO / "config" / "policy.json").read_text())
-    assert policy["real_graph_enabled"] is False
+    assert policy["real_graph_enabled"] is True
 
 
 def test_synthetic_ids_are_not_connectome_ids():
@@ -153,7 +153,7 @@ def test_compile_synthetic_tables_and_report(tmp_path):
     assert compiled.report["exclusion_counts"]["modulatory"] == 1
     path = write_ingestion_report(compiled, tmp_path / "ingestion.json")
     report = json.loads(path.read_text())
-    assert report["real_graph_enabled"] is False
+    assert report["real_graph_enabled"] is True
     assert report["fixture_kind"] == "synthetic"
     assert "synthetic:9007199254740993" not in report["selected_ids"]
     assert report["selected_ids"] == list(compiled.selected_ids)
@@ -182,11 +182,11 @@ def test_missing_review_excludes_without_inventing_ids():
     assert compiled.exclusion_counts["missing_review"] == 1
 
 
-def test_refuses_real_connectome_loads():
-    with pytest.raises(RuntimeError, match="real_graph_enabled is false"):
-        load_malecns_weights(Path("/tmp/missing.feather"))
-    with pytest.raises(RuntimeError, match="real_graph_enabled is false"):
-        load_flywire_adapter(Path("/tmp/missing.parquet"))
+def test_missing_real_connectome_files_are_technical_blockers():
+    with pytest.raises(FileNotFoundError, match="missing file"):
+        load_malecns_weights(Path("/tmp/missing-male-cns.feather"))
+    with pytest.raises(FileNotFoundError, match="missing file"):
+        load_flywire_adapter(Path("/tmp/missing-flywire.parquet"))
 
 
 def test_refuses_mixed_identifier_namespaces():

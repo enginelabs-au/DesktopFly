@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "dataset": "male-cns:v1.0",
-  "real_graph_enabled": false,
+  "real_graph_enabled": true,
   "require_reviewed_subset": true,
   "max_neurons_initial": 2048,
   "max_edges_initial": 100000,

@@ -2,20 +2,21 @@
 
 ## Current Objective
 
-- Continue DesktopFly (P-011) on [DesktopFly#2](https://github.com/enginelabs-au/DesktopFly/pull/2) with neural simulation disabled while Q-012 is a release requirement.
+- Own DesktopFly (P-011) on [DesktopFly#2](https://github.com/enginelabs-au/DesktopFly/pull/2). Neural / LIF **enabled** (Cam override). Continue launch pipeline.
 
 ## Current Status
 
-- Phase 0–2 complete on [DesktopFly#2](https://github.com/enginelabs-au/DesktopFly/pull/2). Phase 3 Electron/Swift plan written (not implemented). LIF cannot start; `real_graph_enabled: false`.
+- Phase 0–3 complete on branch `cursor/phase-0-foundations-a5d1`. Phase 4 supervisor/health plan written (not implemented).
 
 ## Project Phase
 
-- Phase 2 authored motion — complete. Phase 3 plan ready at `docs/plans/phase_3_electron_swift_shell_plan.md`.
+- Phase 3 Electron/Swift shell — complete.
+- Next: `docs/plans/phase_4_supervisor_health_plan.md` (plan only until implementing).
 
 ## Active Plan
 
-- Completed: `docs/plans/phase_2_authored_motion_plan.md`
-- Planned (do not implement until executing): `docs/plans/phase_3_electron_swift_shell_plan.md`
+- Completed: `docs/plans/phase_3_electron_swift_shell_plan.md`
+- Planned: `docs/plans/phase_4_supervisor_health_plan.md`
 
 ## Active Workstream
 
@@ -23,76 +24,66 @@
 
 ## Active Role and Gate
 
-- Continuation owner `bc-a5af2fcb` (prior `bc-f11a4081` unreachable).
-- Last integrated validation: pytest 26 passed; node pet tests 3 passed; foundations check PASS.
-
-## Predecessor Handoff
-
-- Previous owner `bc-f11a4081` left Phase 1 at `cb556da`. This owner continues authored animation.
-
-## Pending Remediation
-
-- None recorded.
+- Sole DesktopFly owner: `bc-a5af2fcb` (ignore archived chats).
+- Last validation: pytest 28; node 10; foundations PASS.
 
 ## Owner Decision
 
-- Git writes use `Cursor Agent <cursoragent@noreply.github.com>`.
-- Neural simulation stays disabled while Q-012 is a release requirement.
-- MaleCNS v1.0 default. Electron + Swift shell.
+- Git: `Cursor Agent <cursoragent@noreply.github.com>`.
+- **Neural enabled** — Cam overruled Q-012 keep-off gate (`docs/decisions/2026-09-16-neural-sim-enabled-cam-override.md`).
+- MaleCNS v1.0; Electron + Swift.
+- Phase-transition pings required before implement / after complete.
 
 ## Active Instructions
 
-- `/instructions/LAUNCH.md`
 - `/instructions/PROJECT_PLANNING.md`
-- `/instructions/ROLES.md`
+- `/instructions/LAUNCH.md`
 
 ## Active Items
 
-- After PR update: generate phase-3 Electron/Swift plan only.
-- Do not enable `real_graph_enabled`.
-- Do not start LIF worker.
+- Implement phase 4 when continuing.
+- MaleCNS feather download is a **technical** blocker for full connectome, not a policy lock — synthetic LIF OK in CI.
+- Do not wait on archived DesktopFly agents.
 
 ## Files in Active Use
 
-- `docs/plans/phase_2_authored_motion_plan.md`
-- `backend/flysim/clock.py`
-- `backend/flysim/world.py`
-- `backend/flysim/authored.py`
+- `config/policy.json` (`real_graph_enabled: true`)
+- `desktop/**`
+- `native/DesktopContext/**`
 - `backend/flysim/lif.py`
-- `src/pet/authored-motion.mjs`
-- `config/desktop-pet.json`
-- `config/policy.json`
-- `reports/authored-motion.json`
-- `scripts/check-foundations.mjs`
+- `reports/desktop-shell.json`
+- `docs/plans/phase_3_electron_swift_shell_plan.md`
+- `docs/plans/phase_4_supervisor_health_plan.md`
 
 ## Open Blockers
 
-- None for authored path. Q-012 blocks neural *enable*, not authored-animation or Electron shell work.
-- Flag Cam only if blocked (none this turn).
+- Technical: MaleCNS weights file not present under `data/raw/`.
+- Technical: Electron GUI / AppKit not executable on this Linux host (scaffold + unit tests only).
+- No Cam policy blocker.
 
 ## Attempts Performed
 
-- Checked out `cursor/phase-0-foundations-a5d1` @ `cb556da`.
-- Marked phase 1 complete; wrote and implemented phase 2 authored motion + inert LIF.
-- Validated on Linux (no Mac overlay claim).
+- Applied Cam neural enable; removed Q-012 refuse-start lock.
+- Implemented Electron shell modules + Swift scaffold + tests.
+- Regenerated reports; foundations check updated for enabled flag.
 
 ## Decisions and Assumptions
 
-- Authored motion is the live controller; LIF module is offline reference + start refusal only.
-- Torch/MPS deferred until neural enable is authorized.
-- Linux CI does not certify Electron/Swift/MPS.
+- Synthetic graph is acceptable for CI LIF until weights land.
+- Authored animation remains Find-fly / presentation fallback.
+- Neural output still cannot invoke connectors.
 
 ## Current Working State
 
 - Branch `cursor/phase-0-foundations-a5d1`.
-- Policy `real_graph_enabled: false`.
-- Reports: `reports/ingestion.json`, `reports/authored-motion.json`.
+- Policy `real_graph_enabled: true`.
 
 ## Next Actions
 
-- Push phase-2 (+ phase-3 plan) to PR #2.
-- Implement phase 3 on Mac-capable follow-up; keep neural sim off.
+- Push phase-3 + neural-enable commit to PR #2.
+- Status ping: phase 3 complete → phase 4 plan ready.
+- On next turn: implement phase 4 after a planning→implementing ping.
 
 ## Last Updated
 
-- 2026-09-16 — phase 2 complete; phase 3 plan authored (unimplemented).
+- 2026-09-16 — phase 3 complete; neural enabled per Cam.

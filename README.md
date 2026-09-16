@@ -2,7 +2,7 @@
 
 Connectome-informed macOS desktop pet: a frameless, transparent, click-through fly that follows the selected window. The workbench and health dashboard open only on request.
 
-While Q-012 (absolute proof of zero possible suffering) remains a release requirement, the **neural simulation stays disabled**. The live path is anatomy viewing plus an authored animation controller.
+**Neural / LIF simulation is enabled** (Cam override 2026-09-16). Authored animation remains for Find fly / presentation fallback. MaleCNS weights under `data/raw/` are still a download prerequisite for the full connectome; CI uses the synthetic graph.
 
 Default dataset: **MaleCNS v1.0**. Shell: **Electron + Swift helper**, not Papership Tauri.
 
@@ -10,9 +10,8 @@ Default dataset: **MaleCNS v1.0**. Shell: **Electron + Swift helper**, not Paper
 
 - Product spec: [`docs/handover/fruit-fly-cursor-handover.md`](docs/handover/fruit-fly-cursor-handover.md)
 - Blueprint: [`docs/blueprints/2026-09-16_desktopfly.md`](docs/blueprints/2026-09-16_desktopfly.md)
-- Phase 0: [`docs/plans/phase_0_foundations_plan.md`](docs/plans/phase_0_foundations_plan.md)
-- Phase 1: [`docs/plans/phase_1_safe_ingest_plan.md`](docs/plans/phase_1_safe_ingest_plan.md)
-- Phase 2: [`docs/plans/phase_2_authored_motion_plan.md`](docs/plans/phase_2_authored_motion_plan.md)
+- Phase 3: [`docs/plans/phase_3_electron_swift_shell_plan.md`](docs/plans/phase_3_electron_swift_shell_plan.md)
+- Phase 4 plan: [`docs/plans/phase_4_supervisor_health_plan.md`](docs/plans/phase_4_supervisor_health_plan.md)
 - Agent entry: [`AGENTS.md`](AGENTS.md)
 - Lifecycle: `/launch-pipeline`
 
@@ -23,5 +22,5 @@ node .cursor/skills/launch-pipeline/scripts/preflight.mjs
 bash .cursor/scripts/bootstrap.sh
 node scripts/check-foundations.mjs
 PYTHONPATH=backend python3 -m pytest -q backend/tests
-node --test src/pet/authored-motion.test.mjs
+node --test src/pet/authored-motion.test.mjs desktop/desktop.test.mjs
 ```

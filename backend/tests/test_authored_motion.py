@@ -95,4 +95,4 @@ def test_desktop_pet_config_enables_authored_path():
     assert data["find_fly_available_without_neural_worker"] is True
     assert data["cursor_yield_radius_points"] == 40
     policy = json.loads((ROOT / "config" / "policy.json").read_text(encoding="utf-8"))
-    assert policy["real_graph_enabled"] is False
+    assert policy["real_graph_enabled"] is True

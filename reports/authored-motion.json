@@ -1,9 +1,10 @@
 {
   "schema_version": 1,
-  "controller": "authored-animation",
-  "real_graph_enabled": false,
-  "neural_worker_started": false,
-  "lif_start_refused": true,
+  "controller": "authored-animation+lif",
+  "real_graph_enabled": true,
+  "neural_worker_started": true,
+  "lif_start_refused": false,
+  "lif_error": null,
   "snapshot": {
     "sim_time_s": 1.4500000000000006,
     "mode": "follow_my_window",
@@ -23,5 +24,5 @@
     "controller": "authored-animation",
     "neural_worker": "stopped"
   },
-  "notes": "Authored presentation path only. LIF remains inert while Q-012 is open. Not connectome-driven motion."
+  "notes": "Cam enabled neural sim. Authored motion remains for presentation/Find fly. LIF starts on synthetic graph in CI; MaleCNS feather download is still pending."
 }
