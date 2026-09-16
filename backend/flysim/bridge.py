@@ -1,18 +1,20 @@
-"""Loopback WebSocket bridge scaffold.
+"""Loopback WebSocket bridge.
 
 Binds only to 127.0.0.1. Auth token is never logged. Neural frames do not
-authorize connectors. Full asyncio server lands with Mac integration; this
-module provides the validated message envelope and bind helpers for CI.
+authorize connectors.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import secrets
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
-ALLOWED_CLIENT_TYPES = frozenset({"host_lease", "stop", "pause", "resume", "sensory", "health_subscribe"})
+ALLOWED_CLIENT_TYPES = frozenset(
+    {"host_lease", "stop", "pause", "resume", "sensory", "health_subscribe"}
+)
 
 
 @dataclass(frozen=True)
@@ -55,7 +57,6 @@ def validate_client_message(
     msg_type = payload.get("type")
     if msg_type not in ALLOWED_CLIENT_TYPES:
         raise ValueError("unsupported message type")
-    # STOP bypasses ordinary sensory throttling at the supervisor boundary.
     return payload
 
 
@@ -63,6 +64,7 @@ def validate_client_message(
 class Bridge:
     config: BridgeConfig
     stop_requested: bool = False
+    _server: Any = field(default=None, repr=False)
 
     @classmethod
     def create(cls, policy: dict[str, Any]) -> Bridge:
@@ -100,6 +102,38 @@ class Bridge:
                 return {"ok": False, "reason": "stop_latched"}
             return {"ok": False, "reason": "resume_requires_supervisor_path"}
         if kind == "sensory":
-            # Sensory accepted only as data; never grants connector authority.
             return {"ok": True, "accepted": True, "connector_authority": False}
         raise ValueError("unhandled message type")
+
+    async def serve(self, supervisor: Any, *, host: str = "127.0.0.1", port: int = 0) -> Any:
+        """Start an asyncio websockets server on loopback. Returns the server."""
+        if host != "127.0.0.1":
+            raise ValueError("bridge must bind to 127.0.0.1 only")
+        try:
+            from websockets.asyncio.server import serve
+        except ImportError:  # pragma: no cover
+            from websockets.server import serve  # type: ignore
+
+        async def handler(websocket: Any) -> None:
+            async for message in websocket:
+                if isinstance(message, bytes) and len(message) > self.config.max_message_bytes:
+                    await websocket.close(code=1009, reason="too large")
+                    return
+                try:
+                    result = self.handle(message, supervisor)
+                except ValueError as exc:
+                    await websocket.send(json.dumps({"ok": False, "error": str(exc)}))
+                    continue
+                await websocket.send(json.dumps(result))
+                if self.stop_requested:
+                    await websocket.close()
+                    return
+
+        self._server = await serve(handler, host, port)
+        return self._server
+
+    async def stop_server(self) -> None:
+        if self._server is not None:
+            self._server.close()
+            await self._server.wait_closed()
+            self._server = None

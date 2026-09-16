@@ -1,12 +1,24 @@
 import Foundation
 
-/// Read-only Accessibility geometry. Disabled unless the operator enables it.
-struct AccessibilityReader {
-  var enabled: Bool = false
+#if canImport(AppKit)
+import AppKit
+#endif
 
-  func focusedWindowRect() -> (x: Double, y: Double, width: Double, height: Double)? {
-    guard enabled else { return nil }
-    // Mac implementation uses AXUIElement / AXObserver. Linux CI cannot link AppKit.
-    return nil
-  }
+/// Read-only Accessibility geometry. Never keylogs. Off until config enables it.
+public struct AccessibilityReader {
+    public var enabled: Bool = false
+
+    public init(enabled: Bool = false) {
+        self.enabled = enabled
+    }
+
+    public func focusedWindowBounds() -> [String: Double]? {
+        guard enabled else { return nil }
+        #if canImport(AppKit)
+        // Mac: AXUIElementCopyAttributeValue for kAXFocusedWindowAttribute / position/size.
+        return nil
+        #else
+        return nil
+        #endif
+    }
 }

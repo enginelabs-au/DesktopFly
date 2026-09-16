@@ -60,10 +60,22 @@ export function createDesktopSession({
   });
 
   const actions = {
-    openHealth() {},
-    openWorkbench() {},
+    openHealth() {
+      return {
+        route: "/health",
+        path: join(root, "src/telemetry/health.html"),
+      };
+    },
+    openWorkbench() {
+      return {
+        route: "/workbench",
+        path: join(root, "src/workbench/workbench.mjs"),
+      };
+    },
     openSettings() {},
-    openHelp() {},
+    openHelp() {
+      return { path: join(root, "docs/handover/operator-runbook.md") };
+    },
     exportDiagnostics() {
       return {
         controller,

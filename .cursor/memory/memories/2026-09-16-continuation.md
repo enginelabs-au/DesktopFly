@@ -67,3 +67,9 @@
 - `reports/supervisor-health.json`; `docs/plans/final_implementation_checklist.md`.
 - Validation: pytest 40; node 10; foundations PASS.
 - Phase 4 complete → final checklist (Mac/human remaining).
+
+## Handover closeout
+
+- Implemented config/adapters/sensory/motor/device, uv.lock, src live/telemetry/workbench, capabilities/connectors, MaleCNS download+provenance, asyncio bridge, Mac/operator runbooks.
+- READY_FOR_CAM_REVIEW: Mac Electron/AppKit/MPS + license + merge.
+- Tests: pytest 48; node 15; foundations PASS.

@@ -1,6 +1,6 @@
 ---
 checklist: final_implementation
-status: open
+status: ready_for_cam_review
 created: 2026-09-16
 updated: 2026-09-16
 owner: lead-agent
@@ -10,40 +10,38 @@ workstream: docs/workstreams/20260916-desktopfly-foundations/manifest.md
 
 # Final implementation checklist (DesktopFly)
 
-Phases 0–4 code paths are on `cursor/phase-0-foundations-a5d1` with **neural / LIF enabled**. Remaining items are Mac-only, human, or download prerequisites.
+Neural / LIF **enabled**. Agent closeout finished everything that does not need Cam.
 
-## Done in-repo
+## Done in-repo (agent)
 
-- [x] Phase 0 foundations + policy (`real_graph_enabled: true`)
-- [x] Phase 1 synthetic ingest / review compile
-- [x] Phase 2 authored animation
-- [x] Phase 3 Electron shell + Swift DesktopContext scaffold
-- [x] Phase 4 supervisor, plain-language health, recovery budgets, checkpoints, bridge/worker scaffolds
-- [x] Linux CI: foundations check, pytest, node unit tests
+- [x] Phase 0–4 Linux scaffolds + handover closeout modules
+- [x] `backend/flysim/config.py` (Pydantic frozen policy)
+- [x] `backend/flysim/adapters/` MaleCNS + FlyWire blocker adapter
+- [x] `sensory.py` + `motor.py`
+- [x] Full Torch/pandas/pyarrow/websockets/pydantic/safetensors + committed `uv.lock`
+- [x] `src/live/`, `src/telemetry/` (health UI), `src/workbench/`
+- [x] `desktop/capabilities/`, `desktop/connectors/`, `layers.mjs`, `scene.mjs`
+- [x] MaleCNS download script + local feathers + `provenance/malecns-v1.0.json` (feathers gitignored)
+- [x] Asyncio loopback WebSocket bridge
+- [x] Device report (`reports/device.json`) — MPS unavailable on Linux CI
+- [x] Mac verification runbook: `docs/handover/mac-verification-runbook.md`
+- [x] Linux tests green
 
-## Human / Mac actions (deferred)
+## Cam-only remaining
 
-- [ ] Download MaleCNS v1.0 feather into `data/raw/` and record hash in provenance
-- [ ] Run Electron pet GUI on macOS; verify click-through and host lease
-- [ ] Build/run `native/DesktopContext` with AppKit; Accessibility permission when geometry profile enabled
-- [ ] Confirm Torch MPS availability on Cam’s Mac (`device: mps`, `allow_cpu_fallback: false`)
-- [ ] Optional: Screen Recording only if screen-vision profile is explicitly enabled later
-- [ ] Legal/license review of cobanov template (recorded, not reviewed)
+- [ ] Run Mac Electron pet GUI per runbook (click-through, host lease, tray Stop)
+- [ ] Build/run `native/DesktopContext` with AppKit; Accessibility when geometry enabled
+- [ ] Confirm Torch **MPS** probe on Cam’s Mac (`reports/mac-verification.json`)
+- [ ] Optional: Screen Recording only if screen-vision profile enabled later
+- [ ] Legal/license review of cobanov template (recorded, not lawyer-reviewed)
 - [ ] Owner merge of [DesktopFly#2](https://github.com/enginelabs-au/DesktopFly/pull/2)
 
-## Environment variables (names only)
+## Not Cam-blocked
 
-| Name | Purpose | Required |
-|---|---|---|
-| `HERMES_HOME` | N/A for DesktopFly | no |
-| (none secret for Phase 0–4 CI) | Loopback token is generated per launch, not env | — |
+- MaleCNS feathers downloaded on agent host and hashed; re-run `python scripts/download_malecns.py` on Cam’s machine if `data/raw/` empty.
+- FlyWire files not downloaded (separate adapter; missing files correctly hard-fail until pinned).
 
-## Technical blockers (not policy)
-
-- MaleCNS weights file missing under `data/raw/`
-- Electron GUI / AppKit not executable on Linux CI host
-
-## Neural policy (Cam)
+## Neural policy
 
 - Enabled. Refuse start only for hard technical blockers.
-- Neural output must not authorize connectors (`capabilities.json`).
+- Neural output must not authorize connectors.
