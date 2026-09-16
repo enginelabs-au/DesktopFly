@@ -14,6 +14,8 @@ function drawFly(pose, scale) {
   const cx = w / 2;
   const cy = h / 2;
   const heading = pose?.headingRad || 0;
+  const speed = pose?.speedPointsS || 0;
+  const wing = speed > 1 ? 0.15 * Math.sin(Date.now() / 60) : 0;
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(heading);
@@ -24,8 +26,8 @@ function drawFly(pose, scale) {
   ctx.fill();
   ctx.fillStyle = "rgba(60, 60, 60, 0.55)";
   ctx.beginPath();
-  ctx.ellipse(-6, -8, 10, 4, -0.4, 0, Math.PI * 2);
-  ctx.ellipse(-6, 8, 10, 4, 0.4, 0, Math.PI * 2);
+  ctx.ellipse(-6, -8, 10, 4, -0.4 + wing, 0, Math.PI * 2);
+  ctx.ellipse(-6, 8, 10, 4, 0.4 - wing, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }

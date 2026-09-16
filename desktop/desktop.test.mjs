@@ -85,6 +85,20 @@ test("desktop session find fly works and exposes LIF controller", () => {
   assert.equal(validatePoseFrame(frame).controller, "lif");
 });
 
+test("tickPresentation moves pet when neural policy is on", () => {
+  let t = 1_000_000;
+  const session = createDesktopSession({ now: () => t });
+  session.lease.beat();
+  const x0 = session.status().pose.x;
+  for (let i = 0; i < 40; i += 1) {
+    t += 50;
+    session.lease.beat();
+    session.tickPresentation();
+  }
+  const x1 = session.status().pose.x;
+  assert.ok(Math.abs(x1 - x0) > 5);
+});
+
 test("menu template requires typed actions", () => {
   const session = createDesktopSession();
   const template = buildApplicationMenuTemplate(session.actions);

@@ -6,7 +6,10 @@
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { findFlyPose, scaleForDepth } from "../src/pet/authored-motion.mjs";
+import {
+  createPetMotionController,
+  scaleForDepth,
+} from "../src/pet/authored-motion.mjs";
 import { FocusTracker, LayerCoordinator, SceneBuilder } from "./focus.mjs";
 import { HostLease } from "./host-lease.mjs";
 import { buildApplicationMenuTemplate, buildTrayMenuTemplate } from "./menus.mjs";
@@ -67,10 +70,14 @@ export function createDesktopSession({
     width: 1440,
     height: 900,
   });
-  let pose = findFlyPose({
-    hostRect: null,
+  const motion = createPetMotionController({
+    petConfig,
+    controllerKind: controller,
     bounds: presentationBounds,
+    mode: petConfig.default_mode || "follow_my_window",
+    now,
   });
+  let pose = motion.getPose();
 
   const actions = {
     openHealth() {
@@ -101,20 +108,9 @@ export function createDesktopSession({
       };
     },
     findFly() {
-      const snap = focus.snapshot();
-      const host = snap.host;
-      pose = findFlyPose({
-        hostRect: host
-          ? {
-              x: host.rect.x,
-              y: host.rect.y,
-              width: host.rect.width,
-              height: host.rect.height,
-            }
-          : null,
-        bounds: presentationBounds,
-        headingRad: pose.headingRad,
-      });
+      motion.syncFocusSnapshot(focus.snapshot());
+      motion.setBounds(presentationBounds);
+      pose = motion.findFly();
       return pose;
     },
     findCursor() {
@@ -122,6 +118,7 @@ export function createDesktopSession({
     },
     setExploreHide(enabled) {
       mode = enabled ? "explore_and_hide" : "follow_my_window";
+      motion.setMode(mode);
       return mode;
     },
     pause() {
@@ -188,11 +185,24 @@ export function createDesktopSession({
     poseFrame,
     setMode(next) {
       mode = validateMode(next);
+      motion.setMode(mode);
       return mode;
     },
     setPresentationBounds(bounds) {
       presentationBounds = normalizeScreenBounds(bounds);
+      motion.setBounds(presentationBounds);
       return presentationBounds;
+    },
+    tickPresentation() {
+      const leaseStatus = lease.tick();
+      if (paused || leaseStatus.paused) {
+        return pose;
+      }
+      motion.setBounds(presentationBounds);
+      motion.setMode(mode);
+      motion.syncFocusSnapshot(focus.snapshot());
+      pose = motion.step();
+      return pose;
     },
     getPresentationBounds() {
       return presentationBounds;
@@ -385,12 +395,17 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
     findFlyAndShow(win);
   }
 
+  const tickMs = Math.max(
+    16,
+    Math.round(1000 / (session.petConfig.geometry_poll_hz || 20)),
+  );
   const timer = setInterval(() => {
     session.lease.beat();
+    session.tickPresentation();
     if (!win.isDestroyed()) {
-      win.webContents.send(IPC.POSE_FRAME, session.poseFrame());
+      syncPetWindow(win);
     }
-  }, 50);
+  }, tickMs);
 
   app.on("before-quit", () => clearInterval(timer));
 
