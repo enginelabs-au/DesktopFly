@@ -11,6 +11,8 @@ Default dataset: **MaleCNS v1.0**. Shell: **Electron + Swift helper**, not Paper
 - Product spec: [`docs/handover/fruit-fly-cursor-handover.md`](docs/handover/fruit-fly-cursor-handover.md)
 - Blueprint: [`docs/blueprints/2026-09-16_desktopfly.md`](docs/blueprints/2026-09-16_desktopfly.md)
 - Phase 0: [`docs/plans/phase_0_foundations_plan.md`](docs/plans/phase_0_foundations_plan.md)
+- Phase 1: [`docs/plans/phase_1_safe_ingest_plan.md`](docs/plans/phase_1_safe_ingest_plan.md)
+- Phase 2: [`docs/plans/phase_2_authored_motion_plan.md`](docs/plans/phase_2_authored_motion_plan.md)
 - Agent entry: [`AGENTS.md`](AGENTS.md)
 - Lifecycle: `/launch-pipeline`
 
@@ -20,4 +22,6 @@ Default dataset: **MaleCNS v1.0**. Shell: **Electron + Swift helper**, not Paper
 node .cursor/skills/launch-pipeline/scripts/preflight.mjs
 bash .cursor/scripts/bootstrap.sh
 node scripts/check-foundations.mjs
+PYTHONPATH=backend python3 -m pytest -q backend/tests
+node --test src/pet/authored-motion.test.mjs
 ```

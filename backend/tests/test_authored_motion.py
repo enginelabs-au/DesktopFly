@@ -1,83 +1,98 @@
+"""Tests for the authored-animation live path."""
+
+from __future__ import annotations
+
 import json
+import math
 from pathlib import Path
 
-import pytest
-
-from flysim.authored import AuthoredAnimationController, AuthoredMotionConfig
+from flysim.authored import AuthoredAnimationController, AuthoredMotionConfig, load_desktop_pet_config
 from flysim.clock import PresentationClock
-from flysim.lif import lif_module_is_inert, start_lif_worker
-from flysim.world import CURSOR_YIELD_SPEED, DesktopWorld
+from flysim.world import DesktopBounds, WorldPose, scale_for_depth
 
-REPO = Path(__file__).resolve().parents[2]
-
-
-def test_policy_still_disables_real_graph():
-    policy = json.loads((REPO / "config" / "policy.json").read_text())
-    assert policy["real_graph_enabled"] is False
-    assert lif_module_is_inert(policy) is True
+ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_presentation_clock_does_not_catch_up_after_stall():
-    clock = PresentationClock(dt_s=0.005)
-    clock.tick(0.0)
-    advanced = clock.tick(2.0)
-    assert advanced <= 0.05 + 1e-9
-    assert clock.sim_time_s <= 0.06 + 1e-9
+def test_clock_bounds_catch_up_after_stall():
+    clock = PresentationClock(max_catch_up_s=0.05)
+    clock.set_fake_wall_s(0.0)
+    assert clock.advance() == 0.0
+    clock.advance_fake_wall(10.0)
+    dt = clock.advance()
+    assert math.isclose(dt, 0.05)
+    assert math.isclose(clock.sim_time_s, 0.05)
 
 
-def test_presentation_clock_stops():
-    clock = PresentationClock(dt_s=0.005)
-    clock.tick(0.0)
+def test_clock_does_not_advance_when_stopped():
+    clock = PresentationClock()
+    clock.set_fake_wall_s(1.0)
+    clock.advance()
+    clock.advance_fake_wall(0.1)
     clock.stop()
-    assert clock.tick(1.0) == 0.0
+    assert clock.advance() == 0.0
 
 
-def test_authored_controller_cycles_finite_locomotion():
-    controller = AuthoredAnimationController(
-        config=AuthoredMotionConfig(idle_hold_s=0.01, crawl_hold_s=0.01, flight_hold_s=0.01)
+def test_scale_for_depth():
+    assert math.isclose(scale_for_depth(0.0), 1.0)
+    assert math.isclose(scale_for_depth(1.0), 0.65)
+
+
+def test_follow_window_moves_toward_host():
+    clock = PresentationClock(max_catch_up_s=0.05)
+    clock.set_fake_wall_s(0.0)
+    ctrl = AuthoredAnimationController(
+        clock=clock,
+        config=AuthoredMotionConfig(cruise_speed_points_s=120.0),
+        bounds=DesktopBounds(0, 0, 1000, 800),
+        mode="follow_my_window",
     )
-    t = 0.0
-    seen = set()
+    ctrl.set_host_window((800, 100, 200, 400))
+    start = ctrl.pose
     for _ in range(40):
-        t += 0.02
-        pose = controller.step(t)
-        seen.add(pose.locomotion)
-    assert seen == {"idle", "crawl", "flight"}
-    assert controller.status()["controller"] == "authored_animation"
-    assert controller.status()["neural_worker_running"] is False
-    assert all(item["source"] in {"authored_policy", "operator_command", "geometry_rule"} for item in controller.status()["transitions"])
+        clock.advance_fake_wall(0.05)
+        ctrl.step()
+    assert ctrl.pose.x > start.x
+    assert math.isfinite(ctrl.pose.heading_rad)
+    assert ctrl.pose.transition_source in {"authored", "geometry", "operator"}
 
 
 def test_find_fly_works_without_neural_worker():
-    controller = AuthoredAnimationController()
-    controller.world.hide(sim_time_s=0.0)
-    assert controller.world.pose.visible is False
-    pose = controller.find_fly(100.0, 150.0, host_surface_id="host-1")
+    ctrl = AuthoredAnimationController(mode="explore_and_hide")
+    ctrl.begin_hide_flight()
+    pose = ctrl.find_fly()
     assert pose.visible is True
-    assert pose.x == 100.0
-    assert pose.y == 150.0
+    assert pose.depth01 == 0.0
+    assert pose.transition_source == "operator"
     assert pose.locomotion == "idle"
-    assert pose.host_surface_id == "host-1"
-    assert controller.neural_worker_running is False
 
 
-def test_cursor_yield_is_bounded_and_cools_down():
-    world = DesktopWorld(x=0.0, y=0.0)
-    first = world.apply_cursor_yield(cursor_x=1.0, cursor_y=0.0, cursor_moving=True, sim_time_s=0.0)
-    assert first == CURSOR_YIELD_SPEED
-    during = world.apply_cursor_yield(cursor_x=1.0, cursor_y=0.0, cursor_moving=True, sim_time_s=0.1)
-    assert during == CURSOR_YIELD_SPEED
-    ended = world.apply_cursor_yield(cursor_x=1.0, cursor_y=0.0, cursor_moving=True, sim_time_s=0.26)
-    assert ended == 0.0
-    assert world.apply_cursor_yield(cursor_x=1.0, cursor_y=0.0, cursor_moving=True, sim_time_s=0.5) == 0.0
+def test_cursor_yield_is_bounded():
+    clock = PresentationClock(max_catch_up_s=0.05)
+    clock.set_fake_wall_s(0.0)
+    cfg = AuthoredMotionConfig(cursor_yield_max_speed_points_s=40.0)
+    ctrl = AuthoredAnimationController(clock=clock, config=cfg)
+    ctrl.pose = WorldPose(
+        x=100.0,
+        y=100.0,
+        heading_rad=0.0,
+        speed_points_s=0.0,
+        depth01=0.0,
+        locomotion="idle",
+    )
+    ctrl.set_cursor((100.0, 100.0), moving=True)
+    # Coincident cursor uses deterministic outward path via zero-dist guard.
+    ctrl.set_cursor((90.0, 100.0), moving=True)
+    for _ in range(5):
+        clock.advance_fake_wall(0.05)
+        ctrl.step()
+    assert ctrl.pose.speed_points_s <= cfg.max_speed_points_s + 1e-6
+    assert ctrl.pose.x >= 100.0 - 1e-6
 
 
-def test_lif_worker_refuses_to_start_while_disabled():
-    with pytest.raises(RuntimeError, match="real_graph_enabled is false"):
-        start_lif_worker()
-
-
-def test_invalid_locomotion_rejected():
-    world = DesktopWorld()
-    with pytest.raises(ValueError, match="Invalid locomotion"):
-        world.set_locomotion("seek", source="authored_policy", sim_time_s=0.0)  # type: ignore[arg-type]
+def test_desktop_pet_config_enables_authored_path():
+    data = load_desktop_pet_config(ROOT / "config" / "desktop-pet.json")
+    assert data["authored_animation_when_graph_disabled"] is True
+    assert data["find_fly_available_without_neural_worker"] is True
+    assert data["cursor_yield_radius_points"] == 40
+    policy = json.loads((ROOT / "config" / "policy.json").read_text(encoding="utf-8"))
+    assert policy["real_graph_enabled"] is False

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "controller": "authored-animation",
+  "real_graph_enabled": false,
+  "neural_worker_started": false,
+  "lif_start_refused": true,
+  "snapshot": {
+    "sim_time_s": 1.4500000000000006,
+    "mode": "follow_my_window",
+    "wing_phase": 0.600000000000005,
+    "pose": {
+      "x": 816.671400662157,
+      "y": 388.40216598679234,
+      "headingRad": -0.6341883615525274,
+      "speedPointsS": 80.0,
+      "depth01": 0.0,
+      "locomotion": "crawl",
+      "displayId": "primary",
+      "hostSurfaceId": "host-window",
+      "visible": true,
+      "transitionSource": "geometry"
+    },
+    "controller": "authored-animation",
+    "neural_worker": "stopped"
+  },
+  "notes": "Authored presentation path only. LIF remains inert while Q-012 is open. Not connectome-driven motion."
+}

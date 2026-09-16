@@ -43,11 +43,10 @@
 - Implemented `backend/flysim/ingest.py` and synthetic three-node fixture. `PYTHONPATH=backend python3 -m pytest -q` → 7 passed.
 - `real_graph_enabled` remains false. No MaleCNS download.
 
-## Phase 1 finish + phase 2 authored motion (continuation owner)
+## Phase 2 authored motion (continuation `bc-a5af2fcb`)
 
-- Messaging prior owner `bc-f11a4081` failed; continued same PR branch only.
-- Added `flysim/schema.py`, `flysim/review.py`, synthetic tables fixture, `reports/ingestion.json`, write script.
-- Implemented `clock.py` / `world.py` / `authored.py` / `lif.py` (LIF refuses to start).
-- `PYTHONPATH=backend python3 -m pytest -q backend/tests` → **23 passed**; foundations + preflight READY.
-- ManagePullRequest update failed in this multi-repo workspace; pushes still land on `cursor/phase-0-foundations-a5d1`.
-- Cam not flagged (not blocked).
+- Prior owner `bc-f11a4081` unreachable; continued PR #2 @ `cb556da`.
+- Wrote `docs/plans/phase_2_authored_motion_plan.md`; implemented `clock` / `world` / `authored` / inert `lif`.
+- `src/pet/authored-motion.mjs` + node tests; `reports/authored-motion.json`.
+- Validation: pytest 26 passed; node 3 passed; foundations check passed. Neural sim still off (Q-012).
+- Next: phase-3 Electron/Swift plan only when starting that phase.
