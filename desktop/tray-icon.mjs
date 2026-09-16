@@ -2,7 +2,7 @@
  * Tray icon path resolution (pure; Electron loads in main).
  */
 
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -22,12 +22,25 @@ export function trayIconPathOrThrow(desktopDir = __dirname) {
 }
 
 /** @param {typeof import("electron").nativeImage} nativeImage */
+function loadTrayImage(nativeImage, absolutePath) {
+  let image = nativeImage.createFromPath(absolutePath);
+  if (image.isEmpty()) {
+    image = nativeImage.createFromBuffer(readFileSync(absolutePath));
+  }
+  return image;
+}
+
+/** @param {typeof import("electron").nativeImage} nativeImage */
 export function createTrayNativeImage(nativeImage, desktopDir = __dirname) {
   const path = trayIconPathOrThrow(desktopDir);
   const retinaPath = join(desktopDir, "assets", "tray-fly@2x.png");
-  const loadPath =
+  let loadPath =
     process.platform === "darwin" && existsSync(retinaPath) ? retinaPath : path;
-  let image = nativeImage.createFromPath(loadPath);
+  let image = loadTrayImage(nativeImage, loadPath);
+  if (image.isEmpty() && loadPath !== path) {
+    loadPath = path;
+    image = loadTrayImage(nativeImage, loadPath);
+  }
   if (image.isEmpty()) {
     throw new Error(`tray icon failed to load: ${loadPath}`);
   }

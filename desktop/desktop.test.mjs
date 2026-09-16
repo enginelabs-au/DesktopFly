@@ -1,6 +1,6 @@
 import test from "node:test";
 import { readFileSync, existsSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { createDesktopSession } from "./main.mjs";
@@ -121,5 +121,13 @@ test("tray icon asset exists", () => {
   const desktopDir = dirname(fileURLToPath(import.meta.url));
   const path = trayIconPathOrThrow(desktopDir);
   assert.ok(existsSync(path));
-  assert.ok(readFileSync(path).length >= 80);
+  const bytes = readFileSync(path);
+  assert.ok(bytes.length >= 120, "tray-fly.png looks truncated for Electron");
+  assert.ok(bytes.subarray(bytes.length - 8).equals(Buffer.from([0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82])));
+  for (const name of ["tray-fly@2x.png", "tray-fly-16.png", "tray-fly-32.png"]) {
+    const asset = join(desktopDir, "assets", name);
+    assert.ok(existsSync(asset), name);
+    const assetBytes = readFileSync(asset);
+    assert.ok(assetBytes.length >= 100, `${name} looks truncated`);
+  }
 });
