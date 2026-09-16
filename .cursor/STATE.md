@@ -2,11 +2,11 @@
 
 ## Current Objective
 
-- Initialize the empty GitHub repository `enginelabs-au/DesktopFly` from this workspace.
+- Enforce Cursor anonymous git identity and keep secrets out of git in the DesktopFly control plane and the `agent-instructions` templates.
 
 ## Current Status
 
-- Complete — local workspace is a git repository pointing at `https://github.com/enginelabs-au/DesktopFly.git`. Agent control plane is materialized. Application source is not implemented.
+- Complete — git-safety rules, hooks, policy, skill, and validators are installed in both trees. Preflight is `READY`.
 
 ## Project Phase
 
@@ -35,7 +35,7 @@
 
 ## Owner Decision
 
-- Initialize this workspace as `https://github.com/enginelabs-au/DesktopFly.git`.
+- Git writes must use `Cursor Agent <cursoragent@noreply.github.com>` or a GitHub noreply address. Secrets, credentials, and passwords must never enter git.
 
 ## Active Instructions
 
@@ -44,7 +44,8 @@
 ## Active Items
 
 - External controls in `docs/handover/agent-governance-operator-setup.md` remain owner-configured.
-- Product implementation should start through `/launch-pipeline` using `docs/fruit-fly-cursor-handover.md`.
+- Product implementation should start through `/launch-pipeline` using `docs/handover/fruit-fly-cursor-handover.md`.
+- Owner requested commit and push of the git-safety controls.
 
 ## Files in Active Use
 
@@ -55,8 +56,10 @@
 - `/SKILLS.md`
 - `/TOOLS.md`
 - `/memory/MEMORY.md`
-- `README.md`
-- `docs/fruit-fly-cursor-handover.md`
+- `/skills/git-safety/SKILL.md`
+- `/rules/git-privacy-and-secrets.mdc`
+- `/hooks/policy.mjs`
+- `.githooks/`
 
 ## Open Blockers
 
@@ -64,28 +67,26 @@
 
 ## Attempts Performed
 
-- Confirmed `enginelabs-au/DesktopFly` was empty and this folder was not a git repository.
-- Preflight reported `BLOCKED` until root `AGENTS.md` and documentation directories existed.
-- Created unprotected seed files, then ran `docs/handover/apply-missing-control-plane-files.sh` to materialize protected root files without weakening hooks.
-- Removed `.DS_Store` files that failed launch reachability validation.
-- Ran `bash .cursor/scripts/bootstrap.sh`; preflight is `READY`.
+- Added `/skills/git-safety`, `.githooks`, standing USER/TOOLS/SKILLS directives, and secret-aware `.gitignore` entries in DesktopFly and `agent-instructions`.
+- Applied protected policy, rule, bootstrap, validator, CLI, and workflow files via `docs/handover/apply-git-safety.sh`.
+- First apply used a wrong relative import in `policy.mjs`; fail-closed hooks blocked all tools until the owner repaired the import to `/skills/git-safety/scripts/git-safety.mjs`.
+- Revalidated: 16 policy/git-safety tests pass in both trees; DesktopFly bootstrap and preflight are `READY`; launch validation classifies 89 control-plane files. Private-email identity check exits 1; Cursor anonymous identity exits 0.
 
 ## Decisions and Assumptions
 
-- "Init this repo" means materialize the agent system, initialize git, and push the first commit to the named GitHub remote. It does not start DesktopFly application implementation.
-- Adaptive gated routing remains canonical.
-- Fail-closed hooks remain in place; missing protected files are created only through the owner-run apply script.
+- Required agent git identity is `cursoragent@noreply.github.com`. `*@users.noreply.github.com` is also allowed. Any other inbox is forbidden.
+- Agents must not run `git config` to change identity. Bootstrap copies `.githooks/` into `.git/hooks/` without changing git config.
+- Secret-bearing paths and high-confidence secret content are blocked by policy, git hooks, CLI denials, and `.gitignore`.
 
 ## Current Working State
 
-- Control plane validates: 77 `.cursor` files classified, bootstrap complete, preflight `READY`.
-- Remote: `https://github.com/enginelabs-au/DesktopFly.git`.
+- DesktopFly hooks are installed at `.git/hooks/{pre-commit,commit-msg,pre-push}`.
+- Template tree at `/Users/camdouglas/agent-instructions` contains the same skill, rules, policy, and `.githooks`.
 
 ## Next Actions
 
-- Start product work with `/launch-pipeline` against `docs/fruit-fly-cursor-handover.md`.
-- Owner-only GitHub branch protection and signing setup remain in `docs/handover/agent-governance-operator-setup.md`.
+- Start product work with `/launch-pipeline` against `docs/handover/fruit-fly-cursor-handover.md`.
 
 ## Last Updated
 
-- 2026-09-16 — initialized empty GitHub repository and materialized the local control plane.
+- 2026-09-16 — installed git-safety anonymous-identity and secret-blocking controls.

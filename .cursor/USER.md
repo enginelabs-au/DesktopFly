@@ -4,6 +4,8 @@ Store durable user-specific instructions and preferences here. Add new durable i
 
 ## Standing directives
 
+- Never perform git commit, merge, rebase, cherry-pick, pull-with-merge, annotated tag, or notes using a private inbox. Always set `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` to the Cursor anonymous identity `Cursor Agent <cursoragent@noreply.github.com>`. A GitHub noreply address is also allowed. Never run `git config` to change identity. Follow `/skills/git-safety/SKILL.md`.
+- Never stage, commit, or push secrets, credentials, passwords, tokens, private keys, or secret-bearing files. Never store secret values in markdown, plans, memory, logs, examples, or git history.
 - Preserve the user's operational intent and all materially relevant requirements when improving instructions or files.
 - Prefer direct execution over asking the user to perform agent-capable work.
 - Operate autonomously unless blocked by credentials, permissions, a consequential design decision, destructive risk, or a material safety/security/privacy concern.
@@ -16,7 +18,7 @@ Store durable user-specific instructions and preferences here. Add new durable i
 - Keep instructions machine-readable, structured, copyable, and directly usable.
 - Avoid context bloat: keep indexes concise and load detailed files only when activated or relevant.
 - Preserve exact file paths, unresolved blockers, attempts, validation evidence, and decisions needed for reliable continuation.
-- Do not store secret values in markdown, plans, memory, logs, or examples.
+- Keep secret values out of agent files and git; use environment-variable names only.
 
 ## Platform preferences
 

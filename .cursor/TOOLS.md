@@ -409,6 +409,46 @@ Prefer built-in project scripts and official tooling over improvised alternative
 
 ---
 
+### Tool: Git safety
+
+**Category**
+
+- security / git / hook / skill
+
+**Purpose**
+
+- Force every agent git write to use the Cursor anonymous email and keep secrets, credentials, and passwords out of git.
+
+**When to use**
+
+- Any commit, merge, rebase, cherry-pick, pull that can create a commit, annotated tag, note, push, or hook install.
+
+**How to access**
+
+- Skill: `/skills/git-safety/SKILL.md`
+- Checker: `node .cursor/skills/git-safety/scripts/git-safety.mjs`
+- Repository hooks: `.githooks/` copied into `.git/hooks/` by bootstrap without changing git config
+
+**Common operations**
+
+- Prefix commit-creating commands with `GIT_AUTHOR_NAME='Cursor Agent' GIT_AUTHOR_EMAIL='cursoragent@noreply.github.com' GIT_COMMITTER_NAME='Cursor Agent' GIT_COMMITTER_EMAIL='cursoragent@noreply.github.com'`
+- Run `node --test .cursor/skills/git-safety/scripts/git-safety.test.mjs`
+
+**Constraints**
+
+- Never use a private inbox. Never run `git config` to set identity. Never use `--no-verify`.
+- Do not print secret values when a scan fails.
+
+**Related files**
+
+- `/skills/git-safety/SKILL.md`
+- `/hooks/policy.mjs`
+- `/rules/git-privacy-and-secrets.mdc`
+- `/memory/runbooks/git-safety.md`
+- `.githooks/`
+
+---
+
 ### Tool: Agent policy hooks and security review
 
 **Category**

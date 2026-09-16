@@ -11,6 +11,7 @@
 - Use adaptive role routing for substantive work: record required/skipped canonical roles, require role charters before action, and preserve evidence-backed handoffs under `docs/workstreams/`.
 - Treat prompts and role identities as guidance, not production authorization; deterministic policy and external access controls govern sensitive actions.
 - Never store passwords, tokens, private keys, or secret values in agent markdown, plans, memories, logs, or templates.
+- Git writes must use `Cursor Agent <cursoragent@noreply.github.com>` or a GitHub noreply address. Never use a private inbox or `git config` identity changes. Canonical procedure: `/skills/git-safety/SKILL.md`.
 
 ## Memory role
 
@@ -37,6 +38,8 @@ Operational history belongs in `/memory/memories/YYYY-MM-DD-continuation.md` or 
 - Agent role pipeline decision: `docs/decisions/2026-08-18-agent-role-pipeline.md`
 - External governance setup: `docs/handover/agent-governance-operator-setup.md`
 - Skills: `/SKILLS.md` and `/skills/`
+- Git safety: `/skills/git-safety/SKILL.md` and `/memory/runbooks/git-safety.md`
+- Git identity decision: `docs/decisions/2026-09-16-git-anonymous-identity.md`
 - Tools: `/TOOLS.md`
 - Active blockers: `/memory/blockers/`
 - Runbooks: `/memory/runbooks/`
@@ -46,7 +49,7 @@ Operational history belongs in `/memory/memories/YYYY-MM-DD-continuation.md` or 
 ## Repository
 
 - Git remote: `https://github.com/enginelabs-au/DesktopFly.git`
-- Product spec: `docs/fruit-fly-cursor-handover.md`
+- Product spec: `docs/handover/fruit-fly-cursor-handover.md`
 
 ## Existing workflow references
 

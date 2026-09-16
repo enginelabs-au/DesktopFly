@@ -6,7 +6,7 @@ This repository is initialized with the agent control plane and the implementati
 
 ## Start here
 
-- Product and implementation spec: [`docs/fruit-fly-cursor-handover.md`](docs/fruit-fly-cursor-handover.md)
+- Product and implementation spec: [`docs/handover/fruit-fly-cursor-handover.md`](docs/handover/fruit-fly-cursor-handover.md)
 - Agent entry: [`AGENTS.md`](AGENTS.md)
 - Lifecycle: `/launch-pipeline`
 

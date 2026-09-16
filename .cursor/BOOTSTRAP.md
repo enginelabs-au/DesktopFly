@@ -51,6 +51,10 @@ The bootstrap must:
 repository-root/
   AGENTS.md
   .cursorignore
+  .githooks/
+    pre-commit
+    commit-msg
+    pre-push
   docs/
     README.md
     blueprints/
@@ -109,6 +113,10 @@ repository-root/
           preflight.mjs
           preflight.test.mjs
           validate-launch.mjs
+      git-safety/
+        SKILL.md
+        scripts/
+          git-safety.mjs
       <other-skill-id>/SKILL.md
     templates/
       docs-readme.md

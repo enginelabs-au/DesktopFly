@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+SCRIPT="$REPO_ROOT/.cursor/skills/git-safety/scripts/git-safety.mjs"
+
+if [ ! -f "$SCRIPT" ]; then
+  printf 'git-safety: missing %s\n' "$SCRIPT" >&2
+  exit 1
+fi
+
+if ! command -v node >/dev/null 2>&1; then
+  printf 'git-safety: node is required to enforce anonymous git identity and secret blocking\n' >&2
+  exit 1
+fi
+
+node "$SCRIPT" commit
