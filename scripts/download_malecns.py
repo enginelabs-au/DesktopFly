@@ -62,7 +62,7 @@ def main() -> int:
                 "bytes": dest.stat().st_size,
                 "sha256": sha256_file(dest),
                 "dataset_version": "male-cns:v1.0",
-                "license": "CC-BY (verify https://male-cns.janelia.org/download/)",
+                "license": "CC-BY-4.0",
                 "retrieved_at": datetime.now(timezone.utc).isoformat(),
             }
         )

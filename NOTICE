@@ -1,0 +1,25 @@
+DesktopFly — third-party notices
+
+This project combines Engine Labs application code with upstream template software
+and optionally downloaded connectome datasets. See also docs/attribution-and-licenses.md.
+
+1. fly-connectome-template (Cobanov Template Attribution License 1.0)
+
+   Upstream: https://github.com/cobanov/fly-connectome-template
+   Full license text: LICENSE.fly-connectome-template
+   Pinned commit: provenance/template.json
+
+   Required README credit (also required in the workbench web UI when shipped):
+
+   Built with fly-connectome-template by Mert Cobanov.
+   (with hyperlinks to the template repo and https://github.com/cobanov)
+
+2. Male CNS connectome data (CC BY 4.0)
+
+   Dataset: Male CNS v1.0 (default)
+   License notice: LICENSE.maleCNS
+   Download provenance: provenance/malecns-v1.0.json
+   Source: https://male-cns.janelia.org/download/
+
+DesktopFly is a modified derivative of the template; Engine Labs owns changes in
+this repository except where noted above.

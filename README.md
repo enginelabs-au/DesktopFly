@@ -6,6 +6,18 @@ Connectome-informed macOS desktop pet: a frameless, transparent, click-through f
 
 Default dataset: **MaleCNS v1.0**. Shell: **Electron + Swift helper**.
 
+## Licenses and attribution
+
+DesktopFly is a **modified** derivative of [fly-connectome-template](https://github.com/cobanov/fly-connectome-template) by [Mert Cobanov](https://github.com/cobanov), licensed under the **Cobanov Template Attribution License 1.0** ([`LICENSE.fly-connectome-template`](LICENSE.fly-connectome-template), [upstream LICENSE](https://github.com/cobanov/fly-connectome-template/blob/main/LICENSE)).
+
+**Required template credit** (README and workbench UI):
+
+Built with [fly-connectome-template](https://github.com/cobanov/fly-connectome-template) by [Mert Cobanov](https://github.com/cobanov).
+
+Connectome tables downloaded for the default graph path come from **Male CNS v1.0**, **[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)** ([`LICENSE.maleCNS`](LICENSE.maleCNS), [official download page](https://male-cns.janelia.org/download/)). Provenance: [`provenance/malecns-v1.0.json`](provenance/malecns-v1.0.json).
+
+Full index: [`docs/attribution-and-licenses.md`](docs/attribution-and-licenses.md) and [`NOTICE`](NOTICE).
+
 ## Start here
 
 - Product spec: [`docs/handover/fruit-fly-cursor-handover.md`](docs/handover/fruit-fly-cursor-handover.md)
