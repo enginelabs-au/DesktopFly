@@ -1,0 +1,11 @@
+{
+  "comment": "Explicitly synthetic. These IDs are not MaleCNS or FlyWire cells.",
+  "ids": ["synthetic:pre", "synthetic:mid", "synthetic:post"],
+  "src": [0, 1],
+  "dst": [1, 2],
+  "counts": [1, 3],
+  "signs": [1.0, -1.0, 1.0],
+  "blocked": [false, false, false],
+  "gain": 1.1,
+  "expected_weights": [1.1, -1.1]
+}

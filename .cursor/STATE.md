@@ -2,91 +2,43 @@
 
 ## Current Objective
 
-- Enforce Cursor anonymous git identity and keep secrets out of git in the DesktopFly control plane and the `agent-instructions` templates.
+- Close DesktopFly handover debt on [DesktopFly#2](https://github.com/enginelabs-au/DesktopFly/pull/2). Neural enabled. Agent work complete → Cam Mac review.
 
 ## Current Status
 
-- Complete — git-safety rules, hooks, policy, skill, and validators are installed in both trees. Preflight is `READY`.
+- **READY_FOR_CAM_REVIEW** — only Mac GUI/AppKit/MPS proof, template license legal review, and PR merge need Cam.
 
 ## Project Phase
 
-- Repository initialized. Product implementation has not started.
+- Phases 0–4 + handover closeout implemented on `cursor/phase-0-foundations-a5d1`.
+- Final checklist: `ready_for_cam_review`.
 
 ## Active Plan
 
-- None.
+- `docs/plans/final_implementation_checklist.md`
 
 ## Active Workstream
 
-- None.
+- `docs/workstreams/20260916-desktopfly-foundations/manifest.md`
 
 ## Active Role and Gate
 
-- None.
-- Last integrated validation: `PASS`.
-
-## Predecessor Handoff
-
-- None.
-
-## Pending Remediation
-
-- None recorded.
+- Sole DesktopFly owner: `bc-a5af2fcb`.
+- Validation: pytest 48; node 15; foundations PASS.
 
 ## Owner Decision
 
-- Git writes must use `Cursor Agent <cursoragent@noreply.github.com>` or a GitHub noreply address. Secrets, credentials, and passwords must never enter git.
+- Neural enabled (Cam).
+- MPS unavailable on Linux CI — documented in `reports/device.json`.
 
-## Active Instructions
+## Open Blockers (Cam-only)
 
-- None.
-
-## Active Items
-
-- External controls in `docs/handover/agent-governance-operator-setup.md` remain owner-configured.
-- Product implementation should start through `/launch-pipeline` using `docs/handover/fruit-fly-cursor-handover.md`.
-- Owner requested commit and push of the git-safety controls.
-
-## Files in Active Use
-
-- `/AGENTS.md`
-- `/USER.md`
-- `/STATE.md`
-- `/INSTRUCTIONS.md`
-- `/SKILLS.md`
-- `/TOOLS.md`
-- `/memory/MEMORY.md`
-- `/skills/git-safety/SKILL.md`
-- `/rules/git-privacy-and-secrets.mdc`
-- `/hooks/policy.mjs`
-- `.githooks/`
-
-## Open Blockers
-
-- None.
-
-## Attempts Performed
-
-- Added `/skills/git-safety`, `.githooks`, standing USER/TOOLS/SKILLS directives, and secret-aware `.gitignore` entries in DesktopFly and `agent-instructions`.
-- Applied protected policy, rule, bootstrap, validator, CLI, and workflow files via `docs/handover/apply-git-safety.sh`.
-- First apply used a wrong relative import in `policy.mjs`; fail-closed hooks blocked all tools until the owner repaired the import to `/skills/git-safety/scripts/git-safety.mjs`.
-- Revalidated: 16 policy/git-safety tests pass in both trees; DesktopFly bootstrap and preflight are `READY`; launch validation classifies 89 control-plane files. Private-email identity check exits 1; Cursor anonymous identity exits 0.
-
-## Decisions and Assumptions
-
-- Required agent git identity is `cursoragent@noreply.github.com`. `*@users.noreply.github.com` is also allowed. Any other inbox is forbidden.
-- Agents must not run `git config` to change identity. Bootstrap copies `.githooks/` into `.git/hooks/` without changing git config.
-- Secret-bearing paths and high-confidence secret content are blocked by policy, git hooks, CLI denials, and `.gitignore`.
-
-## Current Working State
-
-- DesktopFly hooks are installed at `.git/hooks/{pre-commit,commit-msg,pre-push}`.
-- Template tree at `/Users/camdouglas/agent-instructions` contains the same skill, rules, policy, and `.githooks`.
-
-## Next Actions
-
-- Start product work with `/launch-pipeline` against `docs/handover/fruit-fly-cursor-handover.md`.
+- Mac Electron GUI proof
+- AppKit DesktopContext on Mac
+- MPS probe on Mac
+- Template license legal review
+- PR merge
 
 ## Last Updated
 
-- 2026-09-16 — installed git-safety anonymous-identity and secret-blocking controls.
+- 2026-09-16 — handover closeout; READY_FOR_CAM_REVIEW

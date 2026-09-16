@@ -1,0 +1,17 @@
+{
+  "name": "desktopfly-desktop",
+  "private": true,
+  "type": "module",
+  "description": "Electron shell for DesktopFly. GUI launch requires electron on macOS.",
+  "main": "main.mjs",
+  "scripts": {
+    "test": "node --test desktop.test.mjs",
+    "start": "electron ."
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "optionalDependencies": {
+    "electron": ">=33 <35"
+  }
+}

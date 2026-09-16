@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>DesktopFly Health</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./health.css" />
+</head>
+<body>
+  <main id="health-root" class="health">
+    <header>
+      <h1 id="title">Health</h1>
+      <p id="disclaimer" class="disclaimer"></p>
+    </header>
+    <section class="summary">
+      <p id="explanation"></p>
+      <p id="doing"></p>
+      <p id="operator-action"></p>
+      <p id="quiet-note" class="quiet" hidden></p>
+    </section>
+    <section class="cards" id="cards"></section>
+    <details class="technical">
+      <summary>Technical details</summary>
+      <pre id="technical"></pre>
+    </details>
+  </main>
+  <script type="module" src="./health-app.mjs"></script>
+</body>
+</html>

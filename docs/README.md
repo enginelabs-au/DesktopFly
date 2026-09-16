@@ -1,5 +1,6 @@
 # Project documentation
 
+- [`attribution-and-licenses.md`](attribution-and-licenses.md) — fly-connectome-template and MaleCNS license obligations
 - `blueprints/` — product, market, architecture, and go-to-market blueprints
 - `plans/` — sequential implementation plans and final implementation checklist
 - `decisions/` — material architecture and product decision records

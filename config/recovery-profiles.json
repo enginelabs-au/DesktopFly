@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "allow_runtime_weight_updates": false,
+  "allow_threshold_relaxation": false,
+  "allow_automatic_resume_after_hard_fault": false,
+  "profiles": [
+    {
+      "recipe_id": "boundary_open_position",
+      "signature": "boundary_geometry",
+      "step_index": 1,
+      "description": "Move once to a validated open position without changing neural weights",
+      "preconditions": ["recognized_boundary_obstruction", "neural_paused"],
+      "effects": ["reposition_body", "clear_stale_motion_intent"],
+      "test_report": "reports/recovery/boundary_open_position.md"
+    },
+    {
+      "recipe_id": "boundary_simple_arena",
+      "signature": "boundary_geometry",
+      "step_index": 2,
+      "description": "Select the approved simple arena with open navigable space",
+      "preconditions": ["prior_recipe_failed_or_insufficient", "neural_paused"],
+      "effects": ["select_simple_arena_profile"],
+      "test_report": "reports/recovery/boundary_simple_arena.md"
+    },
+    {
+      "recipe_id": "input_calmer_profile",
+      "signature": "excessive_input_variation",
+      "step_index": 1,
+      "description": "Select a fixed calmer visual-input profile",
+      "preconditions": ["pretested_input_variation", "neural_paused"],
+      "effects": ["disable_external_motion_feature_channels"],
+      "test_report": "reports/recovery/input_calmer_profile.md"
+    },
+    {
+      "recipe_id": "input_simple_arena_restore",
+      "signature": "excessive_input_variation",
+      "step_index": 2,
+      "description": "Select simple arena and restore verified earlier/initial state if needed",
+      "preconditions": ["prior_recipe_failed_or_insufficient", "neural_paused"],
+      "effects": ["select_simple_arena_profile", "restore_verified_checkpoint"],
+      "test_report": "reports/recovery/input_simple_arena_restore.md"
+    },
+    {
+      "recipe_id": "timing_lighter_viz",
+      "signature": "render_capture_load",
+      "step_index": 1,
+      "description": "Select lighter visualization; preserve neural dt and hard limits",
+      "preconditions": ["timing_early_warning", "neural_paused"],
+      "effects": ["reduce_displayed_cells", "lower_render_rate"],
+      "test_report": "reports/recovery/timing_lighter_viz.md"
+    },
+    {
+      "recipe_id": "timing_simple_arena",
+      "signature": "render_capture_load",
+      "step_index": 2,
+      "description": "Select simple arena to remove live capture work",
+      "preconditions": ["prior_recipe_failed_or_insufficient", "neural_paused"],
+      "effects": ["select_simple_arena_profile"],
+      "test_report": "reports/recovery/timing_simple_arena.md"
+    },
+    {
+      "recipe_id": "source_geometry_only",
+      "signature": "screen_source_lost",
+      "step_index": 1,
+      "description": "Select geometry-only/open-space profile and clear stale source data",
+      "preconditions": ["source_or_permission_lost", "neural_paused"],
+      "effects": ["select_geometry_only_profile", "clear_stale_filters"],
+      "test_report": "reports/recovery/source_geometry_only.md"
+    },
+    {
+      "recipe_id": "source_initial_in_profile",
+      "signature": "screen_source_lost",
+      "step_index": 2,
+      "description": "Use verified initial state in geometry-only profile if same known issue remains",
+      "preconditions": ["same_known_source_transition", "neural_paused"],
+      "effects": ["restore_initial_checkpoint"],
+      "test_report": "reports/recovery/source_initial_in_profile.md"
+    },
+    {
+      "recipe_id": "host_reconnect_verify",
+      "signature": "host_presentation_disconnect",
+      "step_index": 1,
+      "description": "After authenticated host reconnection, check preserved state before paced verification",
+      "preconditions": ["host_lease_restored", "fresh_input", "neural_paused"],
+      "effects": ["begin_verification"],
+      "test_report": "reports/recovery/host_reconnect_verify.md"
+    },
+    {
+      "recipe_id": "host_simple_arena",
+      "signature": "host_presentation_disconnect",
+      "step_index": 2,
+      "description": "Use simple arena only if a separately recognized desktop-source problem remains",
+      "preconditions": ["recognized_desktop_source_problem", "neural_paused"],
+      "effects": ["select_simple_arena_profile"],
+      "test_report": "reports/recovery/host_simple_arena.md"
+    }
+  ]
+}

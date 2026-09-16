@@ -2,6 +2,12 @@
 
 ## Durable directives
 
+- DesktopFly default dataset is MaleCNS v1.0. FlyWire v783 is a separate adapter.
+- Neural / LIF simulation is **enabled** (Cam override 2026-09-16 of the prior Q-012 keep-off gate). Refuse start only for hard technical blockers (missing weights, crash). Decision: `docs/decisions/2026-09-16-neural-sim-enabled-cam-override.md`.
+- This agent (`bc-a5af2fcb`) is the sole DesktopFly worker; ignore archived DesktopFly chats.
+- Before leaving planning→implementation and when a phase finishes, report a short status ping to the parent.
+- Desktop shell is Electron + Swift helper, not Papership Tauri.
+- Product spec: `docs/handover/fruit-fly-cursor-handover.md`. Blueprint: `docs/blueprints/2026-09-16_desktopfly.md`.
 - Execute agent-capable work directly; do not delegate routine implementation or investigation to the user.
 - Use the sequential planning lifecycle for new projects and major implementations: phase 0 maps the full project, each later phase plan is generated only after the previous phase is implemented and verified, and closure produces `docs/plans/final_implementation_checklist.md`.
 - Defer non-blocking human-only actions and missing credential values to the final phase while completing all possible code, configuration, adapters, tests, documentation, and environment-variable wiring first.
@@ -40,6 +46,13 @@ Operational history belongs in `/memory/memories/YYYY-MM-DD-continuation.md` or 
 - Skills: `/SKILLS.md` and `/skills/`
 - Git safety: `/skills/git-safety/SKILL.md` and `/memory/runbooks/git-safety.md`
 - Git identity decision: `docs/decisions/2026-09-16-git-anonymous-identity.md`
+- Neural-sim disable: `docs/decisions/2026-09-16-neural-sim-disabled-q012.md`
+- MaleCNS default: `docs/decisions/2026-09-16-malecns-default-dataset.md`
+- Electron/Swift shell: `docs/decisions/2026-09-16-electron-swift-shell.md`
+- Phase 0: `docs/plans/phase_0_foundations_plan.md`
+- Phase 4: `docs/plans/phase_4_supervisor_health_plan.md`
+- Final checklist: `docs/plans/final_implementation_checklist.md`
+- Workstream: `docs/workstreams/20260916-desktopfly-foundations/manifest.md`
 - Tools: `/TOOLS.md`
 - Active blockers: `/memory/blockers/`
 - Runbooks: `/memory/runbooks/`

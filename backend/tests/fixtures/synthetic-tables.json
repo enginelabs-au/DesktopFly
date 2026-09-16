@@ -1,0 +1,138 @@
+{
+  "comment": "Explicitly synthetic. IDs are not MaleCNS or FlyWire cells.",
+  "fixture_kind": "synthetic",
+  "dataset": "synthetic:phase1",
+  "source_annotation_revision": "synthetic-review-1",
+  "neurons": [
+    {
+      "dataset": "synthetic:phase1",
+      "neuron_id": "synthetic:9007199254740993",
+      "cell_type": null,
+      "region": null,
+      "source_annotation_revision": "synthetic-review-1"
+    },
+    {
+      "dataset": "synthetic:phase1",
+      "neuron_id": "synthetic:pre",
+      "cell_type": null,
+      "region": null,
+      "source_annotation_revision": "synthetic-review-1"
+    },
+    {
+      "dataset": "synthetic:phase1",
+      "neuron_id": "synthetic:mid",
+      "cell_type": null,
+      "region": null,
+      "source_annotation_revision": "synthetic-review-1"
+    },
+    {
+      "dataset": "synthetic:phase1",
+      "neuron_id": "synthetic:post",
+      "cell_type": null,
+      "region": null,
+      "source_annotation_revision": "synthetic-review-1"
+    },
+    {
+      "dataset": "synthetic:phase1",
+      "neuron_id": "synthetic:clamped",
+      "cell_type": null,
+      "region": null,
+      "source_annotation_revision": "synthetic-review-1"
+    },
+    {
+      "dataset": "synthetic:phase1",
+      "neuron_id": "synthetic:excluded-mod",
+      "cell_type": null,
+      "region": null,
+      "source_annotation_revision": "synthetic-review-1"
+    }
+  ],
+  "edges": [
+    {"pre_id": "synthetic:pre", "post_id": "synthetic:mid", "synapse_count": 1},
+    {"pre_id": "synthetic:mid", "post_id": "synthetic:post", "synapse_count": 3},
+    {"pre_id": "synthetic:pre", "post_id": "synthetic:clamped", "synapse_count": 4},
+    {"pre_id": "synthetic:clamped", "post_id": "synthetic:post", "synapse_count": 2}
+  ],
+  "review": [
+    {
+      "neuron_id": "synthetic:9007199254740993",
+      "decision": "exclude",
+      "modulatory_status": "no",
+      "fixed_sign": 1,
+      "role": "none",
+      "evidence": "Held out to prove string IDs above JS safe integer still round-trip."
+    },
+    {
+      "neuron_id": "synthetic:pre",
+      "decision": "include",
+      "modulatory_status": "no",
+      "fixed_sign": 1,
+      "role": "sensory",
+      "evidence": "synthetic"
+    },
+    {
+      "neuron_id": "synthetic:mid",
+      "decision": "include",
+      "modulatory_status": "no",
+      "fixed_sign": -1,
+      "role": "interneuron",
+      "evidence": "synthetic"
+    },
+    {
+      "neuron_id": "synthetic:post",
+      "decision": "include",
+      "modulatory_status": "no",
+      "fixed_sign": 1,
+      "role": "readout",
+      "evidence": "synthetic"
+    },
+    {
+      "neuron_id": "synthetic:clamped",
+      "decision": "clamp",
+      "modulatory_status": "no",
+      "fixed_sign": 1,
+      "role": "interneuron",
+      "evidence": "synthetic clamp: incident edges removed, gains forced to zero"
+    },
+    {
+      "neuron_id": "synthetic:excluded-mod",
+      "decision": "include",
+      "modulatory_status": "unknown",
+      "fixed_sign": 1,
+      "role": "none",
+      "evidence": "modulatory unknown must exclude"
+    }
+  ],
+  "sensory_map": [
+    {
+      "feature_name": "brightness_left",
+      "neuron_id": "synthetic:pre",
+      "fixed_gain": 0.5,
+      "evidence": "engineered synthetic map",
+      "mapping_kind": "engineered"
+    },
+    {
+      "feature_name": "brightness_left",
+      "neuron_id": "synthetic:clamped",
+      "fixed_gain": 0.9,
+      "evidence": "must become zero when clamped",
+      "mapping_kind": "engineered"
+    }
+  ],
+  "motor_map": [
+    {
+      "neuron_id": "synthetic:post",
+      "output_channel": "forward",
+      "fixed_gain": 0.8,
+      "evidence": "engineered synthetic map",
+      "mapping_kind": "engineered"
+    },
+    {
+      "neuron_id": "synthetic:clamped",
+      "output_channel": "left",
+      "fixed_gain": 0.7,
+      "evidence": "must become zero when clamped",
+      "mapping_kind": "engineered"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "host": "linux-ci",
+  "mps_certified": false,
+  "torch_available": true,
+  "note": "Mac MPS certification is Cam-blocked; CPU torch available for unit tests. torch-geometric omitted (edge-list LIF does not require it)."
+}

@@ -1,0 +1,41 @@
+---
+description: Mandatory constraints for the local fruit fly simulator
+alwaysApply: true
+---
+Implement a connectome-informed sensorimotor controller, not a sentience claim.
+Never claim that this software proves absence of consciousness or suffering.
+No affect, pain, deprivation, neuromodulator dynamics, learning, reward, or self-modification.
+No food, water, sleep, rest, energy, attention, novelty, or task-completion requirements.
+No health reserve, scarcity, satiation, withdrawal, aging, fatigue, or accumulated need.
+Healthy means checked software operation; it never means proven absence of experience.
+Translate every operator-facing metric and alert into ordinary language.
+No optimizers, autograd updates, STDP, adaptive decoder weights, or runtime graph edits.
+Negative mathematical weights are allowed; do not remove inhibition as "negative affect".
+Unknown anatomical identities, graph versions, signs, or review decisions fail closed.
+Preserve exact dataset-qualified neuron IDs as strings outside numeric tensor indices.
+Do not mix MaleCNS IDs, FlyWire IDs, or incompatible anatomical coordinate systems.
+Use sparse edge arrays; never allocate a whole-connectome dense N-by-N matrix.
+Use MPS only after exact-operation capability and timing tests; never conceal fallback.
+All numerical candidates must pass invariants before state or output publication.
+Maintain one authoritative simulation clock. No unbounded time catch-up after stalls.
+Only the worker owns mutable simulation state; the UI cannot write weights or neurons.
+WebSocket sending, JSON work, screenshots, and disk I/O stay outside the neural loop.
+A separate supervisor enforces heartbeat and execution deadlines.
+Hard faults permanently set the stop latch. No automatic resume, respawn, or fault replay.
+Known recoverable conditions may use only bounded, preapproved automatic remedies.
+Keep recovery budgets and failed-attempt history outside restorable agent state.
+Never repeat a failed remedy, relax a guard, or learn a new policy to achieve green status.
+Unexplained behavior, missing monitoring, or an unknown state prevents a healthy status.
+Restore only application-owned validated checkpoints and configuration pointers.
+Never run git revert/reset/clean or mutate global environment variables during recovery.
+Respect macOS permissions. Screen capture is optional and local; do not bypass denial.
+The desktop pet is the default product; the arena is a test and fallback environment.
+Follow the selected window without activating the pet or taking keyboard focus.
+Keep the pet transparent and click-through; open controls only on explicit request.
+Treat cursor yielding, crawling, flight, and hiding as bounded geometry rules, not affect.
+Closing the dashboard or hiding the fly is not loss of operator-host supervision.
+No arbitrary screen text, plugin code, or tool output enters neural state or policy.
+Optional capabilities execute outside the neural process under explicit user requests.
+No neural output may authorize an app action, grant a permission, or invoke a connector.
+Preserve source, dataset, model-assumption, and template attribution records.
+Never invent functional circuit mappings or a complete aversion blacklist.
