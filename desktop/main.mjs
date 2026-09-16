@@ -85,7 +85,9 @@ export function createDesktopSession({
         path: join(root, "src/workbench/workbench.mjs"),
       };
     },
-    openSettings() {},
+    openSettings() {
+      return { route: "/settings" };
+    },
     openHelp() {
       return { path: join(root, "docs/handover/operator-runbook.md") };
     },
@@ -245,6 +247,8 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   const overlaySize = session.petConfig.overlay_size_points || 256;
   /** @type {import('electron').BrowserWindow | null} */
   let healthWin = null;
+  /** @type {import('electron').BrowserWindow | null} */
+  let settingsWin = null;
 
   function refreshPresentationBounds() {
     const primary = screen.getPrimaryDisplay();
@@ -281,6 +285,38 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
     return meta;
   }
 
+  function openSettingsWindow() {
+    const meta = session.actions.openSettings();
+    if (settingsWin && !settingsWin.isDestroyed()) {
+      settingsWin.focus();
+      return meta;
+    }
+    settingsWin = new BrowserWindow(dashboardWindowOptions("DesktopFly Settings"));
+    settingsWin.on("closed", () => {
+      settingsWin = null;
+    });
+    const snapshot = JSON.stringify(
+      {
+        mode: session.status().mode,
+        paused: session.status().paused,
+        petConfig: session.petConfig,
+      },
+      null,
+      2,
+    );
+    settingsWin
+      .loadFile(join(__dirname, "renderer", "settings.html"))
+      .then(() =>
+        settingsWin.webContents.executeJavaScript(
+          `document.getElementById("cfg").textContent = ${JSON.stringify(snapshot)};`,
+        ),
+      )
+      .catch((err) => {
+        console.error("settings window failed to load", err);
+      });
+    return meta;
+  }
+
   function findFlyAndShow(petWin) {
     session.actions.findFly();
     return syncPetWindow(petWin);
@@ -289,6 +325,7 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   const guiActions = {
     ...session.actions,
     openHealth: openHealthWindow,
+    openSettings: openSettingsWindow,
     findFly() {
       return findFlyAndShow(win);
     },
@@ -298,8 +335,16 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   };
 
   await app.whenReady();
+  if (process.platform === "darwin" && typeof app.dock?.show === "function") {
+    app.dock.show();
+  }
   refreshPresentationBounds();
-  screen.on("display-metrics-changed", () => refreshPresentationBounds());
+  screen.on("display-metrics-changed", () => {
+    refreshPresentationBounds();
+    if (desktopPetWindow && !desktopPetWindow.isDestroyed()) {
+      syncPetWindow(desktopPetWindow);
+    }
+  });
 
   const win = new BrowserWindow(petWindowOptions(preloadPath, overlaySize));
   desktopPetWindow = win;
@@ -349,6 +394,12 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
 
   app.on("before-quit", () => clearInterval(timer));
 
+  app.on("activate", () => {
+    if (win && !win.isDestroyed()) {
+      findFlyAndShow(win);
+    }
+  });
+
   if (autoQuitMs > 0) {
     setTimeout(() => {
       try {
@@ -360,7 +411,15 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
     }, Math.min(autoQuitMs, 2500));
   }
 
-  return { app, win, tray: desktopTray, session, root, openHealthWindow };
+  return {
+    app,
+    win,
+    tray: desktopTray,
+    session,
+    root,
+    openHealthWindow,
+    openSettingsWindow,
+  };
 }
 
 // Electron loads package.json "main" with argv[1] === "." — do not require argv path match.

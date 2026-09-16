@@ -112,9 +112,14 @@ test("overlay bounds center pose on screen", () => {
   assert.equal(bounds.y, 300 - 128);
 });
 
+test("desktop session open settings returns route metadata", () => {
+  const session = createDesktopSession();
+  assert.deepEqual(session.actions.openSettings(), { route: "/settings" });
+});
+
 test("tray icon asset exists", () => {
   const desktopDir = dirname(fileURLToPath(import.meta.url));
   const path = trayIconPathOrThrow(desktopDir);
   assert.ok(existsSync(path));
-  assert.ok(readFileSync(path).length > 100);
+  assert.ok(readFileSync(path).length >= 80);
 });

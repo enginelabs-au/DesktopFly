@@ -32,8 +32,14 @@ export function createTrayNativeImage(nativeImage, desktopDir = __dirname) {
     throw new Error(`tray icon failed to load: ${loadPath}`);
   }
   if (process.platform === "darwin") {
+    const { width, height } = image.getSize();
+    if (width !== 18 || height !== 18) {
+      image = image.resize({ width: 18, height: 18, quality: "best" });
+    }
+    if (image.isEmpty()) {
+      throw new Error(`tray icon empty after resize: ${loadPath}`);
+    }
     image.setTemplateImage(true);
-    image = image.resize({ width: 18, height: 18 });
   }
   return image;
 }

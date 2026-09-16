@@ -23,6 +23,6 @@ After pulling tray/pet fixes, quit DesktopFly completely (tray **Quit** or `Cmd+
 cd desktop && npm start
 ```
 
-You should see a **Fly** silhouette in the menu bar and the desktop pet overlay (not Health by default). Use tray or menu **Find fly** if the pet is off-screen. Open **Health…** from the menu when you need the dashboard.
+You should see a **Fly** silhouette in the menu bar and the desktop pet overlay (not Health by default). Use tray or menu **Find fly** if the pet is off-screen. **Settings…** opens a window with live `desktop-pet.json` defaults. Open **Health…** from the menu when you need the dashboard.
 
 Not Papership Tauri.
