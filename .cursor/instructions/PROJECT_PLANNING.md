@@ -20,9 +20,9 @@ Do not activate for a small isolated fix that can be safely implemented and veri
 
 Before planning:
 
-- read the core agent files required by `AGENTS.md`
-- read `/instructions/LAUNCH.md` and preserve its launch/resume/closure mode
-- run the bootstrap
+- have `/AGENTS.md` in context (read it once per session)
+- read `/instructions/LAUNCH.md` when the work was launched through `/launch-pipeline`, and preserve its launch/resume/closure mode
+- run read-only preflight; run the bootstrap only after Build or explicit Agent-mode implementation authorization
 - inspect the repository, configuration, tests, documentation, and current deployment/integration state
 - read relevant prior plans, blueprints, decisions, blockers, runbooks, and skills
 - activate `STRATEGY.md` first when product or market discovery is material
@@ -92,7 +92,7 @@ Do not generate a pile of speculative detailed phase plans at project start. Pha
 
 Every non-final phase plan must end with a prompt equivalent to:
 
-> Read `/AGENTS.md`, the complete core agent context, `/instructions/PROJECT_PLANNING.md`, `/instructions/ROLES.md`, the original `docs/plans/phase_0_foundations_plan.md`, this completed phase plan, the active workstream manifest and role handoffs, all completion evidence, current repository state, active blockers, and relevant decisions. Confirm this phase and every required role gate are fully implemented and validated. Then generate exactly one exhaustive next phase plan at `docs/plans/phase_<NEXT_NUMBER>_<DESCRIPTIVE_SLUG>_plan.md`. Derive it from the phase-0 roadmap and verified current state, preserve unresolved requirements, include all required plan sections and adaptive role decisions, defer non-blocking human actions to the final phase, and do not implement the next phase until the plan is written.
+> Read `/AGENTS.md` if it is not already in context, `/instructions/PROJECT_PLANNING.md`, `/instructions/ROLES.md`, the original `docs/plans/phase_0_foundations_plan.md`, this completed phase plan, the active workstream manifest and role handoffs, all completion evidence, current repository state, active blockers, and relevant decisions. Confirm this phase and every required role gate are fully implemented and validated. Then generate exactly one exhaustive next phase plan at `docs/plans/phase_<NEXT_NUMBER>_<DESCRIPTIVE_SLUG>_plan.md`. Derive it from the phase-0 roadmap and verified current state, preserve unresolved requirements, include all required plan sections and adaptive role decisions, defer non-blocking human actions to the final phase, and do not implement the next phase until the plan is written.
 
 Replace placeholders with the exact next phase number and expected purpose where known.
 

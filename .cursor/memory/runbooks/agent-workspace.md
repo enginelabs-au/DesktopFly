@@ -30,7 +30,7 @@ Document the canonical autonomous agent control plane, startup materialization, 
 3. After Build or explicit Agent-mode implementation authorization, run `/scripts/bootstrap.sh`. From the configuration root, use `bash scripts/bootstrap.sh`.
 4. Confirm root documentation directories and indexes exist.
 5. Confirm `/settings.json` links to `config/settings.json`.
-6. On every substantive turn, read `/AGENTS.md` first and then its complete core set.
+6. Read `/AGENTS.md` once per session; reuse instructions already in context and re-read a control file only after change, context loss, or a newly relevant scope.
 7. Invoke `/launch-pipeline` for a raw idea, major change, resume, remediation, or closure; otherwise route detailed modes through `/INSTRUCTIONS.md`.
 8. For substantive role-based work, create `docs/workstreams/<task-id>/manifest.md`, record required/skipped roles, and materialize each activated role's charter and handoff.
 9. For new multi-phase projects, create and implement `docs/plans/phase_0_foundations_plan.md`, then generate one next phase plan at a time.
@@ -43,6 +43,6 @@ Document the canonical autonomous agent control plane, startup materialization, 
 - Required control files are non-empty.
 - Root `docs/` subdirectories exist.
 - Root `AGENTS.md` routes into the installed control plane and `docs/workstreams/README.md` explains task artifacts.
-- Rules contain valid always-applied frontmatter.
+- Rules declare a valid activation mode: `00-core-routing.mdc`, `git-privacy-and-secrets.mdc`, and `karpathy-guidelines.mdc` always-on; planning, sub-agent, blocker, memory, and runbook rules Agent-Requested by description.
 - Native role adapters, policy configuration, and validator checks pass.
 - No secret values are stored in the control plane.

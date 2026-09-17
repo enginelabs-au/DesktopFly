@@ -1,0 +1,25 @@
+# Context optimization · runbook pack
+
+Version 1.3 · research snapshot 2026-09-17 · status: **R0→R1 reconstructed and independently reviewed; R2 corrections + DesktopFly canary applied; W1 native injection INCONCLUSIVE until a fresh session; W2 subagent PARTIAL; GPT review next.** Sequence: GPT proposal (v1.1) → Claude first pass (v1.2) → Cursor second pass (this version) → GPT review of both. Do not claim final acceptance.
+
+**Objective:** reduce irrelevant/repeated model context and total cost per accepted change while preserving capability availability, reliable discovery, correct execution, and necessary safeguards; preserve broad functionality through selective activation. Scope: `/Users/camdouglas/agent-instructions/.cursor` (shared source, hand-copied into project repositories) and the active Cursor configuration that consumes it. Shared policy stays generic; project facts and state stay project-local.
+
+**What is true now.** Claude's R1 batch is independently reconstructed (81/88 candidate hashes matched; fixture validators/tests pass). Cursor applied R2 corrections and propagated to owner-selected consumer **DesktopFly** via the owner apply route. Shared source `/Users/camdouglas/agent-instructions` was not on the Cloud Agent VM. W1 Customize-panel injection is **INCONCLUSIVE** (stale session prompt). W2: one security subagent avoided TOOLS/LAUNCH/STRATEGY and other role sections but still read INSTRUCTIONS/SUBAGENTS/STATE. Hooks/permissions/sandbox were not changed. Token and cash savings are not claimed.
+
+**Reading order for GPT's review:** this index → [10](10-CHANGE-LOG.md) → [11](11-IMPLEMENTATION-RECEIPT.md) (Claude) → [13 Cursor receipt](13-CURSOR-RECEIPT.md) → [12](12-REMAINING-WORK.md) → [evidence/cursor-phase1-review-2026-09-17.md](evidence/cursor-phase1-review-2026-09-17.md) → [evidence/cursor-phase2-observations-2026-09-17.md](evidence/cursor-phase2-observations-2026-09-17.md) → [07](07-REVIEW-AND-CONTRACTS.md) → changed sections only.
+
+**Scope boundary:** this pack is not an `AGENTS.md`, skill, startup import, or authority to preload every linked source. Uploading it authorizes no configuration change, deployment, purchase, or credential operation. Filesystem paths identify scope; they do not grant access.
+
+| Round | Read in order | Implement / produce | Exit gate | Status |
+|---|---|---|---|---|
+| R0: identify | [01](01-CONTRACT.md) → [02](02-BASELINE.md) → [06](06-EVALUATION-AND-RECOVERY.md) baseline sections | Active loading graph, consumer map, private rollback snapshot, baseline | Source/consumer relationship established; unknowns explicit | **Done** (traces not captured) |
+| R1: loading experiment | [03](03-LOADING-EXPERIMENT.md) → rules/skills sections of [04](04-CAPABILITY-SURFACES.md) → [06](06-EVALUATION-AND-RECOVERY.md) | Minimal activation/reread patch plus coupled validator/bootstrap/docs; model/tools held stable | Lower irrelevant loading, no regression in declared checks | **Deterministic gate passed on reconstructed fixture; native injection still inconclusive** |
+| R2: targeted cleanup | Relevant section of [04](04-CAPABILITY-SURFACES.md) → [06](06-EVALUATION-AND-RECOVERY.md) | Defects D1–D6, W4, payload sync, Ask/preflight exception, DesktopFly canary | Unique functionality retained; negative cases pass; rollback proven | **Partial: W4 and defect fixes applied; W6–W11 not all done** |
+| R3: economics and adapters | [05](05-ROUTING-AND-AUTOMATION.md) → [06](06-EVALUATION-AND-RECOVERY.md) | Optional worker defaults, evaluated routes, necessary native adapters | Lower cost/latency at accepted quality | Deferred; no working adapters exist to optimize |
+| R4: cross-repo automation | [05](05-ROUTING-AND-AUTOMATION.md) → [07](07-REVIEW-AND-CONTRACTS.md) → [06](06-EVALUATION-AND-RECOVERY.md) | Only justified registry/runner/workers | Ownership, idempotence, resume, isolation demonstrated | Deferred |
+| R5: review and promote | [07](07-REVIEW-AND-CONTRACTS.md) → changed sections → [06](06-EVALUATION-AND-RECOVERY.md) | Independent review of diff/evidence; bounded fixes; canary rollout | Findings resolved or accepted; claims and limits retained | **Cursor second pass complete on DesktopFly canary; GPT review next** |
+| R6: maintain | [06](06-EVALUATION-AND-RECOVERY.md) → relevant [04](04-CAPABILITY-SURFACES.md) section | Drift checks, stale evidence refresh | New complexity earns its cost | Not started |
+
+**Reference routes:** [08 evidence ledger](08-EVIDENCE.md); [09](09-HISTORICAL-EVIDENCE-AND-COVERAGE.md); [11 Claude receipt](11-IMPLEMENTATION-RECEIPT.md); [13 Cursor receipt](13-CURSOR-RECEIPT.md); [baseline source manifest](baseline-source-manifest.json); [candidate source manifest](candidate-source-manifest.json); [evidence/](evidence/); [pack manifest](pack-manifest.json).
+
+**Completion receipt per round:** phase; source/client versions; changed paths/diff; validation commands and outcomes; measured versus estimated deltas; regressions; rollback reference; unresolved questions; next phase and entry conditions. A parsable file is not proof the client loaded it; a loaded capability is not proof the agent used it correctly.

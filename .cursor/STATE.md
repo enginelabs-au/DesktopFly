@@ -2,91 +2,87 @@
 
 ## Current Objective
 
-- Enforce Cursor anonymous git identity and keep secrets out of git in the DesktopFly control plane and the `agent-instructions` templates.
+- Context-loading R2 on DesktopFly: selective activation, W4, payload sync, pack v1.3 for GPT review.
 
 ## Current Status
 
-- Complete — git-safety rules, hooks, policy, skill, and validators are installed in both trees. Preflight is `READY`.
+- Implementation complete on this canary. Security gate PASS. Project lead CONDITIONAL (fresh-session W1 + owner W5). Preflight READY.
 
 ## Project Phase
 
-- Repository initialized. Product implementation has not started.
+- Phase 0 of `docs/plans/phase_0_foundations_plan.md` implemented for the control-plane change. Product (Fruit Fly) implementation has not started.
 
 ## Active Plan
 
-- None.
+- `docs/plans/phase_0_foundations_plan.md`
 
 ## Active Workstream
 
-- None.
+- `docs/workstreams/20260917-context-optimization/`
 
 ## Active Role and Gate
 
-- None.
-- Last integrated validation: `PASS`.
+- `project-lead-subagent` CONDITIONAL. Owner decision pending.
+- Last integrated validation: validators + 23 tests PASS.
 
 ## Predecessor Handoff
 
-- None.
+- `docs/workstreams/20260917-context-optimization/security-engineer-subagent/handoff.md`
 
 ## Pending Remediation
 
-- None recorded.
+- None in-repo. W5 owner-only residual.
 
 ## Owner Decision
 
-- Git writes must use `Cursor Agent <cursoragent@noreply.github.com>` or a GitHub noreply address. Secrets, credentials, and passwords must never enter git.
+- Git writes must use `Cursor Agent <cursoragent@noreply.github.com>` or a GitHub noreply address. Secrets must never enter git.
+- This implementation request authorized DesktopFly as the canary consumer and the owner apply route for protected files.
 
 ## Active Instructions
 
-- None.
+- `/instructions/LAUNCH.md`
+- `/instructions/PROJECT_PLANNING.md`
+- `/instructions/SUBAGENTS.md`
+- `/instructions/ROLES.md`
 
 ## Active Items
 
-- External controls in `docs/handover/agent-governance-operator-setup.md` remain owner-configured.
-- Product implementation should start through `/launch-pipeline` using `docs/handover/fruit-fly-cursor-handover.md`.
-- Owner requested commit and push of the git-safety controls.
+- Pack v1.3: `docs/handover/agentic-context-runbook/`
+- Owner handoff: `docs/workstreams/20260917-context-optimization/delivery/owner-handoff.md`
+- Cost operator setup: `docs/handover/cursor-cost-operator-setup.md`
 
 ## Files in Active Use
 
+- `AGENTS.md`
 - `/AGENTS.md`
-- `/USER.md`
-- `/STATE.md`
-- `/INSTRUCTIONS.md`
-- `/SKILLS.md`
-- `/TOOLS.md`
-- `/memory/MEMORY.md`
-- `/skills/git-safety/SKILL.md`
+- `/rules/00-core-routing.mdc`
 - `/rules/git-privacy-and-secrets.mdc`
-- `/hooks/policy.mjs`
-- `.githooks/`
+- `docs/handover/apply-context-optimization-r2.sh`
 
 ## Open Blockers
 
-- None.
+- None in `memory/blockers/`. W1 native injection remains unverified until a fresh session.
 
 ## Attempts Performed
 
-- Added `/skills/git-safety`, `.githooks`, standing USER/TOOLS/SKILLS directives, and secret-aware `.gitignore` entries in DesktopFly and `agent-instructions`.
-- Applied protected policy, rule, bootstrap, validator, CLI, and workflow files via `docs/handover/apply-git-safety.sh`.
-- First apply used a wrong relative import in `policy.mjs`; fail-closed hooks blocked all tools until the owner repaired the import to `/skills/git-safety/scripts/git-safety.mjs`.
-- Revalidated: 16 policy/git-safety tests pass in both trees; DesktopFly bootstrap and preflight are `READY`; launch validation classifies 89 control-plane files. Private-email identity check exits 1; Cursor anonymous identity exits 0.
+- Reconstructed R1; 81/88 hashes matched; fixture validators/tests pass.
+- Applied R2 via owner script; W4 warning-only runbooks; payload resync.
+- W2 security subagent PASS with extra core-file reads recorded.
 
 ## Decisions and Assumptions
 
-- Required agent git identity is `cursoragent@noreply.github.com`. `*@users.noreply.github.com` is also allowed. Any other inbox is forbidden.
-- Agents must not run `git config` to change identity. Bootstrap copies `.githooks/` into `.git/hooks/` without changing git config.
-- Secret-bearing paths and high-confidence secret content are blocked by policy, git hooks, CLI denials, and `.gitignore`.
+- Selective loading over deletion. Home directory as workspace not adopted.
+- Token/cash savings UNKNOWN.
+- Stale Cloud Agent session injection does not prove candidate always-on set.
 
 ## Current Working State
 
-- DesktopFly hooks are installed at `.git/hooks/{pre-commit,commit-msg,pre-push}`.
-- Template tree at `/Users/camdouglas/agent-instructions` contains the same skill, rules, policy, and `.githooks`.
+- Branch `cursor/context-optimization-r2-0433`. Disk rules: 3 always-on + 6 Agent-Requested.
 
 ## Next Actions
 
-- Start product work with `/launch-pipeline` against `docs/handover/fruit-fly-cursor-handover.md`.
+- Owner: fresh chat W1, W5 if needed, GPT review of pack v1.3.
 
 ## Last Updated
 
-- 2026-09-16 — installed git-safety anonymous-identity and secret-blocking controls.
+- 2026-09-17 — Cursor R2 canary on DesktopFly.

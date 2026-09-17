@@ -24,7 +24,7 @@ Do not activate for a trivial answer or isolated low-risk change when the root r
 Cursor loads or discovers these surfaces without manual attachment:
 
 - repository-root `AGENTS.md` — native project-wide router;
-- `/rules/*.mdc` with `alwaysApply: true` — always-on project rules;
+- `/rules/*.mdc` — three always-on rules plus Agent-Requested rules that load by description;
 - `/agents/*.md` — native custom subagents;
 - `/skills/*/SKILL.md` — native discoverable and slash-invokable skills;
 - `/hooks.json`, `/cli.json`, `/sandbox.json`, and `/permissions.json` — native runtime and security configuration at required paths.
@@ -37,7 +37,7 @@ The parent agent remains the sole orchestrator. On activation, connect and read 
 
 1. Repository-root `AGENTS.md`.
 2. `/AGENTS.md`.
-3. `/USER.md`, `/STATE.md`, `/INSTRUCTIONS.md`, `/SKILLS.md`, `/TOOLS.md`, and `/memory/MEMORY.md`.
+3. `/STATE.md` and `/INSTRUCTIONS.md`; then `/USER.md`, `/SKILLS.md`, `/TOOLS.md`, and `/memory/MEMORY.md` only if they are not already in context.
 4. Run the read-only `/skills/launch-pipeline/scripts/preflight.mjs`.
 5. Every active blocker under `/memory/blockers/`.
 6. This file.
@@ -253,7 +253,7 @@ Do not duplicate canonical role bodies, long instructions, secret values, or unv
 
 When the user asks to resume, behave as though instructed:
 
-> Read repository-root `AGENTS.md`, the complete core context, `/instructions/LAUNCH.md`, the active phase plan, active workstream manifest, current role charter and plan, latest predecessor handoff, blockers, decisions, and continuation evidence. Verify current repository state against recorded evidence. Resume only from the recorded gate, preserve completed work, route the next required role, and continue until a strict blocker or owner decision.
+> Read repository-root `AGENTS.md` and `/AGENTS.md` if they are not already in context, `/instructions/LAUNCH.md`, the active phase plan, active workstream manifest, current role charter and plan, latest predecessor handoff, blockers, decisions, and continuation evidence. Verify current repository state against recorded evidence. Resume only from the recorded gate, preserve completed work, route the next required role, and continue until a strict blocker or owner decision.
 
 ## Initial idea prompt contract
 

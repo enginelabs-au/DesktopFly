@@ -23,9 +23,9 @@ Provide the sole user-facing command for the repository's linked strategy, plann
 Read in order:
 
 1. Repository-root `AGENTS.md`.
-2. `.cursor/AGENTS.md` and its complete per-turn context.
+2. `.cursor/AGENTS.md` if it is not already in context.
 3. `.cursor/instructions/LAUNCH.md`.
-4. Every detailed instruction, rule, skill, runbook, plan, workstream artifact, decision, blocker, source file, and test routed by those files.
+4. The instruction bodies, skills, runbooks, plans, workstream artifacts, decisions, blockers, source files, and tests that the selected mode routes to; not every file the control plane contains.
 
 Run the read-only preflight before selecting a mode:
 

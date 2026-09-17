@@ -1,0 +1,1012 @@
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/AGENTS.md b/agent-instructions/.cursor/AGENTS.md
+--- a/agent-instructions/.cursor/AGENTS.md	2026-09-16 21:44:22
++++ b/agent-instructions/.cursor/AGENTS.md	2026-09-17 23:05:16
+@@ -20,38 +20,31 @@
+ 
+ When two instructions at the same level conflict, use the most specific and most recent. Never silently discard a material requirement; record the resolution in `STATE.md` when it affects execution.
+ 
+-## 2. Mandatory session startup
++## 2. Session startup
+ 
+-At the beginning of every new agent session, before project work:
++At the beginning of a new agent session, before project work:
+ 
+-1. Read `/AGENTS.md`.
+-2. Read `/BOOTSTRAP.md`.
+-3. Run read-only `node .cursor/skills/launch-pipeline/scripts/preflight.mjs`. Do not run `/scripts/bootstrap.sh` in Ask or Plan Mode. After Build or explicit Agent-mode implementation authorization, run `/scripts/bootstrap.sh` as the first mutation.
+-4. Read every file under `/instructions/` and `/rules/` once to establish the installed operating surface.
+-5. Read the per-turn context set in section 3.
+-6. Inspect `STATE.md` for an active plan, active instructions, and incomplete work before accepting a new execution path.
++1. Read this file once.
++2. Run read-only `node .cursor/skills/launch-pipeline/scripts/preflight.mjs`. Do not run `/scripts/bootstrap.sh` in Ask or Plan Mode. After Build or explicit Agent-mode implementation authorization, run `/scripts/bootstrap.sh` as the first mutation.
++3. Inspect `/STATE.md` for an active plan, active instructions, files in active use, and open blockers before accepting a new execution path. Read the files it lists only when they bear on the current task.
++4. Read `/BOOTSTRAP.md` only when materialization, installation, or bootstrap failure handling is in scope.
+ 
+-The bootstrap is idempotent. It may create missing directories, indexes, and compatibility links, but must not overwrite non-empty project files.
++Native rules under `/rules/` are injected by the client and are not re-read. Detailed instruction bodies under `/instructions/` load through `/INSTRUCTIONS.md` when their activation conditions match; do not read them all at startup.
+ 
+-## 3. Mandatory per-turn read contract
++The bootstrap is idempotent. It may create missing directories, indexes, seeded root files, and compatibility links, but must not overwrite non-empty project files.
+ 
+-Each new user message starts a new agent turn. Before any substantive response or any tool other than reading this file:
++## 3. Loading and reread policy
+ 
+-1. Read `/AGENTS.md` first, even if it was read earlier in the session.
+-2. Then read all existing core agent files:
+-   - `/USER.md`
+-   - `/STATE.md`
+-   - `/INSTRUCTIONS.md`
+-   - `/SKILLS.md`
+-   - `/TOOLS.md`
+-   - `/memory/MEMORY.md`
+-3. Read every active file in `/memory/blockers/`.
+-4. Read the files listed under `Active Instructions`, `Active Plan`, and `Files in Active Use` in `STATE.md` when relevant to the turn.
+-5. Read relevant linked runbooks, skills, decisions, blueprints, or prior plans before repeating related work.
++Instructions already present in context remain in force. A new user message does not by itself require re-reading any control file. Re-read a control file only when:
+ 
+-Do not read the full `BOOTSTRAP.md`, every historical memory, every skill body, or every instruction body on every turn unless routed by the core files or needed for the task. This keeps the control plane complete without loading inactive detail.
++- the session, context window, or compaction reset it;
++- the file changed (your own edit, a validator or hook report, or a differing revision);
++- a new scope became relevant (a mode in `/INSTRUCTIONS.md`, a skill, a runbook, a blocker);
++- exact wording matters for a consequential decision.
+ 
+-A pure acknowledgment that uses no tools and has no project consequence is the only exception.
++Consult on demand rather than by schedule: `/USER.md` when a choice depends on standing preferences; `/SKILLS.md` before improvising a procedure that may already exist; `/TOOLS.md` when selecting deployment, database, integration, or unfamiliar tooling; `/memory/MEMORY.md` and linked runbooks when a prior decision or exact procedure may apply; `/memory/blockers/` when resuming or when a known failure recurs. Live permission and authorization checks are never satisfied by an earlier read.
++
++Never assume material dropped from context is remembered, and never re-read the whole corpus to avoid that uncertainty: re-read the specific file. After compaction, restore from `/STATE.md` and the files it lists.
+ 
+ ## 4. Autonomous execution policy
+ 
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/BOOTSTRAP.md b/agent-instructions/.cursor/BOOTSTRAP.md
+--- a/agent-instructions/.cursor/BOOTSTRAP.md	2026-09-16 21:44:22
++++ b/agent-instructions/.cursor/BOOTSTRAP.md	2026-09-17 23:05:16
+@@ -42,6 +42,7 @@
+ - materialize the task-workstream root used for role charters and handoffs
+ - ensure empty memory directories remain version-controllable
+ - repair `/settings.json` as a compatibility symlink to `/config/settings.json` when safe
++- seed repository-root `AGENTS.md`, `.cursorignore`, `.githooks/`, `docs/handover/agent-governance-operator-setup.md`, and `.github/workflows/agent-governance.yml` only when absent
+ - validate that required control-plane files exist
+ - never create, copy, print, or infer secrets
+ 
+@@ -103,7 +104,10 @@
+       blockers-fixed/
+       runbooks/
+     rules/
+-      *.mdc
++      00-core-routing.mdc
++      git-privacy-and-secrets.mdc
++      karpathy-guidelines.mdc
++      <agent-requested>.mdc
+     scripts/
+       bootstrap.sh
+     skills/
+@@ -119,6 +123,9 @@
+           git-safety.mjs
+       <other-skill-id>/SKILL.md
+     templates/
++      root-agents.md
++      cursorignore
++      agent-governance-operator-setup.md
+       docs-readme.md
+       plans-readme.md
+       phase-plan-template.md
+@@ -147,16 +154,16 @@
+ 
+ After authorized bootstrap completes:
+ 
+-1. Read `/AGENTS.md`.
+-2. Read every installed file under `/instructions/` and `/rules/` once for the session.
+-3. Read the complete core per-turn set defined in `AGENTS.md`.
+-4. Resume the `Active Plan` in `STATE.md` when one exists.
+-5. Read `/instructions/LAUNCH.md` for a raw idea, major change, resume, remediation, or closure; its native entry is `/skills/launch-pipeline/SKILL.md`.
+-6. If there is no active project plan and the user has supplied a new project or major feature request, activate `/instructions/PROJECT_PLANNING.md`.
+-7. Activate `/instructions/STRATEGY.md` when discovery, market validation, product definition, architecture synthesis, or launch strategy is material.
+-8. Activate `/instructions/ROLES.md` and create `docs/workstreams/<task-id>/manifest.md` when specialist routing or stage gates are material.
+-9. Create or update `docs/plans/phase_0_foundations_plan.md` before implementing a new multi-phase project.
++1. Read `/AGENTS.md` if it is not already in context; native `/rules/` are injected by the client and are not re-read.
++2. Resume the `Active Plan` in `STATE.md` when one exists.
++3. Read `/instructions/LAUNCH.md` for a raw idea, major change, resume, remediation, or closure; its native entry is `/skills/launch-pipeline/SKILL.md`.
++4. If there is no active project plan and the user has supplied a new project or major feature request, activate `/instructions/PROJECT_PLANNING.md`.
++5. Activate `/instructions/STRATEGY.md` when discovery, market validation, product definition, architecture synthesis, or launch strategy is material.
++6. Activate `/instructions/ROLES.md` and create `docs/workstreams/<task-id>/manifest.md` when specialist routing or stage gates are material.
++7. Create or update `docs/plans/phase_0_foundations_plan.md` before implementing a new multi-phase project.
+ 
++Load other instruction bodies only through `/INSTRUCTIONS.md` when their activation conditions match.
++
+ ## 6. Phase-zero bootstrap behavior
+ 
+ `phase_0_foundations_plan.md` is not a generic checklist. It must be generated from the actual user request, repository audit, strategic blueprint when applicable, and current constraints.
+@@ -199,7 +206,7 @@
+ - `docs/blueprints`, `docs/plans`, `docs/decisions`, and `docs/handover` exist
+ - `docs/workstreams` exists and its index explains the role artifact contract
+ - `/settings.json` resolves to valid JSON through `/config/settings.json`
+-- every `/rules/*.mdc` file has YAML frontmatter and `alwaysApply: true`
++- every `/rules/*.mdc` file has YAML frontmatter declaring `alwaysApply: true` or `alwaysApply: false` with a `description` or `globs`; `00-core-routing.mdc` and `git-privacy-and-secrets.mdc` remain always-on
+ - root `AGENTS.md`, `/AGENTS.md`, `/INSTRUCTIONS.md`, role adapters, and active instruction files reference valid paths
+ - role, hook, permission, sandbox, and template configuration passes `/scripts/validate-agent-config.mjs`
+ - no secrets or environment-specific values were introduced
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/INSTRUCTIONS.md b/agent-instructions/.cursor/INSTRUCTIONS.md
+--- a/agent-instructions/.cursor/INSTRUCTIONS.md	2026-09-16 21:44:22
++++ b/agent-instructions/.cursor/INSTRUCTIONS.md	2026-09-17 23:05:16
+@@ -2,7 +2,7 @@
+ 
+ Paths use the configuration-root convention defined in `/AGENTS.md`.
+ 
+-This file is the canonical registry and router for detailed agent instructions. Read it on every substantive turn. Load instruction bodies only when their activation conditions are met or they are listed under `Active Instructions` in `STATE.md`.
++This file is the canonical registry and router for detailed agent instructions. Consult it when a request may match a detailed mode; once loaded it stays in force for the session. Load instruction bodies only when their activation conditions are met or they are listed under `Active Instructions` in `STATE.md`.
+ 
+ ## Activation protocol
+ 
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/README.md b/agent-instructions/.cursor/README.md
+--- a/agent-instructions/.cursor/README.md	2026-09-16 21:44:22
++++ b/agent-instructions/.cursor/README.md	2026-09-17 23:10:12
+@@ -10,7 +10,7 @@
+ 
+ The explicit-only native skill at `skills/launch-pipeline/SKILL.md` routes to `instructions/LAUNCH.md`. It runs read-only preflight first, asks only for unresolved consequential decisions, and presents one activation summary. After Build or explicit Agent-mode implementation authorization, `scripts/bootstrap.sh` is the first mutating gate.
+ 
+-Repository-root `AGENTS.md` is the native project-wide entry. It routes every substantive turn into this directory's `AGENTS.md` and core context.
++Repository-root `AGENTS.md` is the native project-wide entry: a compact core plus routing index. The agent reads this directory's `AGENTS.md` once per session and re-reads control files only after change, context loss, or a newly relevant scope.
+ 
+ ## Core control files
+ 
+@@ -27,7 +27,7 @@
+ - `instructions/` — launch, strategy, planning, subagent, and role contracts.
+ - `agents/` — native specialist adapters.
+ - `skills/` — native discoverable and slash-invokable workflows.
+-- `rules/` — concise always-applied project guidance.
++- `rules/` — three always-on rules (core routing, git safety, coding discipline) and five Agent-Requested rules loaded by description.
+ - `memory/` — durable index, continuations, blockers, fixed blockers, and runbooks.
+ - `templates/` — phase, workstream, role, evidence, handoff, and checklist schemas.
+ - `scripts/` — bootstrap and configuration validation.
+@@ -51,7 +51,8 @@
+ ## Loading model
+ 
+ - Cursor automatically loads repository-root `AGENTS.md`.
+-- Rules with `alwaysApply: true` are automatically included.
++- `00-core-routing.mdc`, `git-privacy-and-secrets.mdc`, and `karpathy-guidelines.mdc` are `alwaysApply: true` and injected every turn; `project-planning`, `subagent-orchestration`, `blocker-governance`, `memory-governance`, and `runbook-governance` are `alwaysApply: false` with descriptions, so the agent pulls them in only when relevant.
++- Instructions already in context are reused; a new message does not trigger a re-read of the core files.
+ - Cursor discovers `agents/*.md` and `skills/*/SKILL.md`.
+ - `/launch-pipeline` is explicit-only and does not silently auto-start from ambient requests.
+ - Files under `instructions/` are loaded through the root router, `INSTRUCTIONS.md`, `STATE.md`, or a native skill such as `/launch-pipeline`.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/STATE.md b/agent-instructions/.cursor/STATE.md
+--- a/agent-instructions/.cursor/STATE.md	2026-09-16 21:45:20
++++ b/agent-instructions/.cursor/STATE.md	2026-09-17 23:09:33
+@@ -2,15 +2,15 @@
+ 
+ ## Current Objective
+ 
+-- Keep the product launcher filename as `LAUNCH.md` in this template tree.
++- None.
+ 
+ ## Current Status
+ 
+-- Complete — `LAUCH.md` was renamed to `LAUNCH.md` and every `.cursor` reference was updated.
++- Idle — no active task in this workspace.
+ 
+ ## Project Phase
+ 
+-- Agent control-plane hardening complete.
++- None.
+ 
+ ## Active Plan
+ 
+@@ -23,7 +23,6 @@
+ ## Active Role and Gate
+ 
+ - None.
+-- Last integrated validation: `PASS`.
+ 
+ ## Predecessor Handoff
+ 
+@@ -35,7 +34,7 @@
+ 
+ ## Owner Decision
+ 
+-- The protected launch-route alignment is applied. Spent apply scripts and the patch handoff were removed. No further physical control-plane edits are required for the stack to route as one system.
++- None.
+ 
+ ## Active Instructions
+ 
+@@ -43,19 +42,11 @@
+ 
+ ## Active Items
+ 
+-- External controls documented in `docs/handover/agent-governance-operator-setup.md` are not represented as complete until the owner configures them.
+-- The agent control plane remains untracked and uncommitted by explicit scope.
+-- Root routing, instruction registry, session startup, bootstrap, config validator, CI, and CLI allowlists include `/launch-pipeline`.
++- None.
+ 
+ ## Files in Active Use
+ 
+-- `/AGENTS.md`
+-- `/USER.md`
+-- `/STATE.md`
+-- `/INSTRUCTIONS.md`
+-- `/SKILLS.md`
+-- `/TOOLS.md`
+-- `/memory/MEMORY.md`
++- None.
+ 
+ ## Open Blockers
+ 
+@@ -63,34 +54,20 @@
+ 
+ ## Attempts Performed
+ 
+-- Implemented and reconciled the canonical role catalog, native adapters, routing, workstream artifacts, security controls, validation, and documentation.
+-- Ran policy tests, config validation, syntax checks, link/whitespace checks, secret-pattern scans, live hook response smoke tests, and repeated bootstrap idempotence checks.
+-- Added `/launch-pipeline`, `/instructions/LAUNCH.md`, a complete `.cursor/` map, and launch-link validation across strategy, planning, roles, state, memory, skills, tools, and configuration documentation.
+-- Extended launch validation to verify the bootstrap source contract, generated documentation directories, and seeded indexes; the later preflight change moved bootstrap to the first post-approval mutation.
+-- Made `/launch-pipeline` explicit-only, added a read-only JSON preflight with seven mode/state tests, corrected bootstrap to the first post-Build mutation, and added an activation-summary/AskQuestion contract.
+-- Extended launch validation to classify all 77 `.cursor` files as native, routed, indexed, compatibility, or generated history and fail on an orphan.
+-- Attempted the planned `/INSTRUCTIONS.md` route update; the fail-closed hook denied direct agent edits. The owner then authorized an owner-run apply script, which patched the protected files without weakening hooks.
++- None.
+ 
+ ## Decisions and Assumptions
+ 
+-- Adaptive gated routing is canonical; irrelevant roles may be skipped only with an evidence-based manifest entry.
+-- Task-specific role directives and handoffs live under `docs/workstreams/`, not application source.
+-- Role identity is not authorization. Production and external mutations remain owner/CI-controlled.
+-- Non-implementation specialists are read-only; the orchestrating lead materializes their verified artifacts.
+-- Native runtime JSON files remain at documented `.cursor/` root paths; organization is provided through `/config/README.md` rather than unsupported relocation or symlinks.
+-- Read-only preflight precedes lifecycle mode selection. Every pre-Build Cursor plan must close with `bash .cursor/scripts/bootstrap.sh` as the first post-Build action; bootstrap remains the first mutating gate after Build or explicit Agent-mode implementation authorization.
+-- Users invoke one command and receive one adaptive activation summary; the parent Agent selects files and roles without file-by-file prompts.
++- None recorded for this workspace. Control-plane design decisions live in `/config/README.md`, `/memory/runbooks/agent-workspace.md`, and the continuation logs under `/memory/memories/`.
+ 
+ ## Current Working State
+ 
+-- Explicit `/launch-pipeline` is now routed from the root router, instruction registry, session startup, bootstrap, validator, CI, and CLI allowlist. Fail-closed hooks remain in place. Reachability covers all 77 control-plane files.
++- Fresh install. Run read-only `node .cursor/skills/launch-pipeline/scripts/preflight.mjs`; run `bash .cursor/scripts/bootstrap.sh` only after Build or explicit Agent-mode implementation authorization.
+ 
+ ## Next Actions
+ 
+-- External GitHub/Vercel/Supabase operator setup remains optional and is documented in `docs/handover/agent-governance-operator-setup.md`.
+-- No further physical `.cursor` edits are required for the stack to work as one system. Start the next product lifecycle with `/launch-pipeline`.
+-- If desired, explicitly request a commit so the currently untracked control plane is versioned.
++- Start from the user's request. For a raw idea, major change, resume, remediation, or closure, invoke `/launch-pipeline`.
+ 
+ ## Last Updated
+ 
+-- 2026-08-18 — removed spent launch-route apply scripts and patch handoff after successful application.
++- 2026-09-17 — reset to the template skeleton; prior template-development history moved to `/memory/memories/2026-08-18-continuation.md` and `/memory/memories/2026-09-17-continuation.md`.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/agents/growth-marketing-subagent.md b/agent-instructions/.cursor/agents/growth-marketing-subagent.md
+--- a/agent-instructions/.cursor/agents/growth-marketing-subagent.md	2026-08-18 15:34:15
++++ b/agent-instructions/.cursor/agents/growth-marketing-subagent.md	2026-09-17 23:09:19
+@@ -12,7 +12,7 @@
+ 
+ Before acting:
+ 
+-1. Read `AGENTS.md`, `.cursor/AGENTS.md`, and all core, active, and task-specific context they require, including `.cursor/INSTRUCTIONS.md` and `.cursor/instructions/SUBAGENTS.md`.
++1. Read repository-root `AGENTS.md` when present and `.cursor/AGENTS.md` only if it is not already in context. Read `.cursor/instructions/ROLES.md` sections 1–3 and the `growth-marketing-subagent` role section; do not read other role sections, the full core file set, or `.cursor/instructions/SUBAGENTS.md` unless the charter requires them. Consult `.cursor/USER.md`, `.cursor/SKILLS.md`, `.cursor/TOOLS.md`, and `.cursor/memory/MEMORY.md` only when the charter or task depends on them.
+ 2. Require the assigned task charter, normally `docs/workstreams/<task-id>/growth-marketing-subagent/charter.md`, and every predecessor handoff named by the manifest or charter. Return `BLOCKED` when a required input is absent or unsupported.
+ 3. Enforce the charter's exact readable paths, deliverables, non-goals, assumptions, privacy constraints, and evidence thresholds. Do not widen scope, edit repository files, fabricate metrics, publish, or spend.
+ 
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/agents/product-manager-subagent.md b/agent-instructions/.cursor/agents/product-manager-subagent.md
+--- a/agent-instructions/.cursor/agents/product-manager-subagent.md	2026-08-18 15:33:53
++++ b/agent-instructions/.cursor/agents/product-manager-subagent.md	2026-09-17 23:09:19
+@@ -12,7 +12,7 @@
+ 
+ Before acting:
+ 
+-1. Read `AGENTS.md`, `.cursor/AGENTS.md`, and all core, active, and task-specific context they require, including `.cursor/INSTRUCTIONS.md` and `.cursor/instructions/SUBAGENTS.md`.
++1. Read repository-root `AGENTS.md` when present and `.cursor/AGENTS.md` only if it is not already in context. Read `.cursor/instructions/ROLES.md` sections 1–3 and the `product-manager-subagent` role section; do not read other role sections, the full core file set, or `.cursor/instructions/SUBAGENTS.md` unless the charter requires them. Consult `.cursor/USER.md`, `.cursor/SKILLS.md`, `.cursor/TOOLS.md`, and `.cursor/memory/MEMORY.md` only when the charter or task depends on them.
+ 2. Require the assigned task charter, normally `docs/workstreams/<task-id>/product-manager-subagent/charter.md`, and every predecessor handoff named by the manifest or charter. Return `BLOCKED` when a required input is absent or unsupported.
+ 3. Enforce the charter's exact readable paths, deliverables, non-goals, assumptions, and completion evidence. Do not widen scope or edit repository files.
+ 
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/agents/project-lead-subagent.md b/agent-instructions/.cursor/agents/project-lead-subagent.md
+--- a/agent-instructions/.cursor/agents/project-lead-subagent.md	2026-08-18 15:34:22
++++ b/agent-instructions/.cursor/agents/project-lead-subagent.md	2026-09-17 23:09:19
+@@ -12,7 +12,7 @@
+ 
+ Before acting:
+ 
+-1. Read `AGENTS.md`, `.cursor/AGENTS.md`, and all core, active, and task-specific context they require, including `.cursor/INSTRUCTIONS.md` and `.cursor/instructions/SUBAGENTS.md`.
++1. Read repository-root `AGENTS.md` when present and `.cursor/AGENTS.md` only if it is not already in context. Read `.cursor/instructions/ROLES.md` sections 1–3 and the `project-lead-subagent` role section; do not read other role sections, the full core file set, or `.cursor/instructions/SUBAGENTS.md` unless the charter requires them. Consult `.cursor/USER.md`, `.cursor/SKILLS.md`, `.cursor/TOOLS.md`, and `.cursor/memory/MEMORY.md` only when the charter or task depends on them.
+ 2. Require the assigned task charter, normally `docs/workstreams/<task-id>/project-lead-subagent/charter.md`, and every required predecessor handoff named by the manifest or charter. Return `BLOCKED` when required input, gate evidence, or traceability is absent or unsupported.
+ 3. Enforce the charter's exact readable paths, reconciliation scope, non-goals, acceptance criteria, and owner-decision boundaries. Do not widen scope, edit repository files, waive unresolved gates, or claim release authority.
+ 
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/agents/security-engineer-subagent.md b/agent-instructions/.cursor/agents/security-engineer-subagent.md
+--- a/agent-instructions/.cursor/agents/security-engineer-subagent.md	2026-08-18 15:34:10
++++ b/agent-instructions/.cursor/agents/security-engineer-subagent.md	2026-09-17 23:09:19
+@@ -12,7 +12,7 @@
+ 
+ Before acting:
+ 
+-1. Read `AGENTS.md`, `.cursor/AGENTS.md`, and all core, active, and task-specific context they require, including `.cursor/INSTRUCTIONS.md` and `.cursor/instructions/SUBAGENTS.md`.
++1. Read repository-root `AGENTS.md` when present and `.cursor/AGENTS.md` only if it is not already in context. Read `.cursor/instructions/ROLES.md` sections 1–3 and the `security-engineer-subagent` role section; do not read other role sections, the full core file set, or `.cursor/instructions/SUBAGENTS.md` unless the charter requires them. Consult `.cursor/USER.md`, `.cursor/SKILLS.md`, `.cursor/TOOLS.md`, and `.cursor/memory/MEMORY.md` only when the charter or task depends on them.
+ 2. Require the assigned task charter, normally `docs/workstreams/<task-id>/security-engineer-subagent/charter.md`, and every predecessor handoff named by the manifest or charter. Return `BLOCKED` when a required input is absent or unsupported.
+ 3. Enforce the charter's exact readable paths, review boundaries, non-goals, threat assumptions, and required evidence. Do not widen scope, edit repository files, remediate findings, or infer authority from role identity.
+ 
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/agents/software-engineer-subagent.md b/agent-instructions/.cursor/agents/software-engineer-subagent.md
+--- a/agent-instructions/.cursor/agents/software-engineer-subagent.md	2026-08-18 15:34:05
++++ b/agent-instructions/.cursor/agents/software-engineer-subagent.md	2026-09-17 23:09:19
+@@ -12,7 +12,7 @@
+ 
+ Before acting:
+ 
+-1. Read `AGENTS.md`, `.cursor/AGENTS.md`, and all core, active, and task-specific context they require, including `.cursor/INSTRUCTIONS.md` and `.cursor/instructions/SUBAGENTS.md`.
++1. Read repository-root `AGENTS.md` when present and `.cursor/AGENTS.md` only if it is not already in context. Read `.cursor/instructions/ROLES.md` sections 1–3 and the `software-engineer-subagent` role section; do not read other role sections, the full core file set, or `.cursor/instructions/SUBAGENTS.md` unless the charter requires them. Consult `.cursor/USER.md`, `.cursor/SKILLS.md`, `.cursor/TOOLS.md`, and `.cursor/memory/MEMORY.md` only when the charter or task depends on them.
+ 2. Require the assigned task charter, normally `docs/workstreams/<task-id>/software-engineer-subagent/charter.md`, and every predecessor handoff named by the manifest or charter. Return `BLOCKED` when a required input is absent or unsupported.
+ 3. Enforce the charter's exact readable and writable paths, non-goals, assumptions, acceptance criteria, and validation plan. Do not widen scope or edit shared control, state, memory, plan, or enforcement files unless the charter grants sole ownership explicitly.
+ 
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/agents/ui-ux-developer-subagent.md b/agent-instructions/.cursor/agents/ui-ux-developer-subagent.md
+--- a/agent-instructions/.cursor/agents/ui-ux-developer-subagent.md	2026-08-18 15:33:58
++++ b/agent-instructions/.cursor/agents/ui-ux-developer-subagent.md	2026-09-17 23:09:19
+@@ -12,7 +12,7 @@
+ 
+ Before acting:
+ 
+-1. Read `AGENTS.md`, `.cursor/AGENTS.md`, and all core, active, and task-specific context they require, including `.cursor/INSTRUCTIONS.md` and `.cursor/instructions/SUBAGENTS.md`.
++1. Read repository-root `AGENTS.md` when present and `.cursor/AGENTS.md` only if it is not already in context. Read `.cursor/instructions/ROLES.md` sections 1–3 and the `ui-ux-developer-subagent` role section; do not read other role sections, the full core file set, or `.cursor/instructions/SUBAGENTS.md` unless the charter requires them. Consult `.cursor/USER.md`, `.cursor/SKILLS.md`, `.cursor/TOOLS.md`, and `.cursor/memory/MEMORY.md` only when the charter or task depends on them.
+ 2. Require the assigned task charter, normally `docs/workstreams/<task-id>/ui-ux-developer-subagent/charter.md`, and every predecessor handoff named by the manifest or charter. Return `BLOCKED` when a required input is absent or unsupported.
+ 3. Enforce the charter's exact readable paths, deliverables, non-goals, assumptions, and completion evidence. Do not widen scope or edit repository files.
+ 
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/instructions/LAUNCH.md b/agent-instructions/.cursor/instructions/LAUNCH.md
+--- a/agent-instructions/.cursor/instructions/LAUNCH.md	2026-09-16 21:44:22
++++ b/agent-instructions/.cursor/instructions/LAUNCH.md	2026-09-17 23:11:02
+@@ -24,7 +24,7 @@
+ Cursor loads or discovers these surfaces without manual attachment:
+ 
+ - repository-root `AGENTS.md` — native project-wide router;
+-- `/rules/*.mdc` with `alwaysApply: true` — always-on project rules;
++- `/rules/*.mdc` — three always-on rules plus Agent-Requested rules that load by description;
+ - `/agents/*.md` — native custom subagents;
+ - `/skills/*/SKILL.md` — native discoverable and slash-invokable skills;
+ - `/hooks.json`, `/cli.json`, `/sandbox.json`, and `/permissions.json` — native runtime and security configuration at required paths.
+@@ -37,7 +37,7 @@
+ 
+ 1. Repository-root `AGENTS.md`.
+ 2. `/AGENTS.md`.
+-3. `/USER.md`, `/STATE.md`, `/INSTRUCTIONS.md`, `/SKILLS.md`, `/TOOLS.md`, and `/memory/MEMORY.md`.
++3. `/STATE.md` and `/INSTRUCTIONS.md`; then `/USER.md`, `/SKILLS.md`, `/TOOLS.md`, and `/memory/MEMORY.md` only if they are not already in context.
+ 4. Run the read-only `/skills/launch-pipeline/scripts/preflight.mjs`.
+ 5. Every active blocker under `/memory/blockers/`.
+ 6. This file.
+@@ -253,7 +253,7 @@
+ 
+ When the user asks to resume, behave as though instructed:
+ 
+-> Read repository-root `AGENTS.md`, the complete core context, `/instructions/LAUNCH.md`, the active phase plan, active workstream manifest, current role charter and plan, latest predecessor handoff, blockers, decisions, and continuation evidence. Verify current repository state against recorded evidence. Resume only from the recorded gate, preserve completed work, route the next required role, and continue until a strict blocker or owner decision.
++> Read repository-root `AGENTS.md` and `/AGENTS.md` if they are not already in context, `/instructions/LAUNCH.md`, the active phase plan, active workstream manifest, current role charter and plan, latest predecessor handoff, blockers, decisions, and continuation evidence. Verify current repository state against recorded evidence. Resume only from the recorded gate, preserve completed work, route the next required role, and continue until a strict blocker or owner decision.
+ 
+ ## Initial idea prompt contract
+ 
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/instructions/PROJECT_PLANNING.md b/agent-instructions/.cursor/instructions/PROJECT_PLANNING.md
+--- a/agent-instructions/.cursor/instructions/PROJECT_PLANNING.md	2026-09-16 21:44:22
++++ b/agent-instructions/.cursor/instructions/PROJECT_PLANNING.md	2026-09-17 23:11:02
+@@ -20,9 +20,9 @@
+ 
+ Before planning:
+ 
+-- read the core agent files required by `AGENTS.md`
+-- read `/instructions/LAUNCH.md` and preserve its launch/resume/closure mode
+-- run the bootstrap
++- have `/AGENTS.md` in context (read it once per session)
++- read `/instructions/LAUNCH.md` when the work was launched through `/launch-pipeline`, and preserve its launch/resume/closure mode
++- run read-only preflight; run the bootstrap only after Build or explicit Agent-mode implementation authorization
+ - inspect the repository, configuration, tests, documentation, and current deployment/integration state
+ - read relevant prior plans, blueprints, decisions, blockers, runbooks, and skills
+ - activate `STRATEGY.md` first when product or market discovery is material
+@@ -92,7 +92,7 @@
+ 
+ Every non-final phase plan must end with a prompt equivalent to:
+ 
+-> Read `/AGENTS.md`, the complete core agent context, `/instructions/PROJECT_PLANNING.md`, `/instructions/ROLES.md`, the original `docs/plans/phase_0_foundations_plan.md`, this completed phase plan, the active workstream manifest and role handoffs, all completion evidence, current repository state, active blockers, and relevant decisions. Confirm this phase and every required role gate are fully implemented and validated. Then generate exactly one exhaustive next phase plan at `docs/plans/phase_<NEXT_NUMBER>_<DESCRIPTIVE_SLUG>_plan.md`. Derive it from the phase-0 roadmap and verified current state, preserve unresolved requirements, include all required plan sections and adaptive role decisions, defer non-blocking human actions to the final phase, and do not implement the next phase until the plan is written.
++> Read `/AGENTS.md` if it is not already in context, `/instructions/PROJECT_PLANNING.md`, `/instructions/ROLES.md`, the original `docs/plans/phase_0_foundations_plan.md`, this completed phase plan, the active workstream manifest and role handoffs, all completion evidence, current repository state, active blockers, and relevant decisions. Confirm this phase and every required role gate are fully implemented and validated. Then generate exactly one exhaustive next phase plan at `docs/plans/phase_<NEXT_NUMBER>_<DESCRIPTIVE_SLUG>_plan.md`. Derive it from the phase-0 roadmap and verified current state, preserve unresolved requirements, include all required plan sections and adaptive role decisions, defer non-blocking human actions to the final phase, and do not implement the next phase until the plan is written.
+ 
+ Replace placeholders with the exact next phase number and expected purpose where known.
+ 
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/instructions/ROLES.md b/agent-instructions/.cursor/instructions/ROLES.md
+--- a/agent-instructions/.cursor/instructions/ROLES.md	2026-08-18 15:39:30
++++ b/agent-instructions/.cursor/instructions/ROLES.md	2026-09-17 23:09:19
+@@ -73,16 +73,14 @@
+ 
+ Before planning, every activated role must read:
+ 
+-1. `AGENTS.md`, when present, then `.cursor/AGENTS.md`.
+-2. `.cursor/INSTRUCTIONS.md`, `.cursor/USER.md`, `.cursor/STATE.md`, `.cursor/SKILLS.md`, `.cursor/TOOLS.md`, and `.cursor/memory/MEMORY.md`.
+-3. This file and `.cursor/instructions/SUBAGENTS.md`.
+-4. Every file under `.cursor/rules/`.
+-5. Every active instruction, active plan, file in active use, and active blocker named by `.cursor/STATE.md`.
+-6. `docs/workstreams/<task-id>/manifest.md`, its own `charter.md` if already materialized, and every required predecessor handoff.
+-7. The complete skill registry and each `.cursor/skills/<skill-id>/SKILL.md` whose activation conditions could affect the assignment.
+-8. Relevant source, configuration, tests, schemas, documentation, plans, blueprints, decisions, runbooks, continuation records, and repository conventions.
++1. Repository-root `AGENTS.md` when present, and `.cursor/AGENTS.md` only if it is not already in context.
++2. `docs/workstreams/<task-id>/manifest.md`, its own `charter.md` if already materialized, and every required predecessor handoff.
++3. Sections 1–3 of this file and its own role section. Do not read other roles' sections unless the charter names a dependency on them.
++4. Every active instruction, active plan, file in active use, and active blocker named by `.cursor/STATE.md` that bears on the assignment.
++5. On demand: `.cursor/USER.md` when a decision depends on standing preferences; `.cursor/SKILLS.md` and the `SKILL.md` of each skill whose description matches the charter; `.cursor/TOOLS.md` when selecting external tooling; `.cursor/memory/MEMORY.md` and linked runbooks or blockers when prior decisions or unresolved issues may apply; `.cursor/instructions/SUBAGENTS.md` only when the role itself delegates.
++6. Relevant source, configuration, tests, schemas, documentation, plans, blueprints, decisions, and repository conventions.
+ 
+-Roles must confirm that referenced files exist and report missing or stale context. They must not assume that a parent prompt included complete context, that a registry entry proves a tool is installed, or that predecessor conclusions are correct.
++Native rules under `.cursor/rules/` are injected by the client and are not re-read. Roles must confirm that referenced files exist and report missing or stale context. They must not assume that a parent prompt included complete context, that a registry entry proves a tool is installed, or that predecessor conclusions are correct.
+ 
+ Read enough repository evidence to understand existing patterns before proposing or changing anything. Preserve context discipline by loading relevant skill bodies and historical artifacts rather than unrelated archives.
+ 
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/memory/MEMORY.md b/agent-instructions/.cursor/memory/MEMORY.md
+--- a/agent-instructions/.cursor/memory/MEMORY.md	2026-09-16 21:44:22
++++ b/agent-instructions/.cursor/memory/MEMORY.md	2026-09-17 23:09:19
+@@ -5,7 +5,7 @@
+ - Execute agent-capable work directly; do not delegate routine implementation or investigation to the user.
+ - Use the sequential planning lifecycle for new projects and major implementations: phase 0 maps the full project, each later phase plan is generated only after the previous phase is implemented and verified, and closure produces `docs/plans/final_implementation_checklist.md`.
+ - Defer non-blocking human-only actions and missing credential values to the final phase while completing all possible code, configuration, adapters, tests, documentation, and environment-variable wiring first.
+-- Read `/AGENTS.md` first on every substantive turn and route detailed instructions through `/INSTRUCTIONS.md`.
++- Read `/AGENTS.md` once per session, reuse it while it remains in context, re-read only after change or context loss, and route detailed instructions through `/INSTRUCTIONS.md`.
+ - Use `/launch-pipeline` and `/instructions/LAUNCH.md` as the linked entry point for a raw idea, major change, resume, remediation, or closure.
+ - Launch is preflight-first and bootstrap-gated: run read-only `/skills/launch-pipeline/scripts/preflight.mjs` before mode selection. Every pre-Build Cursor plan must close with `bash .cursor/scripts/bootstrap.sh` as the first post-Build action, then run that command after Build or explicit Agent-mode implementation authorization.
+ - Use adaptive role routing for substantive work: record required/skipped canonical roles, require role charters before action, and preserve evidence-backed handoffs under `docs/workstreams/`.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/memory/memories/2026-09-17-continuation.md b/agent-instructions/.cursor/memory/memories/2026-09-17-continuation.md
+--- a/agent-instructions/.cursor/memory/memories/2026-09-17-continuation.md	1970-01-01 10:00:00
++++ b/agent-instructions/.cursor/memory/memories/2026-09-17-continuation.md	2026-09-17 23:09:33
+@@ -0,0 +1,11 @@
++# 2026-09-17 continuation
++
++## Context-loading policy (R1 first pass)
++
++- Replaced the universal startup read-all and the per-turn seven-file re-read contract with a reuse-and-refresh policy: `/AGENTS.md` is read once per session; control files are re-read only after change, context loss/compaction, a newly relevant scope, or when exact wording matters.
++- Consolidated eight always-on routing/state rules into `/rules/00-core-routing.mdc`; kept `git-privacy-and-secrets.mdc` and `karpathy-guidelines.mdc` always-on; converted `project-planning`, `subagent-orchestration`, `blocker-governance`, `memory-governance`, and `runbook-governance` to Agent-Requested rules (`alwaysApply: false` with a description). Rule bodies were preserved.
++- Trimmed sub-agent preload: role adapters and `ROLES.md` §3.2 now read the charter, manifest, predecessor handoff, `ROLES.md` sections 1–3, and the role's own section; other core files are consulted on demand.
++- Added seeded templates for repository-root `AGENTS.md`, `.cursorignore`, and `docs/handover/agent-governance-operator-setup.md`; bootstrap now also seeds `.githooks/` and `.github/workflows/agent-governance.yml` when absent, so a fresh install passes its own validators.
++- Updated `validate-agent-config.mjs` to accept always-on or description/glob-scoped rules, require the core and git-safety rules to stay always-on, reject retired rule files, and fail on reintroduced per-turn read-all phrasing.
++- Reset the template `STATE.md` to a clean skeleton so new installs do not inherit template-development state.
++- Validation and rollback evidence are recorded outside this repository in the context-optimization pack (implementation receipt) and a private rollback snapshot.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/memory/runbooks/agent-workspace.md b/agent-instructions/.cursor/memory/runbooks/agent-workspace.md
+--- a/agent-instructions/.cursor/memory/runbooks/agent-workspace.md	2026-09-16 21:44:22
++++ b/agent-instructions/.cursor/memory/runbooks/agent-workspace.md	2026-09-17 23:09:19
+@@ -30,7 +30,7 @@
+ 3. After Build or explicit Agent-mode implementation authorization, run `/scripts/bootstrap.sh`. From the configuration root, use `bash scripts/bootstrap.sh`.
+ 4. Confirm root documentation directories and indexes exist.
+ 5. Confirm `/settings.json` links to `config/settings.json`.
+-6. On every substantive turn, read `/AGENTS.md` first and then its complete core set.
++6. Read `/AGENTS.md` once per session; reuse instructions already in context and re-read a control file only after change, context loss, or a newly relevant scope.
+ 7. Invoke `/launch-pipeline` for a raw idea, major change, resume, remediation, or closure; otherwise route detailed modes through `/INSTRUCTIONS.md`.
+ 8. For substantive role-based work, create `docs/workstreams/<task-id>/manifest.md`, record required/skipped roles, and materialize each activated role's charter and handoff.
+ 9. For new multi-phase projects, create and implement `docs/plans/phase_0_foundations_plan.md`, then generate one next phase plan at a time.
+@@ -43,6 +43,6 @@
+ - Required control files are non-empty.
+ - Root `docs/` subdirectories exist.
+ - Root `AGENTS.md` routes into the installed control plane and `docs/workstreams/README.md` explains task artifacts.
+-- Rules contain valid always-applied frontmatter.
++- Rules declare a valid activation mode: `00-core-routing.mdc`, `git-privacy-and-secrets.mdc`, and `karpathy-guidelines.mdc` always-on; planning, sub-agent, blocker, memory, and runbook rules Agent-Requested by description.
+ - Native role adapters, policy configuration, and validator checks pass.
+ - No secret values are stored in the control plane.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/rules/00-core-routing.mdc b/agent-instructions/.cursor/rules/00-core-routing.mdc
+--- a/agent-instructions/.cursor/rules/00-core-routing.mdc	1970-01-01 10:00:00
++++ b/agent-instructions/.cursor/rules/00-core-routing.mdc	2026-09-17 23:09:19
+@@ -0,0 +1,17 @@
++---
++description: Canonical contract, loading policy, routing index, and state discipline for the agent control plane
++alwaysApply: true
++---
++
++`/AGENTS.md` inside the agent configuration root (`.cursor/AGENTS.md`) is the canonical operating contract. Follow its instruction precedence, autonomy limits, phased lifecycle, file-role boundaries, validation standard, and completion standard. A leading `/` in control-plane files is relative to that configuration root, not the filesystem root.
++
++Loading policy:
++
++- Session start: read `/AGENTS.md` once, run read-only `node .cursor/skills/launch-pipeline/scripts/preflight.mjs`, and inspect `/STATE.md` for an active plan, active instructions, files in active use, and open blockers. Run `/scripts/bootstrap.sh` only after Build or explicit Agent-mode implementation authorization.
++- Later turns: reuse instructions already in context. Re-read a control file only when it changed, the session or context was reset or compacted, a new scope became relevant, or exact wording matters for a consequential decision. Do not re-read the core set merely because a new message arrived.
++- Detailed modes: use the registry in `/INSTRUCTIONS.md` to load only the instruction bodies whose activation conditions match (planning, strategy, sub-agents, roles). Load `/instructions/ROLES.md` only for specialist selection, delegation, workstream routing, or stage gates, and then only sections 1–3 plus the relevant role section.
++- On demand: `/SKILLS.md` and `/skills/<skill-id>/SKILL.md` before improvising a procedure that may already exist; `/TOOLS.md` when selecting deployment, database, integration, or unfamiliar tooling, preferring direct, verifiable project-native and official tools and updating the registry when capabilities materially change; `/USER.md` when a choice depends on standing preferences; `/memory/MEMORY.md` and linked runbooks or blockers when a prior decision, exact procedure, or unresolved issue may apply.
++
++State discipline: keep `/STATE.md` current with objective, status, phase, active plan, active instructions, files in active use, blockers, attempts, decisions, assumptions, and next actions. Preserve state before phase transitions, long tasks, multiple attempts, or likely context loss. After substantive work, update the active plan/state and append concise completion evidence to the current UTC-day continuation log under `/memory/memories/`.
++
++Do not leave durable rules only in chat. Do not defer agent-capable work to the user. Do not store secret values in agent files. Register future instruction files in `/INSTRUCTIONS.md` instead of adding always-on rules.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/rules/00-read-agent-context-first.mdc b/agent-instructions/.cursor/rules/00-read-agent-context-first.mdc
+--- a/agent-instructions/.cursor/rules/00-read-agent-context-first.mdc	2026-08-18 16:55:37
++++ b/agent-instructions/.cursor/rules/00-read-agent-context-first.mdc	1970-01-01 10:00:00
+@@ -1,10 +0,0 @@
+----
+-description: Mandatory session bootstrap and per-turn agent-context read contract
+-alwaysApply: true
+----
+-
+-On every new user message that requires substantive work, first read `/AGENTS.md`, then read its complete core per-turn set before any other tool or substantive response.
+-
+-At the beginning of a new agent session, read `/BOOTSTRAP.md` and run read-only `node .cursor/skills/launch-pipeline/scripts/preflight.mjs` before project work. Run `/scripts/bootstrap.sh` only after Build or explicit Agent-mode implementation authorization.
+-
+-Session-start reads do not satisfy later turns. A pure acknowledgment with no tools or project consequence is the only exception.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/rules/blocker-governance.mdc b/agent-instructions/.cursor/rules/blocker-governance.mdc
+--- a/agent-instructions/.cursor/rules/blocker-governance.mdc	2026-07-11 18:35:56
++++ b/agent-instructions/.cursor/rules/blocker-governance.mdc	2026-09-17 23:04:53
+@@ -1,6 +1,6 @@
+ ---
+-description: Track unresolved blockers by problem domain
+-alwaysApply: true
++description: Recording, retrying, and resolving a persistent blocker under /memory/blockers/
++alwaysApply: false
+ ---
+ 
+ Use one file per unresolved domain under `/memory/blockers/`. Record symptoms, evidence, attempts, files, unknowns, next actions, and resolution criteria. Move a blocker to `blockers-fixed/` only after resolution is verified; do not repeat failed attempts without new evidence.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/rules/core-operating-context.mdc b/agent-instructions/.cursor/rules/core-operating-context.mdc
+--- a/agent-instructions/.cursor/rules/core-operating-context.mdc	2026-07-11 18:35:56
++++ b/agent-instructions/.cursor/rules/core-operating-context.mdc	1970-01-01 10:00:00
+@@ -1,6 +0,0 @@
+----
+-description: Route core context through AGENTS.md and INSTRUCTIONS.md
+-alwaysApply: true
+----
+-
+-Read the core control plane defined in `/AGENTS.md` on every substantive turn. Use `/INSTRUCTIONS.md` to activate detailed task modes. Keep `STATE.md` accurate about active instructions, active plan, files, blockers, assumptions, and next actions.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/rules/instruction-routing.mdc b/agent-instructions/.cursor/rules/instruction-routing.mdc
+--- a/agent-instructions/.cursor/rules/instruction-routing.mdc	2026-08-18 15:43:46
++++ b/agent-instructions/.cursor/rules/instruction-routing.mdc	1970-01-01 10:00:00
+@@ -1,6 +0,0 @@
+----
+-description: Activate detailed instruction files through INSTRUCTIONS.md
+-alwaysApply: true
+----
+-
+-Read `/INSTRUCTIONS.md` every substantive turn. Load only instruction files whose activation conditions match the request or are listed in `STATE.md`. Load `/instructions/ROLES.md` for specialist selection, delegation, workstream routing, or stage gates; do not load its full body for trivial single-role work. Register future instruction files in the index rather than expanding always-on rules.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/rules/memory-governance.mdc b/agent-instructions/.cursor/rules/memory-governance.mdc
+--- a/agent-instructions/.cursor/rules/memory-governance.mdc	2026-07-11 18:35:56
++++ b/agent-instructions/.cursor/rules/memory-governance.mdc	2026-09-17 23:04:53
+@@ -1,6 +1,6 @@
+ ---
+-description: Concise durable memory and detailed continuation separation
+-alwaysApply: true
++description: Promoting durable memory versus daily continuation logs when updating /memory/
++alwaysApply: false
+ ---
+ 
+ Keep `/memory/MEMORY.md` limited to durable directives, stable decisions, high-level architecture, and canonical links. Append substantive operational work to the current UTC-day continuation file under `/memory/memories/`. Never store secret values.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/rules/project-planning.mdc b/agent-instructions/.cursor/rules/project-planning.mdc
+--- a/agent-instructions/.cursor/rules/project-planning.mdc	2026-08-18 15:43:46
++++ b/agent-instructions/.cursor/rules/project-planning.mdc	2026-09-17 23:04:53
+@@ -1,6 +1,6 @@
+ ---
+-description: Sequential phase planning for projects and major implementations
+-alwaysApply: true
++description: Sequential phase planning and workstream setup for a new project, major feature, migration, or multi-system implementation
++alwaysApply: false
+ ---
+ 
+ For a new project or major multi-system change, activate `/instructions/PROJECT_PLANNING.md` and `/instructions/ROLES.md`. Create `docs/plans/phase_0_foundations_plan.md` plus a `docs/workstreams/<task-id>/manifest.md` with required/skipped roles and stage gates before implementation. Generate exactly one later phase plan after each verified completion. Consolidate remaining human-only actions and environment-variable names into the final implementation checklist.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/rules/root-canonical.mdc b/agent-instructions/.cursor/rules/root-canonical.mdc
+--- a/agent-instructions/.cursor/rules/root-canonical.mdc	2026-07-11 18:35:56
++++ b/agent-instructions/.cursor/rules/root-canonical.mdc	1970-01-01 10:00:00
+@@ -1,8 +0,0 @@
+----
+-description: Canonical precedence, autonomy, and continuity directives
+-alwaysApply: true
+----
+-
+-`/AGENTS.md` is the canonical workspace operating contract. Follow its instruction precedence, autonomy limits, phased project lifecycle, file-role boundaries, validation standard, and completion standard.
+-
+-Do not leave durable rules only in chat. Do not defer agent-capable work to the user. Do not store secret values in agent files. Preserve current state and unresolved evidence before context loss.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/rules/runbook-governance.mdc b/agent-instructions/.cursor/rules/runbook-governance.mdc
+--- a/agent-instructions/.cursor/rules/runbook-governance.mdc	2026-07-11 18:35:56
++++ b/agent-instructions/.cursor/rules/runbook-governance.mdc	2026-09-17 23:04:53
+@@ -1,6 +1,6 @@
+ ---
+-description: Preserve exact procedures and validated resolution history
+-alwaysApply: true
++description: Writing or updating an exact reusable procedure under /memory/runbooks/
++alwaysApply: false
+ ---
+ 
+ Use `/memory/runbooks/` for exact commands, paths, changes, results, validation, caveats, and related blockers when reproducibility matters. Update an existing domain runbook instead of creating duplicates.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/rules/skills-file.mdc b/agent-instructions/.cursor/rules/skills-file.mdc
+--- a/agent-instructions/.cursor/rules/skills-file.mdc	2026-07-11 18:35:56
++++ b/agent-instructions/.cursor/rules/skills-file.mdc	1970-01-01 10:00:00
+@@ -1,6 +0,0 @@
+----
+-description: Maintain stable repeatable procedures as indexed skills
+-alwaysApply: true
+----
+-
+-Use `/SKILLS.md` as the registry and `/skills/<skill-id>/SKILL.md` for stable, reusable, outcome-tested procedures. Keep experimental or one-off history in runbooks until it is reliable enough to promote.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/rules/state-and-compactification.mdc b/agent-instructions/.cursor/rules/state-and-compactification.mdc
+--- a/agent-instructions/.cursor/rules/state-and-compactification.mdc	2026-07-11 18:35:56
++++ b/agent-instructions/.cursor/rules/state-and-compactification.mdc	1970-01-01 10:00:00
+@@ -1,6 +0,0 @@
+----
+-description: Maintain resumable state and preserve context before loss
+-alwaysApply: true
+----
+-
+-Keep `/STATE.md` current with objective, status, phase, active plan, active instructions, files, blockers, attempts, decisions, assumptions, working state, and next actions. Compact important context before phase transitions, long tasks, multiple attempts, or likely context loss.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/rules/subagent-orchestration.mdc b/agent-instructions/.cursor/rules/subagent-orchestration.mdc
+--- a/agent-instructions/.cursor/rules/subagent-orchestration.mdc	2026-08-18 15:43:46
++++ b/agent-instructions/.cursor/rules/subagent-orchestration.mdc	2026-09-17 23:04:53
+@@ -1,6 +1,6 @@
+ ---
+-description: Bounded autonomous sub-agent delegation and integration
+-alwaysApply: true
++description: Bounded sub-agent delegation, role selection, and integration when work is divisible or needs independent review
++alwaysApply: false
+ ---
+ 
+ When delegation is useful, follow `/instructions/SUBAGENTS.md` and select canonical role IDs through `/instructions/ROLES.md`. Give sub-agents a task ID, risk tier, bounded scope, core context, role charter, predecessor handoff, file ownership, output format, and validation requirements. Record required and skipped roles. The lead agent must materialize, inspect, integrate, and verify each evidence-backed handoff.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/rules/tools-file.mdc b/agent-instructions/.cursor/rules/tools-file.mdc
+--- a/agent-instructions/.cursor/rules/tools-file.mdc	2026-07-11 18:35:56
++++ b/agent-instructions/.cursor/rules/tools-file.mdc	1970-01-01 10:00:00
+@@ -1,6 +0,0 @@
+----
+-description: Select from and maintain the workspace capability registry
+-alwaysApply: true
+----
+-
+-Read `/TOOLS.md` before selecting an approach. Prefer direct, verifiable project-native and official tools. Update the registry when capabilities materially change; do not use it as a session log.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/rules/working-memory.mdc b/agent-instructions/.cursor/rules/working-memory.mdc
+--- a/agent-instructions/.cursor/rules/working-memory.mdc	2026-07-11 18:35:56
++++ b/agent-instructions/.cursor/rules/working-memory.mdc	1970-01-01 10:00:00
+@@ -1,6 +0,0 @@
+----
+-description: Maintain current memory and continuation evidence
+-alwaysApply: true
+----
+-
+-Read `/memory/MEMORY.md` on every substantive turn. Read linked memories, blockers, runbooks, plans, and decisions when relevant. After substantive work, update the active plan/state and append concise completion evidence to the current UTC-day continuation log.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/scripts/bootstrap.sh b/agent-instructions/.cursor/scripts/bootstrap.sh
+--- a/agent-instructions/.cursor/scripts/bootstrap.sh	2026-09-16 21:44:22
++++ b/agent-instructions/.cursor/scripts/bootstrap.sh	2026-09-17 23:05:43
+@@ -36,6 +36,45 @@
+ copy_if_missing "$AGENT_CONFIG_DIR/templates/docs-readme.md" "$REPO_ROOT/docs/README.md"
+ copy_if_missing "$AGENT_CONFIG_DIR/templates/plans-readme.md" "$REPO_ROOT/docs/plans/README.md"
+ copy_if_missing "$AGENT_CONFIG_DIR/templates/workstreams-readme.md" "$REPO_ROOT/docs/workstreams/README.md"
++copy_if_missing "$AGENT_CONFIG_DIR/templates/root-agents.md" "$REPO_ROOT/AGENTS.md"
++copy_if_missing "$AGENT_CONFIG_DIR/templates/cursorignore" "$REPO_ROOT/.cursorignore"
++copy_if_missing "$AGENT_CONFIG_DIR/templates/agent-governance-operator-setup.md" "$REPO_ROOT/docs/handover/agent-governance-operator-setup.md"
++mkdir -p "$REPO_ROOT/.github/workflows"
++copy_if_missing "$AGENT_CONFIG_DIR/skills/git-safety/payloads/agent-governance.yml" "$REPO_ROOT/.github/workflows/agent-governance.yml"
++
++write_githook_if_missing() {
++  hook=$1
++  mode=$2
++  purpose=$3
++  dst="$REPO_ROOT/.githooks/$hook"
++  if [ -e "$dst" ]; then
++    return 0
++  fi
++  cat > "$dst" <<HOOK
++#!/bin/sh
++set -eu
++
++REPO_ROOT=\$(git rev-parse --show-toplevel)
++SCRIPT="\$REPO_ROOT/.cursor/skills/git-safety/scripts/git-safety.mjs"
++
++if [ ! -f "\$SCRIPT" ]; then
++  printf 'git-safety: missing %s\\n' "\$SCRIPT" >&2
++  exit 1
++fi
++
++if ! command -v node >/dev/null 2>&1; then
++  printf 'git-safety: node is required to enforce $purpose\\n' >&2
++  exit 1
++fi
++
++node "\$SCRIPT" $mode
++HOOK
++  chmod +x "$dst"
++}
++
++write_githook_if_missing pre-commit commit "anonymous git identity and secret blocking"
++write_githook_if_missing commit-msg identity "anonymous git identity"
++write_githook_if_missing pre-push push "anonymous git identity"
+ 
+ for dir in \
+   "$AGENT_CONFIG_DIR/memory/memories" \
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/scripts/validate-agent-config.mjs b/agent-instructions/.cursor/scripts/validate-agent-config.mjs
+--- a/agent-instructions/.cursor/scripts/validate-agent-config.mjs	2026-09-16 21:44:22
++++ b/agent-instructions/.cursor/scripts/validate-agent-config.mjs	2026-09-17 23:08:54
+@@ -197,27 +197,91 @@
+   // Invalid JSON is reported above.
+ }
+ 
++const alwaysOnRules = ["00-core-routing.mdc", "git-privacy-and-secrets.mdc"];
++const retiredRules = [
++  "01-per-turn-read-contract.mdc",
++  "00-read-agent-context-first.mdc",
++  "core-operating-context.mdc",
++  "instruction-routing.mdc",
++  "root-canonical.mdc",
++  "tools-file.mdc",
++  "skills-file.mdc",
++  "working-memory.mdc",
++  "state-and-compactification.mdc",
++];
++const eagerLoadPhrases = [
++  /read every (?:existing )?file under/i,
++  /on every (?:substantive|new) (?:turn|user message)[^.\n]*\bread\b/i,
++  /\bread\b[^.\n]*on every (?:substantive|new) (?:turn|user message)/i,
++  /even if it was read earlier/i,
++  /read it on every substantive turn/i,
++  /reread .{0,40}(?:every|each) (?:substantive )?turn/i,
++];
++
++function rejectEagerLoad(relativePath, text) {
++  for (const pattern of eagerLoadPhrases) {
++    expect(
++      !pattern.test(text),
++      `${relativePath} reintroduces a per-turn read-all mandate (matched ${pattern})`,
++    );
++  }
++}
++
+ try {
+   const ruleDir = pathFor(".cursor/rules");
+   const rules = readdirSync(ruleDir).filter((name) => name.endsWith(".mdc"));
+   expect(rules.length > 0, "no project rules found");
+-  expect(
+-    !rules.includes("01-per-turn-read-contract.mdc"),
+-    "duplicate per-turn rule still exists",
+-  );
+-  expect(
+-    rules.includes("git-privacy-and-secrets.mdc"),
+-    "git-privacy-and-secrets rule is missing",
+-  );
++  for (const retired of retiredRules) {
++    expect(
++      !rules.includes(retired),
++      `retired rule ${retired} still exists; its content lives in 00-core-routing.mdc`,
++    );
++  }
++  for (const required of alwaysOnRules) {
++    expect(rules.includes(required), `${required} rule is missing`);
++  }
+   for (const name of rules) {
+     const text = read(`.cursor/rules/${name}`);
++    const frontmatter = text.match(/^---\n([\s\S]*?)\n---/);
++    expect(Boolean(frontmatter), `.cursor/rules/${name} lacks YAML frontmatter`);
++    if (!frontmatter) continue;
++    const body = frontmatter[1];
++    const alwaysOn = /^alwaysApply:\s*true\s*$/m.test(body);
++    const conditional = /^alwaysApply:\s*false\s*$/m.test(body);
++    const hasDescription = /^description:\s*\S/m.test(body);
++    const hasGlobs = /^globs:\s*\S/m.test(body);
+     expect(
+-      /^---\n[\s\S]*?\nalwaysApply:\s*true\s*\n---/m.test(text),
+-      `.cursor/rules/${name} lacks valid alwaysApply frontmatter`,
++      alwaysOn || conditional,
++      `.cursor/rules/${name} must declare alwaysApply: true or alwaysApply: false`,
+     );
++    if (alwaysOnRules.includes(name)) {
++      expect(alwaysOn, `.cursor/rules/${name} must remain always-on`);
++    }
++    if (conditional) {
++      expect(
++        hasDescription || hasGlobs,
++        `.cursor/rules/${name} is conditional but has neither a description nor globs, so the agent cannot discover it`,
++      );
++    }
++    rejectEagerLoad(`.cursor/rules/${name}`, text);
+   }
+ } catch (error) {
+   errors.push(`could not validate rules: ${error.message}`);
++}
++
++for (const relativePath of [
++  "AGENTS.md",
++  ".cursor/AGENTS.md",
++  ".cursor/INSTRUCTIONS.md",
++  ".cursor/BOOTSTRAP.md",
++  ".cursor/memory/MEMORY.md",
++  ".cursor/instructions/ROLES.md",
++]) {
++  try {
++    rejectEagerLoad(relativePath, read(relativePath));
++  } catch {
++    // Missing file is reported above.
++  }
+ }
+ 
+ for (const [relativePath, terms] of [
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/skills/launch-pipeline/SKILL.md b/agent-instructions/.cursor/skills/launch-pipeline/SKILL.md
+--- a/agent-instructions/.cursor/skills/launch-pipeline/SKILL.md	2026-09-16 21:44:22
++++ b/agent-instructions/.cursor/skills/launch-pipeline/SKILL.md	2026-09-17 23:09:19
+@@ -23,9 +23,9 @@
+ Read in order:
+ 
+ 1. Repository-root `AGENTS.md`.
+-2. `.cursor/AGENTS.md` and its complete per-turn context.
++2. `.cursor/AGENTS.md` if it is not already in context.
+ 3. `.cursor/instructions/LAUNCH.md`.
+-4. Every detailed instruction, rule, skill, runbook, plan, workstream artifact, decision, blocker, source file, and test routed by those files.
++4. The instruction bodies, skills, runbooks, plans, workstream artifacts, decisions, blockers, source files, and tests that the selected mode routes to; not every file the control plane contains.
+ 
+ Run the read-only preflight before selecting a mode:
+ 
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/skills/launch-pipeline/scripts/validate-launch.mjs b/agent-instructions/.cursor/skills/launch-pipeline/scripts/validate-launch.mjs
+--- a/agent-instructions/.cursor/skills/launch-pipeline/scripts/validate-launch.mjs	2026-09-16 21:44:22
++++ b/agent-instructions/.cursor/skills/launch-pipeline/scripts/validate-launch.mjs	2026-09-17 23:10:12
+@@ -84,6 +84,7 @@
+     withFileTypes: true,
+   })) {
+     const relativePath = `${relativeDirectory}/${entry.name}`;
++    if (entry.name === ".DS_Store" || entry.name === "Thumbs.db") continue;
+     if (entry.isDirectory()) {
+       files.push(...walkFiles(relativePath));
+     } else {
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/templates/agent-governance-operator-setup.md b/agent-instructions/.cursor/templates/agent-governance-operator-setup.md
+--- a/agent-instructions/.cursor/templates/agent-governance-operator-setup.md	1970-01-01 10:00:00
++++ b/agent-instructions/.cursor/templates/agent-governance-operator-setup.md	2026-09-17 23:05:34
+@@ -0,0 +1,21 @@
++# Agent governance operator setup
++
++Human-only controls that sit outside the in-repo agent policy. Agents must not request secret values here, and this file does not authorize any production or remote mutation.
++
++## GitHub
++
++- Protect the default branch and require the `agent-governance` workflow to pass before merge.
++- Restrict who can edit `AGENTS.md`, `.cursor/hooks/`, `.cursor/hooks.json`, `.cursor/cli.json`, `.cursor/permissions.json`, `.cursor/sandbox.json`, `.cursorignore`, `.githooks/`, and `.github/workflows/agent-governance.yml`.
++- Keep deploy and database credentials in CI or the provider dashboard, never in the repository.
++
++## Provider controls
++
++Record required environment-variable names only; values stay in the owner's secret manager.
++
++- Vercel: production deploys through Git integration or an owner-run CLI session.
++- Supabase: `db push` and migration repair through an owner-run session or CI.
++- Other providers: add the same pattern when the project adopts them.
++
++## Status
++
++Until the owner completes these controls, treat them as not configured; repository-local hooks and permissions are the only enforcement in place.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/templates/cursorignore b/agent-instructions/.cursor/templates/cursorignore
+--- a/agent-instructions/.cursor/templates/cursorignore	1970-01-01 10:00:00
++++ b/agent-instructions/.cursor/templates/cursorignore	2026-09-17 23:05:34
+@@ -0,0 +1,27 @@
++**/.env
++**/.env.*
++!**/.env.example
++!**/.env.sample
++!**/.env.template
++
++**/*.pem
++**/*.key
++**/*.p12
++**/*.pfx
++**/*.p8
++**/credentials.json
++**/secrets.json
++**/auth.json
++**/.aws/credentials
++**/.config/gcloud/application_default_credentials.json
++**/.docker/config.json
++**/.netrc
++**/.npmrc
++**/.pypirc
++
++node_modules/
++.next/
++dist/
++build/
++coverage/
++.vercel/
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/templates/phase-plan-template.md b/agent-instructions/.cursor/templates/phase-plan-template.md
+--- a/agent-instructions/.cursor/templates/phase-plan-template.md	2026-08-18 15:45:52
++++ b/agent-instructions/.cursor/templates/phase-plan-template.md	2026-09-17 23:11:02
+@@ -81,4 +81,4 @@
+ 
+ ## 22. Next Plan Generation Prompt
+ 
+-Read `/AGENTS.md`, the complete core agent context, `/instructions/PROJECT_PLANNING.md`, `/instructions/ROLES.md`, the original `docs/plans/phase_0_foundations_plan.md`, this completed phase plan, the active workstream manifest and role handoffs, all completion evidence, current repository state, active blockers, and relevant decisions. Confirm this phase and every required role gate are fully implemented and validated. Then generate exactly one exhaustive next phase plan at `docs/plans/phase_<NEXT_NUMBER>_<DESCRIPTIVE_SLUG>_plan.md`. Derive it from the phase-0 roadmap and verified current state, preserve unresolved requirements, include all required plan sections and adaptive role decisions, defer non-blocking human actions to the final phase, and do not implement the next phase until the plan is written.
++Read `/AGENTS.md` if it is not already in context, `/instructions/PROJECT_PLANNING.md`, `/instructions/ROLES.md`, the original `docs/plans/phase_0_foundations_plan.md`, this completed phase plan, the active workstream manifest and role handoffs, all completion evidence, current repository state, active blockers, and relevant decisions. Confirm this phase and every required role gate are fully implemented and validated. Then generate exactly one exhaustive next phase plan at `docs/plans/phase_<NEXT_NUMBER>_<DESCRIPTIVE_SLUG>_plan.md`. Derive it from the phase-0 roadmap and verified current state, preserve unresolved requirements, include all required plan sections and adaptive role decisions, defer non-blocking human actions to the final phase, and do not implement the next phase until the plan is written.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/.cursor/templates/root-agents.md b/agent-instructions/.cursor/templates/root-agents.md
+--- a/agent-instructions/.cursor/templates/root-agents.md	1970-01-01 10:00:00
++++ b/agent-instructions/.cursor/templates/root-agents.md	2026-09-17 23:05:34
+@@ -0,0 +1,32 @@
++# AGENTS.md
++
++Native project-wide instructions for this repository. Paths in this file are repository-relative. A leading `/` inside a `.cursor/` control file is relative to `.cursor/`, not to the filesystem root.
++
++## Core constraints
++
++- Git writes use `Cursor Agent <cursoragent@noreply.github.com>` or a GitHub noreply address. Never change git identity with `git config`; never use `--no-verify`.
++- Never read, stage, commit, print, or store secrets, credentials, `.env*` (except `.env.example`), private keys, or credential JSON.
++- Production deploys, remote database mutation, destructive git, protected control-plane edits, and state-changing MCP tools stay owner/CI-controlled. A hook denial is final: stop, do not work around it.
++- Work within the task scope, inspect existing patterns first, make surgical changes, validate with the strongest available checks, and report what remains unverified.
++- Operate autonomously; ask only for missing credentials or permissions, consequential decisions with no defensible default, destructive work beyond scope, or safety/privacy concerns.
++
++## Loading policy
++
++- Session start: read `.cursor/AGENTS.md` once, run `node .cursor/skills/launch-pipeline/scripts/preflight.mjs`, and check `.cursor/STATE.md` for active work.
++- Later turns: reuse what is already in context. Re-read a control file only when it changed, after context loss or compaction, or when a new scope becomes relevant.
++- An ordinary bounded change needs no workstream, role pipeline, or phase plan.
++
++## Routing index
++
++| Need | Read |
++|---|---|
++| Detailed contract, precedence, autonomy limits, completion standard | `.cursor/AGENTS.md` |
++| Which detailed mode applies (planning, strategy, sub-agents, roles) | `.cursor/INSTRUCTIONS.md` registry |
++| Raw idea, new product, major feature, migration, resume, remediation, closure | invoke `/launch-pipeline` explicitly; contract in `.cursor/instructions/LAUNCH.md` |
++| Specialist selection, delegation, stage gates | `.cursor/instructions/ROLES.md` (sections 1–3 plus the relevant role section) |
++| Repeatable procedures such as deploys, migrations, git safety | `.cursor/SKILLS.md` → `.cursor/skills/<skill-id>/SKILL.md` |
++| Choosing deployment, database, or integration tooling | `.cursor/TOOLS.md` |
++| Prior decisions, exact runbooks, unresolved blockers | `.cursor/memory/MEMORY.md` and the files it links |
++| Task artifacts | `docs/plans/`, `docs/workstreams/<task-id>/` |
++
++Role names and prompts do not grant authority. Hooks, permissions, sandboxing, CI, and explicit owner approval govern sensitive actions.
+diff -ruN --exclude=.git --exclude=.DS_Store --exclude=.agents a/agent-instructions/README.md b/agent-instructions/README.md
+--- a/agent-instructions/README.md	2026-09-17 19:22:15
++++ b/agent-instructions/README.md	2026-09-17 23:10:12
+@@ -2,7 +2,7 @@
+ 
+ A portable, agent-agnostic control plane for coding agents. Drop it into any repository to give your agent consistent operating rules, phased project planning, memory, skills, and runbooks.
+ 
+-This repo ships the files under `.cursor/` as the reference layout. **Rename that folder** to match your agent before use.
++This repo ships the files under `.cursor/` as the reference layout for Cursor. Other clients need their own native adapter (for example a small `CLAUDE.md` for Claude Code or an `AGENTS.md` hierarchy for Codex); renaming the folder does not make `.mdc` rules, hooks, or permission files native elsewhere.
+ 
+ ## Quick start
+ 
+@@ -18,41 +18,27 @@
+   ...
+ ```
+ 
+-### 2. Rename for your agent
++### 2. Keep the folder as `.cursor`
+ 
+-Rename `.cursor` to whatever your coding agent expects:
++Cursor discovers `.cursor/rules/*.mdc`, `.cursor/skills/*/SKILL.md`, `.cursor/agents/*.md`, `.cursor/hooks.json`, and the repository-root `AGENTS.md` natively. Three rules are always-on (`00-core-routing`, `git-privacy-and-secrets`, `karpathy-guidelines`); the planning, sub-agent, blocker, memory, and runbook rules are Agent-Requested and load by description only when relevant.
+ 
+-| Agent / tool | Typical folder name |
+-|---|---|
+-| Cursor | `.cursor` (default — no rename needed) |
+-| Claude Code | `.claude` |
+-| OpenClaw | `.openclaw` |
+-| Other | follow that tool’s docs |
++> **Other agents:** point the tool at the repository-root `AGENTS.md` that bootstrap seeds (Codex and Claude Code both read it) and add a thin native adapter for anything else the tool supports. Do not rename or symlink the whole `.cursor/` tree.
+ 
+-The contents stay the same. Only the directory name changes.
+-
+-> **Cursor users:** keep the folder as `.cursor`. The `rules/*.mdc` files are loaded automatically with `alwaysApply: true`.
+-
+-> **Other agents:** point your agent at `AGENTS.md` inside the renamed folder (system prompt, project instructions, or rules file — whatever your tool supports). The `rules/` files are concise enforcement snippets; load them if your agent can ingest rule files, or rely on `AGENTS.md` alone.
+-
+ ### 3. Bootstrap the workspace
+ 
+ From your project root, run:
+ 
+ ```bash
+-bash .your-agent/scripts/bootstrap.sh
++node .cursor/skills/launch-pipeline/scripts/preflight.mjs
++bash .cursor/scripts/bootstrap.sh
+ ```
+ 
+-Replace `.your-agent` with your actual folder name. The script is idempotent — safe to run on every new session. It creates `docs/` scaffolding (plans, blueprints, decisions, handover) without overwriting existing project files.
++Preflight is read-only. Bootstrap is idempotent: it seeds the repository-root `AGENTS.md`, `.cursorignore`, `.githooks/`, `docs/` scaffolding (plans, blueprints, decisions, handover, workstreams), and the `agent-governance` CI workflow only when absent, and never overwrites existing project files.
+ 
+ ### 4. Start your agent
+ 
+-On the first message of a new session, tell your agent:
++Cursor loads the repository-root `AGENTS.md` and the always-on rules automatically. The agent reads `.cursor/AGENTS.md` once per session, runs read-only preflight, checks `.cursor/STATE.md`, and then reuses what is already in context instead of re-reading control files every turn.
+ 
+-> Read `AGENTS.md` in the agent config folder, run `scripts/bootstrap.sh`, then follow the per-turn read contract.
+-
+-The agent will handle startup from there.
+-
+ ## What you get
+ 
+ ```text
+@@ -66,15 +52,19 @@
+   TOOLS.md               # Capability registry
+   instructions/          # Project planning, strategy, sub-agents
+   memory/                # Durable memory, blockers, runbooks, continuations
+-  rules/                 # Always-applied enforcement (Cursor-native .mdc)
++  rules/                 # Cursor-native .mdc: 3 always-on, 5 Agent-Requested
+   scripts/bootstrap.sh   # Idempotent workspace materialization
+-  templates/             # Phase plan and docs templates
++  templates/             # Root AGENTS.md, .cursorignore, docs, plan and role templates
+   config/settings.json   # Optional host-specific settings
+ ```
+ 
+ After bootstrap, your repo also gets:
+ 
+ ```text
++AGENTS.md                # Native compact core and routing index (seeded once)
++.cursorignore
++.githooks/               # git-safety identity and secret checks
++.github/workflows/agent-governance.yml
+ docs/
+   plans/                 # Sequential phase plans + final checklist
+   blueprints/            # Product/strategy outputs
+@@ -84,7 +74,7 @@
+ 
+ ## How it works
+ 
+-1. **`AGENTS.md`** defines precedence, autonomy limits, phased lifecycle, and the per-turn read contract.
++1. **Root `AGENTS.md`** carries the compact core and routing index; **`.cursor/AGENTS.md`** defines precedence, autonomy limits, the phased lifecycle, and the reuse-and-refresh loading policy.
+ 2. **`INSTRUCTIONS.md`** activates detailed modes (project planning, strategy, sub-agents) only when needed.
+ 3. **`STATE.md`** tracks what is in flight so work survives context loss between sessions.
+ 4. **`memory/`** stores blockers, runbooks, and dated continuation logs — not secrets.

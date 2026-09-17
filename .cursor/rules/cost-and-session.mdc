@@ -1,0 +1,14 @@
+---
+description: Cost control for Ask-mode default, subagent permission, Cloud Agent limits, and avoiding broad searches
+alwaysApply: false
+---
+
+Use this rule when the user asks to reduce cost or tokens, or when choosing whether to search, delegate, or use Cloud Agent.
+
+- Prefer Ask mode for questions and explanations. Use Agent mode only when implementation is requested.
+- Do not spawn subagents unless the user permits it or a launched workstream requires a named role.
+- Do not use Cloud Agent unless the user requested a cloud VM.
+- Prefer a named file or directory over workspace-wide grep/glob.
+- Do not attach large context packs by default.
+- Do not claim token or cash savings that were not measured.
+- Keep secrets, credentials, and private rollback snapshots out of chat and git.

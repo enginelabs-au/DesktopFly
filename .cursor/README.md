@@ -10,7 +10,7 @@ For a raw idea, major change, active-workstream resume, remediation, or closure,
 
 The explicit-only native skill at `skills/launch-pipeline/SKILL.md` routes to `instructions/LAUNCH.md`. It runs read-only preflight first, asks only for unresolved consequential decisions, and presents one activation summary. After Build or explicit Agent-mode implementation authorization, `scripts/bootstrap.sh` is the first mutating gate.
 
-Repository-root `AGENTS.md` is the native project-wide entry. It routes every substantive turn into this directory's `AGENTS.md` and core context.
+Repository-root `AGENTS.md` is the native project-wide entry: a compact core plus routing index. The agent reads this directory's `AGENTS.md` once per session and re-reads control files only after change, context loss, or a newly relevant scope.
 
 ## Core control files
 
@@ -27,7 +27,7 @@ Repository-root `AGENTS.md` is the native project-wide entry. It routes every su
 - `instructions/` — launch, strategy, planning, subagent, and role contracts.
 - `agents/` — native specialist adapters.
 - `skills/` — native discoverable and slash-invokable workflows.
-- `rules/` — concise always-applied project guidance.
+- `rules/` — three always-on rules (core routing, git safety, coding discipline) and five Agent-Requested rules loaded by description.
 - `memory/` — durable index, continuations, blockers, fixed blockers, and runbooks.
 - `templates/` — phase, workstream, role, evidence, handoff, and checklist schemas.
 - `scripts/` — bootstrap and configuration validation.
@@ -51,7 +51,8 @@ See `config/README.md` for ownership and placement. Do not move native runtime f
 ## Loading model
 
 - Cursor automatically loads repository-root `AGENTS.md`.
-- Rules with `alwaysApply: true` are automatically included.
+- `00-core-routing.mdc`, `git-privacy-and-secrets.mdc`, and `karpathy-guidelines.mdc` are `alwaysApply: true` and injected every turn; `project-planning`, `subagent-orchestration`, `blocker-governance`, `memory-governance`, and `runbook-governance` are `alwaysApply: false` with descriptions, so the agent pulls them in only when relevant.
+- Instructions already in context are reused; a new message does not trigger a re-read of the core files.
 - Cursor discovers `agents/*.md` and `skills/*/SKILL.md`.
 - `/launch-pipeline` is explicit-only and does not silently auto-start from ambient requests.
 - Files under `instructions/` are loaded through the root router, `INSTRUCTIONS.md`, `STATE.md`, or a native skill such as `/launch-pipeline`.

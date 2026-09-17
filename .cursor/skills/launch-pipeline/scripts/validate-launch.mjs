@@ -84,6 +84,7 @@ function walkFiles(relativeDirectory) {
     withFileTypes: true,
   })) {
     const relativePath = `${relativeDirectory}/${entry.name}`;
+    if (entry.name === ".DS_Store" || entry.name === "Thumbs.db") continue;
     if (entry.isDirectory()) {
       files.push(...walkFiles(relativePath));
     } else {
@@ -231,11 +232,19 @@ function classifyControlPlaneFile(relativePath) {
   }
 
   if (/^\.cursor\/memory\/runbooks\/[^/]+\.md$/.test(relativePath)) {
-    return linked(
-      "indexed",
-      [".cursor/memory/MEMORY.md", ".cursor/TOOLS.md"],
-      relativePath.split("/").at(-1),
-    );
+    const term = relativePath.split("/").at(-1);
+    const owners = [".cursor/memory/MEMORY.md", ".cursor/TOOLS.md"];
+    const referenced = owners.some((owner) => {
+      try {
+        return read(owner).includes(term);
+      } catch {
+        return false;
+      }
+    });
+    if (referenced) {
+      return linked("indexed", owners, term);
+    }
+    return { kind: "project-local" };
   }
 
   if (
@@ -259,6 +268,13 @@ function validateReachability() {
       classification.kind,
       (counts.get(classification.kind) ?? 0) + 1,
     );
+
+    if (classification.kind === "project-local") {
+      process.stderr.write(
+        `launch validation warning: ${relativePath} is a project-local runbook not listed in MEMORY.md or TOOLS.md\n`,
+      );
+      continue;
+    }
 
     if (classification.kind === "invalid") {
       errors.push(

@@ -17,6 +17,11 @@ Store durable user-specific instructions and preferences here. Add new durable i
 - Defer non-blocking manual actions, credentials, provider dashboard work, production DNS, and similar user-only tasks to the final phase and consolidate them into `docs/plans/final_implementation_checklist.md`.
 - Keep instructions machine-readable, structured, copyable, and directly usable.
 - Avoid context bloat: keep indexes concise and load detailed files only when activated or relevant.
+- Default to Ask mode for questions and explanations. Use Agent mode only when implementation is requested.
+- Do not spawn subagents unless explicitly permitted or a launched workstream requires a named role.
+- Do not use Cloud Agent unless the user requested a cloud VM.
+- Prefer a named path over workspace-wide search. Do not attach large context packs by default.
+- Do not claim token or cash savings that were not measured. Existing-plan usage is not the same as API billing.
 - Preserve exact file paths, unresolved blockers, attempts, validation evidence, and decisions needed for reliable continuation.
 - Keep secret values out of agent files and git; use environment-variable names only.
 

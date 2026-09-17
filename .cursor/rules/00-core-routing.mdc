@@ -1,0 +1,20 @@
+---
+description: Canonical contract, loading policy, routing index, state discipline, and cost-control defaults for the agent control plane
+alwaysApply: true
+---
+
+`/AGENTS.md` inside the agent configuration root (`.cursor/AGENTS.md`) is the canonical operating contract. Follow its instruction precedence, autonomy limits, phased lifecycle, file-role boundaries, validation standard, and completion standard. A leading `/` in control-plane files is relative to that configuration root, not the filesystem root.
+
+Loading policy:
+
+- Session start for implementation, launch, resume, or other project-consequential work: read `/AGENTS.md` once, run read-only `node .cursor/skills/launch-pipeline/scripts/preflight.mjs`, and inspect `/STATE.md` for an active plan, active instructions, files in active use, and open blockers. Run `/scripts/bootstrap.sh` only after Build or explicit Agent-mode implementation authorization.
+- Ask-mode questions, pure acknowledgments, and other requests with no repository or external mutation skip preflight, STATE inspection, and extra control-plane reads.
+- Later turns: reuse instructions already in context. Re-read a control file only when it changed, the session or context was reset or compacted, a new scope became relevant, or exact wording matters for a consequential decision. Do not re-read the core set merely because a new message arrived.
+- Detailed modes: use the registry in `/INSTRUCTIONS.md` to load only the instruction bodies whose activation conditions match (planning, strategy, sub-agents, roles). Load `/instructions/ROLES.md` only for specialist selection, delegation, workstream routing, or stage gates, and then only sections 1–3 plus the relevant role section.
+- On demand: `/SKILLS.md` and `/skills/<skill-id>/SKILL.md` before improvising a procedure that may already exist; `/TOOLS.md` when selecting deployment, database, integration, or unfamiliar tooling, preferring direct, verifiable project-native and official tools and updating the registry when capabilities materially change; `/USER.md` when a choice depends on standing preferences; `/memory/MEMORY.md` and linked runbooks or blockers when a prior decision, exact procedure, or unresolved issue may apply.
+
+Cost defaults: answer from context when that is sufficient; do not spawn subagents unless the user permits it or a launched workstream requires a named role; do not use Cloud Agent unless requested; prefer a named path over repository-wide search. Do not infer token or cash savings.
+
+State discipline: keep `/STATE.md` current with objective, status, phase, active plan, active instructions, files in active use, blockers, attempts, decisions, assumptions, and next actions. Preserve state before phase transitions, long tasks, multiple attempts, or likely context loss. After substantive work, update the active plan/state and append concise completion evidence to the current UTC-day continuation log under `/memory/memories/`.
+
+Do not leave durable rules only in chat. Do not defer agent-capable work to the user. Do not store secret values in agent files. Register future instruction files in `/INSTRUCTIONS.md` instead of adding always-on rules.

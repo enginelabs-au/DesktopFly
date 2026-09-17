@@ -5,7 +5,7 @@
 - Execute agent-capable work directly; do not delegate routine implementation or investigation to the user.
 - Use the sequential planning lifecycle for new projects and major implementations: phase 0 maps the full project, each later phase plan is generated only after the previous phase is implemented and verified, and closure produces `docs/plans/final_implementation_checklist.md`.
 - Defer non-blocking human-only actions and missing credential values to the final phase while completing all possible code, configuration, adapters, tests, documentation, and environment-variable wiring first.
-- Read `/AGENTS.md` first on every substantive turn and route detailed instructions through `/INSTRUCTIONS.md`.
+- Read `/AGENTS.md` once per session for project-consequential work, reuse it while it remains in context, re-read only after change or context loss, and route detailed instructions through `/INSTRUCTIONS.md`. Ask-mode and acknowledgments skip preflight.
 - Use `/launch-pipeline` and `/instructions/LAUNCH.md` as the linked entry point for a raw idea, major change, resume, remediation, or closure.
 - Launch is preflight-first and bootstrap-gated: run read-only `/skills/launch-pipeline/scripts/preflight.mjs` before mode selection. Every pre-Build Cursor plan must close with `bash .cursor/scripts/bootstrap.sh` as the first post-Build action, then run that command after Build or explicit Agent-mode implementation authorization.
 - Use adaptive role routing for substantive work: record required/skipped canonical roles, require role charters before action, and preserve evidence-backed handoffs under `docs/workstreams/`.
@@ -37,6 +37,9 @@ Operational history belongs in `/memory/memories/YYYY-MM-DD-continuation.md` or 
 - Task workstreams and role handoffs: `docs/workstreams/`
 - Agent role pipeline decision: `docs/decisions/2026-08-18-agent-role-pipeline.md`
 - External governance setup: `docs/handover/agent-governance-operator-setup.md`
+- Context/cost operator setup: `docs/handover/cursor-cost-operator-setup.md`
+- Context-optimization pack: `docs/handover/agentic-context-runbook/`
+- Context-optimization apply route: `docs/handover/apply-context-optimization-r2.sh`
 - Skills: `/SKILLS.md` and `/skills/`
 - Git safety: `/skills/git-safety/SKILL.md` and `/memory/runbooks/git-safety.md`
 - Git identity decision: `docs/decisions/2026-09-16-git-anonymous-identity.md`

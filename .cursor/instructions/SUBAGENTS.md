@@ -15,7 +15,7 @@ Use one or more sub-agents when:
 - a strategy blueprint requires separate market, competitor, architecture, or distribution analysis
 - a complex plan benefits from adversarial gap analysis
 
-Do not use sub-agents for trivial tasks, tightly coupled edits, or work where coordination costs exceed the benefit.
+Do not use sub-agents for trivial tasks, tightly coupled edits, or work where coordination costs exceed the benefit. Do not spawn a subagent unless the user explicitly permits it or `/launch-pipeline` requires a named canonical role.
 
 ## Required briefing
 
@@ -35,7 +35,7 @@ Every sub-agent brief must include:
 - required validation/evidence
 - completion criteria
 
-Every sub-agent must read `/AGENTS.md`, `/INSTRUCTIONS.md`, `/instructions/ROLES.md`, `/instructions/LAUNCH.md` when the assignment belongs to a launched product lifecycle, and the core context required by its canonical role, plus the active plan, task manifest, role charter, predecessor handoff, and instruction files relevant to its assignment. A role starts by verifying or completing its charter and exhaustive plan; delegation is not permission to implement before that plan exists.
+Every sub-agent must read the task manifest, its charter, and every required predecessor handoff. Read `/instructions/ROLES.md` sections 1–3 and the role's own section. Read repository-root `AGENTS.md` and `/AGENTS.md` only if they are not already in context. Consult `/INSTRUCTIONS.md`, `/instructions/LAUNCH.md`, `/USER.md`, `/SKILLS.md`, `/TOOLS.md`, and `/memory/MEMORY.md` only when the charter or assignment depends on them. Do not spawn further subagents unless the user permits it. A role starts by verifying or completing its charter and exhaustive plan; delegation is not permission to implement before that plan exists.
 
 ## Write ownership
 

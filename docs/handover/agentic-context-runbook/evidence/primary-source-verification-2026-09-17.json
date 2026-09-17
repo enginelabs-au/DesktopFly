@@ -1,0 +1,236 @@
+{
+ "recorded_at": "2026-09-17",
+ "method": "WebFetch of each primary page by an independent reader agent; summarised extraction, not raw HTML; quotes under 15 words",
+ "review_agents": "three adversarial review agents failed to start (Claude plan monthly spend limit); adversarial review was performed inline by the first-pass agent instead",
+ "docs": [
+  {
+   "url": "https://cursor.com/docs/hooks",
+   "fetched": true,
+   "claims": [
+    {
+     "claim": "Project hooks are configured in .cursor/hooks.json with \"version\": 1; user hooks in ~/.cursor/hooks.json.",
+     "status": "SUPPORTED",
+     "evidence": "Page lists project-level <project-root>/.cursor/hooks.json and user-level ~/.cursor/hooks.json, and states both require a \"version\": 1 field. It also lists Enterprise and Team locations with priority Enterprise \u2192 Team \u2192 Project \u2192 User.",
+     "quote": "Both files require \"version\": 1 field."
+    },
+    {
+     "claim": "Supported events include preToolUse, beforeReadFile, beforeShellExecution, beforeMCPExecution, subagentStart, sessionStart, preCompact.",
+     "status": "SUPPORTED",
+     "evidence": "All seven names appear in the page's agent-hooks event list, alongside others (postToolUse, postToolUseFailure, subagentStop, afterShellExecution, afterMCPExecution, afterFileEdit, beforeSubmitPrompt, stop, afterAgentResponse, afterAgentThought, sessionEnd, plus tab hooks beforeTabFileRead/afterTabFileEdit and workspaceOpen)."
+    },
+    {
+     "claim": "Hook entries support command, timeout, matcher, and failClosed.",
+     "status": "SUPPORTED",
+     "evidence": "Per-script fields listed: command (required), type (\"command\" default or \"prompt\"), timeout (seconds), loop_limit, failClosed (boolean, default false), matcher (regex; empty or \"*\" matches all).",
+     "quote": "when true, hook failures block the action"
+    },
+    {
+     "claim": "The permission/deny output shape for beforeShellExecution and preToolUse is JSON on stdout with permission: allow|deny and optional user_message/agent_message.",
+     "status": "PARTIAL",
+     "evidence": "Both schemas use permission plus optional user_message and agent_message, but beforeShellExecution's permission is allow|deny|ask (not just allow|deny), and preToolUse additionally accepts an optional updated_input field; the page notes \"ask\" is accepted in schema but not enforced for preToolUse. Exit code 2 also blocks; other non-zero codes fail open.",
+     "quote": "\"permission\": \"allow|deny|ask\""
+    }
+   ],
+   "other_relevant_facts": [
+    "Additional config locations: Enterprise hooks at /Library/Application Support/Cursor/hooks.json (macOS), /etc/cursor/hooks.json (Linux/WSL), C:\\ProgramData\\Cursor\\hooks.json (Windows); Team hooks are cloud-distributed via dashboard (Enterprise only). Priority: Enterprise \u2192 Team \u2192 Project \u2192 User.",
+    "Project-level hooks run from the project root; user-level hooks run from ~/.cursor/.",
+    "Hook entries support type: \"prompt\" (LLM-evaluated) in addition to the default \"command\".",
+    "loop_limit field applies to stop/subagentStop hooks (default 5, null = no limit).",
+    "Exit code semantics: 0 = success, 2 = block action, other codes = fail-open (allow by default) unless failClosed is true.",
+    "preToolUse can return updated_input to modify the tool input.",
+    "Event list also includes beforeSubmitPrompt, afterAgentResponse, afterAgentThought, sessionEnd, stop, tab hooks (beforeTabFileRead, afterTabFileEdit) and workspaceOpen.",
+    "The page does not discuss rules/skills activation, context loading, discovery locations for rules/skills, or token/usage diagnostics."
+   ],
+   "limitations": "Content was obtained via WebFetch, which summarizes the page through a smaller model rather than returning raw HTML; the summary reported the page rendered as a static doc (not a JS shell), so no fallback variant was needed. Exact quotes are as relayed by the fetch summary and may differ slightly in wording/formatting from the live page. Details such as full JSON input schemas per event and troubleshooting sections were not extracted."
+  },
+  {
+   "url": "https://cursor.com/docs/subagents",
+   "fetched": true,
+   "claims": [
+    {
+     "claim": "Custom subagents are Markdown files in .cursor/agents/ (project) or ~/.cursor/agents/ (user) with frontmatter name, description, model (default inherit), readonly, is_background.",
+     "status": "SUPPORTED",
+     "evidence": "Page lists project (.cursor/agents/, also .claude/agents/ and .codex/agents/) and user (~/.cursor/agents/ etc.) locations, and a frontmatter table with name (default derived from filename), description, model (default inherit), readonly (default false), is_background (default false). Extra detail: project subagents take precedence over user ones, and .cursor/ over .claude/ or .codex/.",
+     "quote": "model ... default inherit; readonly ... false; is_background ... false"
+    },
+    {
+     "claim": "Subagents start with a separate context; the parent must supply relevant context.",
+     "status": "SUPPORTED",
+     "evidence": "Page says subagents start with a clean context, have their own context window, and the parent includes relevant information in the prompt because subagents lack prior conversation history.",
+     "quote": "Subagents start with a clean context."
+    },
+    {
+     "claim": "Whether project rules (.cursor/rules) and AGENTS.md are automatically injected into a subagent context.",
+     "status": "UNKNOWN",
+     "evidence": "The page contains no mention of rules, .cursor/rules, AGENTS.md, CLAUDE.md, system prompt, or project instructions; it only states that subagents inherit all tools (including MCP tools) from the parent. The page neither confirms nor denies rule/AGENTS.md injection."
+    }
+   ],
+   "other_relevant_facts": [
+    "Subagent definition files are also discovered in .claude/agents/ and .codex/agents/ (project) and ~/.claude/agents/ and ~/.codex/agents/ (user); .cursor/ wins on name conflicts, and project-level beats user-level.",
+    "Subagents inherit all tools from the parent, including MCP tools from configured servers; cloud subagents instead use MCP servers configured at cursor.com/agents.",
+    "Token diagnostics: each subagent has its own context window and consumes tokens independently; running five subagents in parallel uses roughly five times the tokens. Trade-offs cited: startup overhead and higher token use during parallel runs; benefits: context isolation and specialized focus.",
+    "Three built-in subagents: explore (codebase search), bash (shell commands), browser (browser automation); they handle context-heavy operations automatically to keep the main context small.",
+    "Invocation: the agent proactively delegates based on task complexity/scope, custom subagent descriptions, and current context; users can request a specific subagent with /name syntax or by mentioning it naturally.",
+    "Guidance: for simple single-purpose tasks (e.g. generate a changelog, format imports) use a skill or command instead of a subagent; avoid creating dozens of generic subagents."
+   ],
+   "limitations": "Content was obtained via WebFetch, which summarizes the page through a small model rather than returning the raw HTML/markdown, so exact wording beyond the quoted fragments and any content in collapsed/JS-only sections may be missing. Two passes were run (a general extraction and a targeted keyword search for rules/AGENTS.md/skills); no fallback .md or llms.txt variant was needed since the first fetch returned substantive content. Absence of a mention of rules/AGENTS.md is a negative finding from the summarizer, not a verified full-text grep."
+  },
+  {
+   "url": "https://cursor.com/docs/cli/overview",
+   "fetched": true,
+   "claims": [
+    {
+     "claim": "The Cursor CLI (agent) supports non-interactive mode with -p/--print and --output-format json or stream-json.",
+     "status": "PARTIAL",
+     "evidence": "The page documents print mode for non-interactive use with `agent -p \"...\"` and `--output-format text`, but the long flag --print and the json / stream-json output formats are not mentioned anywhere on this page.",
+     "quote": "Use print mode for non-interactive scenarios like scripts, CI pipelines, or automation"
+    },
+    {
+     "claim": "The CLI loads the same project rules (.cursor/rules), AGENTS.md, skills and hooks as the desktop Agent.",
+     "status": "UNKNOWN",
+     "evidence": "The overview page contains no mention of rules, .cursor/rules, AGENTS.md, skills, hooks, or parity with the desktop Agent."
+    },
+    {
+     "claim": "The CLI json/stream-json output includes token usage or cost fields.",
+     "status": "UNKNOWN",
+     "evidence": "The page mentions no json/stream-json output format at all and says nothing about token usage, cost, or usage fields."
+    },
+    {
+     "claim": "CLI permissions are configured via .cursor/cli.json (project) and ~/.cursor/cli-config.json (user).",
+     "status": "UNKNOWN",
+     "evidence": "No mention of permissions configuration, .cursor/cli.json, or ~/.cursor/cli-config.json on the overview page; the only configuration discussed is the sandbox mode."
+    }
+   ],
+   "other_relevant_facts": [
+    "Print mode examples on the page: `agent -p \"find and fix performance issues\" --model \"gpt-5\"` and `agent -p \"review these changes for security issues\" --output-format text` (text is the only output format value shown).",
+    "Sandbox: 'Configure command execution settings with /sandbox or the --sandbox <mode> flag (enabled or disabled).' and 'Settings persist across sessions.'",
+    "Cloud Agent handoff: conversations can be pushed to a Cloud Agent and resumed on web or mobile at cursor.com/agents.",
+    "The page has no content about context loading, rule/skill activation, discovery locations (rules, AGENTS.md, skills, hooks, MCP), or token/usage diagnostics; those topics, if documented, live on other CLI docs pages not fetched here."
+   ],
+   "limitations": "Only the overview page was verified; it is a short introductory page (install, interactive use, print mode, sandbox, cloud handoff) and does not cover reference-level details. WebFetch returned real content (not a JS shell), but the fetch tool summarizes via a small model, so minor omissions are possible. An attempt to fetch https://cursor.com/docs/cli/overview.md returned HTTP 404, so no raw/markdown variant was available. Claims 2-4 are UNKNOWN because the page is silent, not because it contradicts them; the relevant details likely reside on sibling pages (e.g. CLI headless/using/reference/permissions) that were out of scope."
+  },
+  {
+   "url": "https://cursor.com/docs/skills",
+   "fetched": true,
+   "claims": [
+    {
+     "claim": "Skills are discovered from .cursor/skills/<name>/SKILL.md in the project and ~/.cursor/skills for the user; .agents/skills and other agent directories are also scanned.",
+     "status": "SUPPORTED",
+     "evidence": "The page lists .agents/skills/, .cursor/skills/ (project) and ~/.agents/skills/, ~/.cursor/skills/ (user) as discovery locations, plus Claude and Codex compatibility directories (.claude/skills/, .codex/skills/ and their ~ variants). The name field must match the parent folder name, consistent with <name>/SKILL.md.",
+     "quote": "Cursor also loads skills from Claude and Codex directories"
+    },
+    {
+     "claim": "Skill frontmatter supports name, description, disable-model-invocation (explicit slash-only), and a file-pattern field (globs or paths) for file-scoped surfacing.",
+     "status": "SUPPORTED",
+     "evidence": "Frontmatter lists required name and description, optional paths (glob patterns limiting the skill to matching files), and disable-model-invocation; the legacy globs field is still accepted as a fallback, with paths recommended. Page also lists icon, color, metadata.",
+     "quote": "The legacy `globs` field is still accepted as a fallback for older skills"
+    },
+    {
+     "claim": "Only skill metadata (name/description) is loaded at startup; the body loads when the skill is selected or invoked.",
+     "status": "PARTIAL",
+     "evidence": "The page says Cursor discovers skills at startup, the agent decides relevance from the description/context, and skills load resources on demand; it does not explicitly say that only name/description are in context at startup or precisely when the SKILL.md body enters context (the on-demand statement is about references/assets resources).",
+     "quote": "Skills load resources on demand, keeping context usage efficient."
+    },
+    {
+     "claim": "A skill with disable-model-invocation:true can be run with /<name> and its body enters context only then.",
+     "status": "SUPPORTED",
+     "evidence": "The page states that with disable-model-invocation: true the skill behaves like a traditional slash command and is only included in context when the user explicitly types /skill-name.",
+     "quote": "only included in context when you explicitly type `/skill-name` in chat"
+    }
+   ],
+   "other_relevant_facts": [
+    "Discovery priority order: .agents/skills/, .cursor/skills/, ~/.agents/skills/, ~/.cursor/skills/; legacy compatibility paths .claude/skills/, .codex/skills/, ~/.claude/skills/, ~/.codex/skills/ also loaded.",
+    "Skills can live in nested subdirectories; monorepos can colocate skills with specific packages.",
+    "name must be lowercase letters/numbers/hyphens and match the parent folder name.",
+    "Additional optional frontmatter: icon, color (default/green/cyan/blue/purple/magenta/orange/yellow/red/brand), metadata (arbitrary key-value pairs).",
+    "paths field: skill is only surfaced when the agent is reading or editing matching files; legacy globs accepted as fallback.",
+    "Invocation: automatic (agent decides relevance from description/context); /<skill-name> attaches the skill to one message; Option+Enter / Alt+Enter turns it into a Custom Mode that keeps the skill active for the session.",
+    "Supporting files in references/ and assets/ directories load progressively only when needed.",
+    "To view discovered skills: Customize in the sidebar -> Skills. No token-usage or context-usage diagnostics are described on the page."
+   ],
+   "limitations": "The page fetched successfully on the first attempt (no JS shell, no fallback variant needed). Content was returned via WebFetch's summarizing model in two passes rather than as the raw page, so exact wording is only as reliable as the quoted sentences; some sections of the page may have been omitted from the summaries. Claim 3 is PARTIAL because the page does not explicitly state that only name/description are loaded at startup or the exact moment the SKILL.md body enters context, other than for disable-model-invocation skills."
+  },
+  {
+   "url": "https://cursor.com/docs/context/rules",
+   "fetched": true,
+   "claims": [
+    {
+     "claim": "This alternate URL documents rules/AGENTS.md; report whether it resolves and any discrepancy with cursor.com/docs/rules.",
+     "status": "SUPPORTED",
+     "evidence": "https://cursor.com/docs/context/rules resolved (no redirect reported) with H1 \"Rules\" and an AGENTS.md section; a parallel fetch of https://cursor.com/docs/rules returned the same H1 and the same verbatim sentences, so no discrepancy was found between the two. The page's own internal link points to cursor.com/docs/rules.md#agentsmd, but that .md URL returned HTTP 404.",
+     "quote": "Cursor supports AGENTS.md in the project root and subdirectories."
+    },
+    {
+     "claim": "AGENTS.md at repository root is treated as always-applied project instruction; CLAUDE.md is also recognized.",
+     "status": "PARTIAL",
+     "evidence": "The page supports AGENTS.md in the project root (and nested subdirectories, combined hierarchically with more specific files taking precedence) as a plain-markdown alternative to .cursor/rules, but it never explicitly says AGENTS.md is 'always applied' (the Always/Intelligently/Specific-files/Manual types are described only for .mdc Project Rules). CLAUDE.md is not mentioned anywhere on the page, so that half of the claim is unsupported by this source.",
+     "quote": "Unlike Project Rules, `AGENTS.md` is a plain markdown file without metadata."
+    }
+   ],
+   "other_relevant_facts": [
+    "Rule contents are placed at the start of the model context: \"When applied, rule contents are included at the start of the model context.\"",
+    "Four Project Rule application types: Always Apply (every chat session), Apply Intelligently (Agent decides based on description), Apply to Specific Files (glob pattern match), Apply Manually (@-mentioned in chat).",
+    "Project rules live in .cursor/rules as version-controlled .mdc files; plain .md files there are ignored unless they carry frontmatter metadata; \"the three frontmatter fields interact to determine when a rule is included.\"",
+    "Precedence/application order: Team Rules -> Project Rules -> User Rules; Team Rules are Team/Enterprise plan features managed in the dashboard.",
+    "User Rules are global preferences set in Customize -> Rules, apply across all projects, and are used by Agent (Chat) only, not Inline Edit.",
+    "Nested AGENTS.md files in subdirectories are combined with parent-directory instructions, with more specific (deeper) instructions taking precedence.",
+    "No mention on the page of legacy .cursorrules, CLAUDE.md, token counts, usage diagnostics, or context-window sizing.",
+    "https://cursor.com/docs/rules.md (the raw-markdown variant the page itself links to) returned HTTP 404 at fetch time."
+   ],
+   "limitations": "Content was obtained via WebFetch, which summarizes the page through a small model rather than returning raw HTML; absence claims (CLAUDE.md, .cursorrules, tokens) rely on that model's search of the converted markdown and could miss content hidden in collapsed tabs or JS-rendered components. The raw .md variant 404'd so no independent verification of full-page text was possible. Comparison with cursor.com/docs/rules was based on overlapping verbatim quotes, not a full diff."
+  },
+  {
+   "url": "https://cursor.com/docs/rules",
+   "fetched": true,
+   "claims": [
+    {
+     "claim": "Cursor project rules live in .cursor/rules/*.mdc and support four modes: Always Apply (alwaysApply:true), Apply Intelligently (alwaysApply:false with description; agent decides), Apply to Specific Files (globs), Apply Manually (@-mention).",
+     "status": "SUPPORTED",
+     "evidence": "Page states project rules live in .cursor/rules/ as .mdc files, names the four modes (Always Apply, Apply Intelligently, Apply to Specific Files, Apply Manually), and maps them to alwaysApply:true / alwaysApply:false+description / alwaysApply:false+globs / alwaysApply:false with neither (only via @-mention).",
+     "quote": "Agent reads the description and pulls the rule in when relevant."
+    },
+    {
+     "claim": "For an Apply Intelligently rule, the description is made visible to the agent and the body is loaded only when the agent decides it is relevant.",
+     "status": "SUPPORTED",
+     "evidence": "The page describes Apply Intelligently as the agent reading the description and pulling the rule in when relevant; it does not use the words 'body' or 'visible', but the mechanism described matches the claim.",
+     "quote": "Agent reads the description and pulls the rule in when relevant."
+    },
+    {
+     "claim": "alwaysApply:true makes a rule unconditional even if globs are present.",
+     "status": "SUPPORTED",
+     "evidence": "The frontmatter table says alwaysApply:true rules are always included and that globs and description are ignored.",
+     "quote": "Always included. Globs and description are ignored."
+    },
+    {
+     "claim": "A repository-root AGENTS.md is loaded automatically as project-wide instructions; nested AGENTS.md files are supported.",
+     "status": "SUPPORTED",
+     "evidence": "Page says Cursor supports AGENTS.md in the project root and subdirectories, describes it as a simpler markdown alternative to rules without metadata, and says nested files are automatically applied when working with files in that directory or its children. The word 'automatically' is stated explicitly for nested files; root loading is described as supported (no manual invocation mentioned).",
+     "quote": "Cursor supports AGENTS.md in the project root and subdirectories."
+    },
+    {
+     "claim": "User Rules (global) are configured in the Cursor UI (Customize/Settings), not from ~/.cursor/rules files.",
+     "status": "PARTIAL",
+     "evidence": "Page says User Rules are global preferences defined in Customize \u2192 Rules (a Cursor UI location) and shows them as plain markdown with no frontmatter. It does not mention ~/.cursor/rules at all, so the negative half of the claim is not addressed either way.",
+     "quote": "User Rules are global preferences defined in Customize \u2192 Rules"
+    },
+    {
+     "claim": "Plain .md files in .cursor/rules are not native rules.",
+     "status": "SUPPORTED",
+     "evidence": "Page explicitly states plain .md files in .cursor/rules are ignored by the rules system because they lack frontmatter for description, globs and alwaysApply.",
+     "quote": "A plain .md file in .cursor/rules is ignored by the rules system"
+    }
+   ],
+   "other_relevant_facts": [
+    "Precedence/application order is stated as: Team Rules -> Project Rules -> User Rules.",
+    "Team Rules (Team/Enterprise plans) are managed from the dashboard and apply organization-wide, with optional enforcement.",
+    "User Rules are only used by Agent (Chat); they are not applied to Inline Edit (Cmd/Ctrl+K).",
+    "Frontmatter matrix: alwaysApply:true = always included; alwaysApply:false + globs = auto-attached for matching files; alwaysApply:false + description = agent-selected; alwaysApply:false + neither = only via @-mention.",
+    "Rules can be created via '/create-rule' in Agent or via Customize sidebar -> Rules -> Add Rule.",
+    "Best practices: keep rules under 500 lines, reference files rather than copying content, avoid duplicating style guides/tool docs/rare edge cases.",
+    "AGENTS.md is presented as a simpler markdown alternative to .mdc rules with no metadata/frontmatter; nested AGENTS.md files apply when working with files in that directory or its children.",
+    "Page does not mention: nested .cursor/rules directories (monorepo), ~/.cursor or home-directory rule files, CLAUDE.md, legacy .cursorrules, an 'Active Rules' panel, or any token/context-usage diagnostics."
+   ],
+   "limitations": "WebFetch returned model-generated summaries and selected verbatim quotes rather than the full page text, so some wording may be paraphrased and less-prominent sections could be missed. The .md raw variant (https://cursor.com/docs/rules.md) returned HTTP 404; the llms.txt variant was not attempted since the main page fetched successfully and three targeted prompts were run against it. Claims about absence (e.g., no mention of ~/.cursor/rules) rely on the fetch tool's reporting rather than a direct full-text read."
+  }
+ ]
+}
