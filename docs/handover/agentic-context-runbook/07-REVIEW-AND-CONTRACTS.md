@@ -2,7 +2,7 @@
 
 [Index](INDEX.md) · [Evidence ledger](08-EVIDENCE.md)
 
-**Current task (v1.2):** Claude has reviewed the proposal and applied a bounded R0→R1 batch; Cursor reviews both and makes the second pass; GPT reviews both passes. The implementation diff and deterministic test results now exist ([11](11-IMPLEMENTATION-RECEIPT.md)); live-session evidence does not yet. Reviewers must inspect the current state on disk before accepting reported completion. No subscription changes, third-party contact, purchases, credential operations, or deployments are authorized by this pack.
+**Current task (v1.4):** Claude applied a bounded R0→R1 batch ([11](11-IMPLEMENTATION-RECEIPT.md)); Cursor independently reviewed it, applied R2, and canaried DesktopFly ([13](13-CURSOR-RECEIPT.md), [this-pass](this-pass/README.md)); GPT reviews both passes using [GPT-REVIEW-PROMPT.md](GPT-REVIEW-PROMPT.md). Live-session W1 injection is still inconclusive. Reviewers must inspect the pack (including `this-pass/repo/` snapshots) before accepting reported completion. No subscription changes, third-party contact, purchases, credential operations, or deployments are authorized by this pack.
 
 ## Review priorities
 

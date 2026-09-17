@@ -9,3 +9,4 @@
 - W1 native injection INCONCLUSIVE (stale 15-rule session prompt).
 - Pack v1.3 at `docs/handover/agentic-context-runbook/`. Token savings not claimed. W5 not performed.
 - Pack v1.4: copied every other in-repo canary artefact into `docs/handover/agentic-context-runbook/this-pass/` (live paths unchanged). Out-of-repo items still absent.
+- GPT review prompt updated in-pack: `docs/handover/agentic-context-runbook/GPT-REVIEW-PROMPT.md` (INDEX + this-pass README called out as pack files).

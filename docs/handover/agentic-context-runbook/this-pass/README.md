@@ -11,7 +11,7 @@ Pack version 1.4 snapshots every in-repo file from Cursor’s second pass into t
 | `desktopfly-outside-pack.patch` | `git diff origin/main...HEAD` excluding this pack directory |
 | `INVENTORY.json` | Machine-readable list of copied, deleted, and still-out-of-repo items |
 
-Chapters, evidence, manifests, and `diffs/agent-instructions-r1.patch` at the pack root are already part of this folder.
+Chapters, evidence, manifests, `GPT-REVIEW-PROMPT.md`, and `diffs/agent-instructions-r1.patch` at the pack root are already part of this folder.
 
 **Not available on this VM (cannot be snapshotted):**
 

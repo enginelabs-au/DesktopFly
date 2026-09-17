@@ -30,4 +30,5 @@ Token and cash savings are UNKNOWN. Plan allowances are not API billing.
 
 - Workstream: `docs/workstreams/20260917-context-optimization/`
 - Pack: `docs/handover/agentic-context-runbook/` (v1.4; `this-pass/` holds copies of every other in-repo artefact from this canary)
+- GPT prompt: `docs/handover/agentic-context-runbook/GPT-REVIEW-PROMPT.md` (copy the body below the rule; attach the pack folder; `INDEX.md` and `this-pass/README.md` are inside it)
 - Apply route: `docs/handover/apply-context-optimization-r2.sh`

@@ -47,7 +47,7 @@
 
 ## Active Items
 
-- Pack v1.4: `docs/handover/agentic-context-runbook/` including `this-pass/` snapshot of every other in-repo artefact
+- Pack v1.4: `docs/handover/agentic-context-runbook/` including `this-pass/` snapshot and `GPT-REVIEW-PROMPT.md`
 - Owner handoff: `docs/workstreams/20260917-context-optimization/delivery/owner-handoff.md`
 - Cost operator setup: `docs/handover/cursor-cost-operator-setup.md`
 
@@ -81,8 +81,8 @@
 
 ## Next Actions
 
-- Owner: fresh chat W1, W5 if needed, GPT review of pack v1.4.
+- Owner: fresh chat W1, W5 if needed, GPT review of pack v1.4 using `docs/handover/agentic-context-runbook/GPT-REVIEW-PROMPT.md`.
 
 ## Last Updated
 
-- 2026-09-17 — Pack v1.4 this-pass snapshot of all in-repo canary artefacts.
+- 2026-09-17 — Pack v1.4 this-pass snapshot plus GPT-REVIEW-PROMPT.md.

@@ -2,7 +2,7 @@
   "artifact_type": "documentation_and_implementation_review_pack",
   "schema_version": 5,
   "pack_version": "1.4",
-  "updated_at_utc": "2026-09-17T14:02:36Z",
+  "updated_at_utc": "2026-09-17T14:08:31Z",
   "entrypoint": "INDEX.md",
   "status": "cursor_second_pass_desktopfly_canary; this_pass_snapshot_complete; w1_inconclusive; w2_partial; gpt_review_next",
   "implementation_performed": true,
@@ -46,8 +46,8 @@
     },
     {
       "path": "07-REVIEW-AND-CONTRACTS.md",
-      "sha256": "f58bd39b2825ce8e1bd9c48f64256c062c468e07973fb53544ec0939a0f02cfe",
-      "bytes": 9499
+      "sha256": "6c7810bb1b0f839a3a937d20bff0055d50f1db9a686635810eed29924b5432c8",
+      "bytes": 9577
     },
     {
       "path": "08-EVIDENCE.md",
@@ -56,13 +56,13 @@
     },
     {
       "path": "09-HISTORICAL-EVIDENCE-AND-COVERAGE.md",
-      "sha256": "4c4855f8b78a767790c6699dd175b32a8683fd074b37b69ee548ce28435159ef",
-      "bytes": 10046
+      "sha256": "56e2310dc108765bb53823141bc379402ddc9b6b3df66004b1e5ee8dcd97bedb",
+      "bytes": 10143
     },
     {
       "path": "10-CHANGE-LOG.md",
-      "sha256": "fc5ed8629e0833293d73c9c4887bc97ca08c042d98b4248117eed30762a85044",
-      "bytes": 10249
+      "sha256": "5e89afba1e2b919c316ef971f432ba9c1eb891aabb33d8afa193ae2ea7561d3e",
+      "bytes": 10630
     },
     {
       "path": "11-IMPLEMENTATION-RECEIPT.md",
@@ -85,9 +85,14 @@
       "bytes": 7366
     },
     {
+      "path": "GPT-REVIEW-PROMPT.md",
+      "sha256": "fa5eb3a0a26515db8b8d3c161fa02d9a6c800ac664dfc13ca6e59ea9a44c2848",
+      "bytes": 6696
+    },
+    {
       "path": "INDEX.md",
-      "sha256": "f129442ffd9326f31d2c9825dac88263a40fa54fe144e13c28a892ec0f005854",
-      "bytes": 5981
+      "sha256": "d94768478e2312028e357fafd70511644e75ed8ea5dd1821422452fff1c83a75",
+      "bytes": 6188
     },
     {
       "path": "baseline-source-manifest.json",
@@ -156,8 +161,8 @@
     },
     {
       "path": "this-pass/README.md",
-      "sha256": "172400e796510dae9705317ed0c8c1a87452713ac5654610e2d7d3e8ce61d2c8",
-      "bytes": 1471
+      "sha256": "976be997521a42365a90d764ea4b5ca773f0cfce834d08fdd2fa23c4c95271d6",
+      "bytes": 1495
     },
     {
       "path": "this-pass/desktopfly-outside-pack.patch",
@@ -186,8 +191,8 @@
     },
     {
       "path": "this-pass/repo/.cursor/STATE.md",
-      "sha256": "0cb6394ab78564fbeff54d4ca1563c6c6251dfadeb2ca092ada69dc974c8462b",
-      "bytes": 2700
+      "sha256": "2408ab4cbeb01b501ba89d952543105895d244a94a19c7eb6af5d8628b1ef126",
+      "bytes": 2756
     },
     {
       "path": "this-pass/repo/.cursor/USER.md",
@@ -251,8 +256,8 @@
     },
     {
       "path": "this-pass/repo/.cursor/memory/memories/2026-09-17-continuation.md",
-      "sha256": "124c9d46eb07c8e5458b98a7f899f63735dd46faafbfd6ff6d8143ae5f95fcf7",
-      "bytes": 787
+      "sha256": "5cf99f024f693b88f975aecb5a711b8064a1045d8175cbacef9d01521e408de8",
+      "bytes": 938
     },
     {
       "path": "this-pass/repo/.cursor/memory/runbooks/agent-workspace.md",
@@ -491,8 +496,8 @@
     },
     {
       "path": "this-pass/repo/docs/plans/final_implementation_checklist.md",
-      "sha256": "2ddd94d674f77c3a970f2c8f4d3364dada3eee8acfd2c5e20e241c9f1cf4a9c8",
-      "bytes": 553
+      "sha256": "8aa5343b2b55681954baf57da2e139db83ff616d7925d9cdd3bfcc3fd1f8b9ef",
+      "bytes": 654
     },
     {
       "path": "this-pass/repo/docs/plans/phase_0_foundations_plan.md",
@@ -501,8 +506,8 @@
     },
     {
       "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/delivery/owner-handoff.md",
-      "sha256": "da9c333e1867f690ade4d5695942ce1eebc5722c50aae32c969dc2545bbe7033",
-      "bytes": 1832
+      "sha256": "6323e69e6f6e58fadcdcb11a2d0a642d9eb6854afd63d96493218614b8c0adfb",
+      "bytes": 2014
     },
     {
       "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/manifest.md",
@@ -610,7 +615,7 @@
       "bytes": 353
     }
   ],
-  "file_count": 119,
+  "file_count": 120,
   "checks": {
     "json_parse": "this file",
     "relative_links_spot_checked": true,

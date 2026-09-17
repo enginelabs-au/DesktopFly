@@ -77,5 +77,6 @@ Original observation was visual; downloadable data required paid access and was 
 | Paths, versions, diff, validation outcomes, measured vs estimated, rollback | [11](11-IMPLEMENTATION-RECEIPT.md) |
 | Prioritized remaining work with acceptance criteria | [12](12-REMAINING-WORK.md) |
 | Second-pass instructions for Cursor | [CURSOR-IMPLEMENTATION-PROMPT](CURSOR-IMPLEMENTATION-PROMPT.md) |
+| Copy-paste GPT review of both passes (v1.4 pack) | [GPT-REVIEW-PROMPT](GPT-REVIEW-PROMPT.md) |
 
 **Explicitly deferred until earned:** hardcoded provider ladders; new subscriptions/APIs; custom tool gateways; vector/global-memory databases; messaging/scheduling frameworks; automatic cross-repo edits; wholesale plugin removal; blanket permission changes; generated universal application summaries. A future phase may adopt a component when evidence and authorization justify it. Defer does not mean the capability should be discarded.
