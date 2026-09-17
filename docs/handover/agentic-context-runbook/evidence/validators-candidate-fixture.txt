@@ -1,0 +1,40 @@
+# Validator and test outputs — candidate fixture (fresh copy of the revised shared source, path contains a space, after bootstrap)
+
+$ node .cursor/scripts/validate-agent-config.mjs
+agent config validation complete
+$ node .cursor/skills/launch-pipeline/scripts/validate-launch.mjs
+launch pipeline validation complete: 85 control-plane files (compatibility=1, generated-history=5, indexed=44, native=22, routed=13)
+$ node .cursor/skills/launch-pipeline/scripts/preflight.mjs (status only)
+{
+ "status": "READY",
+ "configuration": {
+  "healthy": true,
+  "missing_control_files": [],
+  "invalid_json": []
+ },
+ "materialization": {
+  "bootstrap_required": false,
+  "missing_directories": [],
+  "missing_indexes": [],
+  "settings_link": "valid"
+ }
+}
+$ node --test .cursor/hooks/policy.test.mjs
+ℹ tests 11
+ℹ pass 11
+ℹ fail 0
+$ node --test .cursor/skills/git-safety/scripts/git-safety.test.mjs
+ℹ tests 5
+ℹ pass 5
+ℹ fail 0
+$ node --test .cursor/skills/launch-pipeline/scripts/preflight.test.mjs
+ℹ tests 7
+ℹ pass 7
+ℹ fail 0
+
+# Idempotence: sha256 of every file after bootstrap run 1 vs run 2
+identical
+
+# Git hook live test
+$ git -c user.email=someone@gmail.com commit -m x  -> blocked by .githooks/commit-msg (git-safety identity check)
+$ GIT_*=Cursor Agent <cursoragent@noreply.github.com> git commit -> accepted

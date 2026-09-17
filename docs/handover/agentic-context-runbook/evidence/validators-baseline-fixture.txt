@@ -1,0 +1,6 @@
+# Validator outputs — baseline fixture (pre-change shared source + consumer-style root files from an existing consumer)
+$ node .cursor/scripts/validate-agent-config.mjs
+agent config validation complete
+$ node .cursor/skills/launch-pipeline/scripts/validate-launch.mjs
+launch pipeline validation complete: 88 control-plane files (compatibility=1, generated-history=4, indexed=41, native=29, routed=13)
+rules: 15 files, 6843 bytes, all alwaysApply: true

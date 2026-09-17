@@ -1,0 +1,9 @@
+# Headless Cursor CLI diagnostic attempt (2026-09-17)
+
+Command (identical prompt intended for baseline and candidate fixtures):
+  agent -p --mode ask --trust --workspace "<fixture>" --output-format json "<diagnostic prompt>"
+
+Result: exit 1; stdout empty; stderr:
+Error: Authentication required. Please run 'agent login' first, or set CURSOR_API_KEY environment variable.
+
+Interpretation: the CLI's stored login did not satisfy print-mode authentication; 'agent login' is an interactive user action and was not performed. Native loading validation is therefore NOT PERFORMED in this pass and is assigned to Cursor (native session) in 12-REMAINING-WORK.md.

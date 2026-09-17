@@ -1,0 +1,625 @@
+{
+  "artifact_type": "documentation_and_implementation_review_pack",
+  "schema_version": 5,
+  "pack_version": "1.4",
+  "updated_at_utc": "2026-09-17T14:08:31Z",
+  "entrypoint": "INDEX.md",
+  "status": "cursor_second_pass_desktopfly_canary; this_pass_snapshot_complete; w1_inconclusive; w2_partial; gpt_review_next",
+  "implementation_performed": true,
+  "implementation_scope": "DesktopFly canary via owner apply route; shared source not on VM; no hook/permission/sandbox/credential changes; this-pass/ snapshots every other in-repo artefact",
+  "this_pass": {
+    "readme": "this-pass/README.md",
+    "inventory": "this-pass/INVENTORY.json",
+    "file_map": "this-pass/FILE-MAP.tsv",
+    "patch": "this-pass/desktopfly-outside-pack.patch"
+  },
+  "files": [
+    {
+      "path": "01-CONTRACT.md",
+      "sha256": "946d96e81bde786df4e6eae7eddf93b99a6e4cde9a998b440c49a6cee7e00f13",
+      "bytes": 6708
+    },
+    {
+      "path": "02-BASELINE.md",
+      "sha256": "7692a0e31cfbfb770adece24da46a1e1280fa33f1416109af30c4214314cdb4a",
+      "bytes": 7898
+    },
+    {
+      "path": "03-LOADING-EXPERIMENT.md",
+      "sha256": "eb92866ee5d86a1c70b81da99c93973cfd18820a44bbdf11a8cb63f6edaa6378",
+      "bytes": 7861
+    },
+    {
+      "path": "04-CAPABILITY-SURFACES.md",
+      "sha256": "799c0e6d54e94a39018edd9c24674ccb2028728df8ac0fdbc40c0e6687af9d5a",
+      "bytes": 23723
+    },
+    {
+      "path": "05-ROUTING-AND-AUTOMATION.md",
+      "sha256": "b953b0435009d3e7b0cd4b78e4645e6028c1742e1db980746a1b6f3ed67762cb",
+      "bytes": 11546
+    },
+    {
+      "path": "06-EVALUATION-AND-RECOVERY.md",
+      "sha256": "b3a9aa794a4c316720357f83d3818efb971e6b33db0d779400544f2123cdc1ce",
+      "bytes": 12866
+    },
+    {
+      "path": "07-REVIEW-AND-CONTRACTS.md",
+      "sha256": "6c7810bb1b0f839a3a937d20bff0055d50f1db9a686635810eed29924b5432c8",
+      "bytes": 9577
+    },
+    {
+      "path": "08-EVIDENCE.md",
+      "sha256": "27e9cf19195b6eeec140e9ecc93de0bab4162b0b49bed065b256a92c3fe50640",
+      "bytes": 21792
+    },
+    {
+      "path": "09-HISTORICAL-EVIDENCE-AND-COVERAGE.md",
+      "sha256": "56e2310dc108765bb53823141bc379402ddc9b6b3df66004b1e5ee8dcd97bedb",
+      "bytes": 10143
+    },
+    {
+      "path": "10-CHANGE-LOG.md",
+      "sha256": "5e89afba1e2b919c316ef971f432ba9c1eb891aabb33d8afa193ae2ea7561d3e",
+      "bytes": 10630
+    },
+    {
+      "path": "11-IMPLEMENTATION-RECEIPT.md",
+      "sha256": "491e17468d04125126a51f54a5f26cfc1b90360f91e9f9f170a63168b9c90745",
+      "bytes": 6905
+    },
+    {
+      "path": "12-REMAINING-WORK.md",
+      "sha256": "0e83911f83768c4cfc453e2ec2b6251e7305a9719b006a9f0119da5e1d364d07",
+      "bytes": 7684
+    },
+    {
+      "path": "13-CURSOR-RECEIPT.md",
+      "sha256": "84e3e53f49945806cf54afbbc435a420a87e7bf8a0f738087035e7090e09a39f",
+      "bytes": 3167
+    },
+    {
+      "path": "CURSOR-IMPLEMENTATION-PROMPT.md",
+      "sha256": "f284b8b42b17ac2a548a5704671876af0d8ece881f4c059e8b3659e473f24e8b",
+      "bytes": 7366
+    },
+    {
+      "path": "GPT-REVIEW-PROMPT.md",
+      "sha256": "fa5eb3a0a26515db8b8d3c161fa02d9a6c800ac664dfc13ca6e59ea9a44c2848",
+      "bytes": 6696
+    },
+    {
+      "path": "INDEX.md",
+      "sha256": "d94768478e2312028e357fafd70511644e75ed8ea5dd1821422452fff1c83a75",
+      "bytes": 6188
+    },
+    {
+      "path": "baseline-source-manifest.json",
+      "sha256": "f2d63513b7f23966c0e088725b962f710e3af6e68a1c630f22c9f1e388b4ac41",
+      "bytes": 6900
+    },
+    {
+      "path": "candidate-source-manifest.json",
+      "sha256": "dbd517050a903b60e406c5fa31b494f40d99aa666dacd0c774450132b812329a",
+      "bytes": 19234
+    },
+    {
+      "path": "diffs/agent-instructions-r1.patch",
+      "sha256": "48fe6d24df1bc5103b2724b45ed645711a2db32c6fa67fde6593ab68958aeb0c",
+      "bytes": 75915
+    },
+    {
+      "path": "evidence/cursor-phase1-review-2026-09-17.md",
+      "sha256": "efa375880d152b4009616c37da6cfae5a3e823a86fa9667f4a257181c39ef298",
+      "bytes": 2064
+    },
+    {
+      "path": "evidence/cursor-phase2-observations-2026-09-17.md",
+      "sha256": "1821a434f0099edef6d4d70c0b8e07bb52de1400b543177b269680e27bc94c9d",
+      "bytes": 2534
+    },
+    {
+      "path": "evidence/headless-cli-attempt.txt",
+      "sha256": "fde5a2956d5fff27ab6820d09768c1dea6ffabcec7c5fa38ecde149c60a78b45",
+      "bytes": 656
+    },
+    {
+      "path": "evidence/primary-source-verification-2026-09-17.json",
+      "sha256": "a0c3996fa3bb1432dfd4bf5e0e01ea4573b1ec6ccfd9dbf0d6131b16075d1eee",
+      "bytes": 23144
+    },
+    {
+      "path": "evidence/validators-baseline-fixture.txt",
+      "sha256": "b7d35db58e38f001ee228948fb643b731562142e03ff6009da13c80c062d3453",
+      "bytes": 454
+    },
+    {
+      "path": "evidence/validators-candidate-fixture.txt",
+      "sha256": "27c8d167607af9ffaaf5e15228c8ead050f599837770be619dd69ff4a0f2cff0",
+      "bytes": 1324
+    },
+    {
+      "path": "evidence/validators-template-repo.txt",
+      "sha256": "4c2ed2da1a0b146cac18a5c5473fb31a3fcb75cd0033bf252c0ffb3d147d4cb1",
+      "bytes": 1445
+    },
+    {
+      "path": "this-pass/DELETED-PATHS.txt",
+      "sha256": "6faffebcf252c8b434f3950ee1d20bf7ecd8a74cfddec6eab03a06008c2edd93",
+      "bytes": 295
+    },
+    {
+      "path": "this-pass/FILE-MAP.tsv",
+      "sha256": "e510d3f2af30c38cabd797e0116c7f748300bafa9517732c732c468d5f35c9aa",
+      "bytes": 11079
+    },
+    {
+      "path": "this-pass/INVENTORY.json",
+      "sha256": "64e6627b95fccbbecdeed2850312aec27c64981917e99004f51e84118695b6d3",
+      "bytes": 8297
+    },
+    {
+      "path": "this-pass/README.md",
+      "sha256": "976be997521a42365a90d764ea4b5ca773f0cfce834d08fdd2fa23c4c95271d6",
+      "bytes": 1495
+    },
+    {
+      "path": "this-pass/desktopfly-outside-pack.patch",
+      "sha256": "638d3b181f38ae3611ee7a769b5ff010e8221c7df2ba5227702754b7deed68a3",
+      "bytes": 230249
+    },
+    {
+      "path": "this-pass/repo/.cursor/AGENTS.md",
+      "sha256": "a0a0375cc5dca9a428101fa66d4e2805294adff64a307b12aab004d12a5ac8b2",
+      "bytes": 12639
+    },
+    {
+      "path": "this-pass/repo/.cursor/BOOTSTRAP.md",
+      "sha256": "b8dcc08f2492679b14f14c02e93c65b91ebabdd322777e4f5cb4c055eb2f7831",
+      "bytes": 8671
+    },
+    {
+      "path": "this-pass/repo/.cursor/INSTRUCTIONS.md",
+      "sha256": "bd8cabd83ee090b8fe9f882291bd1f291ebf326b4846882ca8e751cdc179b48f",
+      "bytes": 2538
+    },
+    {
+      "path": "this-pass/repo/.cursor/README.md",
+      "sha256": "0a506864e25624eeb355380b06816b6030aeb9817e09d3294745f825869bf3b9",
+      "bytes": 4195
+    },
+    {
+      "path": "this-pass/repo/.cursor/STATE.md",
+      "sha256": "2408ab4cbeb01b501ba89d952543105895d244a94a19c7eb6af5d8628b1ef126",
+      "bytes": 2756
+    },
+    {
+      "path": "this-pass/repo/.cursor/USER.md",
+      "sha256": "cec4905a6ce041b7b18f4d8eaad15d60853af45f4d325da9e2339f93bd459c3b",
+      "bytes": 3798
+    },
+    {
+      "path": "this-pass/repo/.cursor/agents/growth-marketing-subagent.md",
+      "sha256": "ffc5d869d7761c1832a022feccfb2ade1fceebaf572896cea1c81f908d041226",
+      "bytes": 1734
+    },
+    {
+      "path": "this-pass/repo/.cursor/agents/product-manager-subagent.md",
+      "sha256": "8496b7037a3527fde45bd3747f012d8b9ba45cf65ddb7dd9d2808bf3a8f2fbfb",
+      "bytes": 1656
+    },
+    {
+      "path": "this-pass/repo/.cursor/agents/project-lead-subagent.md",
+      "sha256": "2feea50449938799c1bb1d00a9701a0695e7af53dc31539c5b46840e8d399479",
+      "bytes": 1800
+    },
+    {
+      "path": "this-pass/repo/.cursor/agents/security-engineer-subagent.md",
+      "sha256": "01edf2be0677632d64c8ca23d464cd2332a5d20c078d37bfad051ad672f23c0f",
+      "bytes": 1804
+    },
+    {
+      "path": "this-pass/repo/.cursor/agents/software-engineer-subagent.md",
+      "sha256": "ca8be7cc448c9880c6fa5b2c3bdf4a7f39ab51f96eb3e3cb5e454f88d86489bd",
+      "bytes": 1751
+    },
+    {
+      "path": "this-pass/repo/.cursor/agents/ui-ux-developer-subagent.md",
+      "sha256": "6db5ecf5c482732ad7f6ec1855573608c30e469c5db7f866c592543f77f814c5",
+      "bytes": 1654
+    },
+    {
+      "path": "this-pass/repo/.cursor/instructions/LAUNCH.md",
+      "sha256": "e8dadc7c5e775f12b301c5b446ebc8d3b898b2e8e2dd09f021e5e02eda0f2459",
+      "bytes": 15918
+    },
+    {
+      "path": "this-pass/repo/.cursor/instructions/PROJECT_PLANNING.md",
+      "sha256": "92ff3bc2da6cbfce2dcb73c830211b0e8cab9f11332cd2ee2cca8b4ff17ce2ca",
+      "bytes": 6474
+    },
+    {
+      "path": "this-pass/repo/.cursor/instructions/ROLES.md",
+      "sha256": "e548ceffb4b2ae7185e80089f6d8a63797ee0fc8dd215ca52fae198673586ec1",
+      "bytes": 57638
+    },
+    {
+      "path": "this-pass/repo/.cursor/instructions/SUBAGENTS.md",
+      "sha256": "f4b99d1b520a85f126c89c349dcc053599845407afa27b1bb764313b7f35a04e",
+      "bytes": 4334
+    },
+    {
+      "path": "this-pass/repo/.cursor/memory/MEMORY.md",
+      "sha256": "9937c2ace10e7c6b4e975fad720f352cc58c0cb119073a799a158298fd4ce6e1",
+      "bytes": 4334
+    },
+    {
+      "path": "this-pass/repo/.cursor/memory/memories/2026-09-17-continuation.md",
+      "sha256": "5cf99f024f693b88f975aecb5a711b8064a1045d8175cbacef9d01521e408de8",
+      "bytes": 938
+    },
+    {
+      "path": "this-pass/repo/.cursor/memory/runbooks/agent-workspace.md",
+      "sha256": "7e07ca4039ed44b63ec3021bbac7ba7845f19a977aad0b7fb7836c1ea0ef364a",
+      "bytes": 3294
+    },
+    {
+      "path": "this-pass/repo/.cursor/rules/00-core-routing.mdc",
+      "sha256": "75468d5f5bfa7155b48637f8e1d95b6af7294ab6f2bbe66842c5f2ba56162eb5",
+      "bytes": 3183
+    },
+    {
+      "path": "this-pass/repo/.cursor/rules/blocker-governance.mdc",
+      "sha256": "6b5aec8cc53f2aa34119336e4574b801e0160190744b7d8ee9b26ae082d875d0",
+      "bytes": 399
+    },
+    {
+      "path": "this-pass/repo/.cursor/rules/cost-and-session.mdc",
+      "sha256": "acad380e671881e69da0341e2e936bce96cf30431bee879d0f3cfa200c34182e",
+      "bytes": 794
+    },
+    {
+      "path": "this-pass/repo/.cursor/rules/git-privacy-and-secrets.mdc",
+      "sha256": "96417bc70a4549fc883484cb270734de904a2ac96205668e7c3294ec92ea6fff",
+      "bytes": 723
+    },
+    {
+      "path": "this-pass/repo/.cursor/rules/karpathy-guidelines.mdc",
+      "sha256": "9cd3afd9f923725201c6fca69991360f8bfc9963374a55e486a37ea9858ef1ee",
+      "bytes": 669
+    },
+    {
+      "path": "this-pass/repo/.cursor/rules/memory-governance.mdc",
+      "sha256": "9870d255fd95404770225efe119adad0c8736f87e35f99e367a3f7dfbce68802",
+      "bytes": 371
+    },
+    {
+      "path": "this-pass/repo/.cursor/rules/project-planning.mdc",
+      "sha256": "997c264fff7b4caeef18f1d17c142e0125af59d7d1c3b0fcf5965bebd3ae49eb",
+      "bytes": 674
+    },
+    {
+      "path": "this-pass/repo/.cursor/rules/runbook-governance.mdc",
+      "sha256": "5b047917fcf962591b64048f3ef80f436315528340d837cc6aa27a7ea3fd6432",
+      "bytes": 320
+    },
+    {
+      "path": "this-pass/repo/.cursor/rules/subagent-orchestration.mdc",
+      "sha256": "0538141ddd906d10c26f416b4b14e9e7e39b73e1aabfcdc68be53dc00f0b21de",
+      "bytes": 572
+    },
+    {
+      "path": "this-pass/repo/.cursor/scripts/bootstrap.sh",
+      "sha256": "3a9ef3c9e18e4856d992ab327c6f244c623ddafd57bafc7d4cc0dd9c4d50cbc9",
+      "bytes": 6389
+    },
+    {
+      "path": "this-pass/repo/.cursor/scripts/validate-agent-config.mjs",
+      "sha256": "25422a81ac1fe5679ff4e0fbd2bd7022a743f452cf45e25f3fd1cd69ccbdb27d",
+      "bytes": 10375
+    },
+    {
+      "path": "this-pass/repo/.cursor/skills/git-safety/payloads/bootstrap.sh",
+      "sha256": "3a9ef3c9e18e4856d992ab327c6f244c623ddafd57bafc7d4cc0dd9c4d50cbc9",
+      "bytes": 6389
+    },
+    {
+      "path": "this-pass/repo/.cursor/skills/git-safety/payloads/validate-agent-config.mjs",
+      "sha256": "25422a81ac1fe5679ff4e0fbd2bd7022a743f452cf45e25f3fd1cd69ccbdb27d",
+      "bytes": 10375
+    },
+    {
+      "path": "this-pass/repo/.cursor/skills/launch-pipeline/SKILL.md",
+      "sha256": "cd216ad6b705aeab829d6241893bf6ab48d08e1742ff397f85f033f568c1a670",
+      "bytes": 7096
+    },
+    {
+      "path": "this-pass/repo/.cursor/skills/launch-pipeline/scripts/validate-launch.mjs",
+      "sha256": "b57a760139ff744f72336097e842e68f31aa2b7a0d2146510b128d54bdf5517d",
+      "bytes": 11986
+    },
+    {
+      "path": "this-pass/repo/.cursor/templates/agent-governance-operator-setup.md",
+      "sha256": "8d54992347f89878a4ecba5edf8f4a49e0839e620bd12c29bd9fcbe4fe5f333e",
+      "bytes": 1145
+    },
+    {
+      "path": "this-pass/repo/.cursor/templates/cursorignore",
+      "sha256": "de3906f35b5bee5f9a9f270def594f4e5767e63284f0069ace5f501ce4d168cb",
+      "bytes": 427
+    },
+    {
+      "path": "this-pass/repo/.cursor/templates/phase-plan-template.md",
+      "sha256": "34cff487a704d8f47605c9061d1075438583c4d896cbc3105e0ae1259dc851ed",
+      "bytes": 2727
+    },
+    {
+      "path": "this-pass/repo/.cursor/templates/root-agents.md",
+      "sha256": "6c43e9ab3151d53b9069fce1a2cc1c2bdcaaf161903ac4dba553418c4e81bfff",
+      "bytes": 2944
+    },
+    {
+      "path": "this-pass/repo/.cursorignore",
+      "sha256": "de3906f35b5bee5f9a9f270def594f4e5767e63284f0069ace5f501ce4d168cb",
+      "bytes": 427
+    },
+    {
+      "path": "this-pass/repo/AGENTS.md",
+      "sha256": "6c43e9ab3151d53b9069fce1a2cc1c2bdcaaf161903ac4dba553418c4e81bfff",
+      "bytes": 2944
+    },
+    {
+      "path": "this-pass/repo/docs/decisions/2026-09-17-selective-control-plane-loading.md",
+      "sha256": "093e83756809bee29e28cd6fdab5139082756ddbc4cb220c497c83e90d902a9b",
+      "bytes": 566
+    },
+    {
+      "path": "this-pass/repo/docs/handover/apply-context-optimization-r2.sh",
+      "sha256": "72c06982acbf52efba628c97df6cee7b08e9ea8635392f972a39f90d373d2c9f",
+      "bytes": 2095
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/AGENTS.md",
+      "sha256": "a0a0375cc5dca9a428101fa66d4e2805294adff64a307b12aab004d12a5ac8b2",
+      "bytes": 12639
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/INSTRUCTIONS.md",
+      "sha256": "bd8cabd83ee090b8fe9f882291bd1f291ebf326b4846882ca8e751cdc179b48f",
+      "bytes": 2538
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/agents/growth-marketing-subagent.md",
+      "sha256": "ffc5d869d7761c1832a022feccfb2ade1fceebaf572896cea1c81f908d041226",
+      "bytes": 1734
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/agents/product-manager-subagent.md",
+      "sha256": "8496b7037a3527fde45bd3747f012d8b9ba45cf65ddb7dd9d2808bf3a8f2fbfb",
+      "bytes": 1656
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/agents/project-lead-subagent.md",
+      "sha256": "2feea50449938799c1bb1d00a9701a0695e7af53dc31539c5b46840e8d399479",
+      "bytes": 1800
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/agents/security-engineer-subagent.md",
+      "sha256": "01edf2be0677632d64c8ca23d464cd2332a5d20c078d37bfad051ad672f23c0f",
+      "bytes": 1804
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/agents/software-engineer-subagent.md",
+      "sha256": "ca8be7cc448c9880c6fa5b2c3bdf4a7f39ab51f96eb3e3cb5e454f88d86489bd",
+      "bytes": 1751
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/agents/ui-ux-developer-subagent.md",
+      "sha256": "6db5ecf5c482732ad7f6ec1855573608c30e469c5db7f866c592543f77f814c5",
+      "bytes": 1654
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/instructions/ROLES.md",
+      "sha256": "e548ceffb4b2ae7185e80089f6d8a63797ee0fc8dd215ca52fae198673586ec1",
+      "bytes": 57638
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/rules/00-core-routing.mdc",
+      "sha256": "75468d5f5bfa7155b48637f8e1d95b6af7294ab6f2bbe66842c5f2ba56162eb5",
+      "bytes": 3183
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/rules/blocker-governance.mdc",
+      "sha256": "6b5aec8cc53f2aa34119336e4574b801e0160190744b7d8ee9b26ae082d875d0",
+      "bytes": 399
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/rules/cost-and-session.mdc",
+      "sha256": "acad380e671881e69da0341e2e936bce96cf30431bee879d0f3cfa200c34182e",
+      "bytes": 794
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/rules/git-privacy-and-secrets.mdc",
+      "sha256": "96417bc70a4549fc883484cb270734de904a2ac96205668e7c3294ec92ea6fff",
+      "bytes": 723
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/rules/karpathy-guidelines.mdc",
+      "sha256": "9cd3afd9f923725201c6fca69991360f8bfc9963374a55e486a37ea9858ef1ee",
+      "bytes": 669
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/rules/memory-governance.mdc",
+      "sha256": "9870d255fd95404770225efe119adad0c8736f87e35f99e367a3f7dfbce68802",
+      "bytes": 371
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/rules/project-planning.mdc",
+      "sha256": "997c264fff7b4caeef18f1d17c142e0125af59d7d1c3b0fcf5965bebd3ae49eb",
+      "bytes": 674
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/rules/runbook-governance.mdc",
+      "sha256": "5b047917fcf962591b64048f3ef80f436315528340d837cc6aa27a7ea3fd6432",
+      "bytes": 320
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/rules/subagent-orchestration.mdc",
+      "sha256": "0538141ddd906d10c26f416b4b14e9e7e39b73e1aabfcdc68be53dc00f0b21de",
+      "bytes": 572
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/scripts/bootstrap.sh",
+      "sha256": "3a9ef3c9e18e4856d992ab327c6f244c623ddafd57bafc7d4cc0dd9c4d50cbc9",
+      "bytes": 6389
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursor/scripts/validate-agent-config.mjs",
+      "sha256": "25422a81ac1fe5679ff4e0fbd2bd7022a743f452cf45e25f3fd1cd69ccbdb27d",
+      "bytes": 10375
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/.cursorignore",
+      "sha256": "de3906f35b5bee5f9a9f270def594f4e5767e63284f0069ace5f501ce4d168cb",
+      "bytes": 427
+    },
+    {
+      "path": "this-pass/repo/docs/handover/context-optimization-r2-payloads/AGENTS.md",
+      "sha256": "6c43e9ab3151d53b9069fce1a2cc1c2bdcaaf161903ac4dba553418c4e81bfff",
+      "bytes": 2944
+    },
+    {
+      "path": "this-pass/repo/docs/handover/cursor-cost-operator-setup.md",
+      "sha256": "6896140ffdf5216432700b9088ff39031de1127927e6855b9505929b26f92d5f",
+      "bytes": 1926
+    },
+    {
+      "path": "this-pass/repo/docs/plans/final_implementation_checklist.md",
+      "sha256": "8aa5343b2b55681954baf57da2e139db83ff616d7925d9cdd3bfcc3fd1f8b9ef",
+      "bytes": 654
+    },
+    {
+      "path": "this-pass/repo/docs/plans/phase_0_foundations_plan.md",
+      "sha256": "4f7c6239fb0a87610365799c6db63ecfb1ec9a943475ea4f5113bbc6b4811eae",
+      "bytes": 953
+    },
+    {
+      "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/delivery/owner-handoff.md",
+      "sha256": "6323e69e6f6e58fadcdcb11a2d0a642d9eb6854afd63d96493218614b8c0adfb",
+      "bytes": 2014
+    },
+    {
+      "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/manifest.md",
+      "sha256": "0e739c078cb9ecd830a394cb74b9dd762301f34b7969a0d056906975b9139487",
+      "bytes": 2330
+    },
+    {
+      "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/project-lead-subagent/charter.md",
+      "sha256": "2044c87d43a93669a3fe069de113c0ca7c7532688a605d7bc8fa97c479e9217b",
+      "bytes": 300
+    },
+    {
+      "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/project-lead-subagent/evidence.md",
+      "sha256": "086a961f448b378723ab172f14d5bd0c0b3f608cda71e3cd66cd1890ad8b967b",
+      "bytes": 665
+    },
+    {
+      "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/project-lead-subagent/handoff.md",
+      "sha256": "a5d6ad3c91332bc2fa59a3d875f59cf29aa52e36005a8848ea526e935b92d70e",
+      "bytes": 477
+    },
+    {
+      "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/project-lead-subagent/plan.md",
+      "sha256": "7443ed3d0bf3a75841ddc6b3296effe8d753897496f4798fd8fdd43b66eed924",
+      "bytes": 320
+    },
+    {
+      "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/security-engineer-subagent/charter.md",
+      "sha256": "132351b713642913930f4ad753f50f53b4d3b178ef22139a194229105df8de5c",
+      "bytes": 1545
+    },
+    {
+      "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/security-engineer-subagent/evidence.md",
+      "sha256": "fe8ccc7749cb62066333e0a1e9d96f1b58b2cb975cd12fba5c472ba4da5a1300",
+      "bytes": 1392
+    },
+    {
+      "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/security-engineer-subagent/handoff.md",
+      "sha256": "cfc3685db7b5531a8c544adcd39d489dc1f6dd29dfd0e0f292ab2e4b9fc2b44c",
+      "bytes": 715
+    },
+    {
+      "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/security-engineer-subagent/plan.md",
+      "sha256": "7bcda531e8795e5929553314e02fa53565bf13f95587627503f08d52a0c2ac36",
+      "bytes": 586
+    },
+    {
+      "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/software-engineer-subagent/charter.md",
+      "sha256": "8c96344c684640fbcc295f4c9026da8c05f2c4219e781104c9c42b1ffc143c52",
+      "bytes": 786
+    },
+    {
+      "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/software-engineer-subagent/evidence.md",
+      "sha256": "6eec8bf71badd20a14bbd4285c943ec1e8e8f384ea82e43a1dd1266d639a8812",
+      "bytes": 1522
+    },
+    {
+      "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/software-engineer-subagent/handoff.md",
+      "sha256": "c9ba30bb86927eb7c65031b23603dde49f30fa98f5bbba386f2eeac7fec4804c",
+      "bytes": 408
+    },
+    {
+      "path": "this-pass/repo/docs/workstreams/20260917-context-optimization/software-engineer-subagent/plan.md",
+      "sha256": "1cb1b80538e420826110170a0e3cc74fb7964e7a63caf4cdc10bf1b80bc65682",
+      "bytes": 629
+    },
+    {
+      "path": "this-pass/retired-rules/00-read-agent-context-first.mdc",
+      "sha256": "58484cf22ac8777d8278cfc2b13fdb1d1812a7d42f05638740a88a64d0a519a7",
+      "bytes": 671
+    },
+    {
+      "path": "this-pass/retired-rules/core-operating-context.mdc",
+      "sha256": "e51d379213d380778a976d0e0c7a2af38c1478e1e5704cc7bb55aa678c6da56e",
+      "bytes": 345
+    },
+    {
+      "path": "this-pass/retired-rules/instruction-routing.mdc",
+      "sha256": "9d0ae9657c90d8ffc8d0c28df520dd4fad56d3aa8208915542af2cc922ce0ac0",
+      "bytes": 497
+    },
+    {
+      "path": "this-pass/retired-rules/root-canonical.mdc",
+      "sha256": "3aa9726d6faa4b68316611477db9e06ec484fdae722dd6b1f85bde9e889a63e7",
+      "bytes": 502
+    },
+    {
+      "path": "this-pass/retired-rules/skills-file.mdc",
+      "sha256": "0dbbf4e6c368fef411f9ec95af478807db85928484bac27e8365c42be985293d",
+      "bytes": 301
+    },
+    {
+      "path": "this-pass/retired-rules/state-and-compactification.mdc",
+      "sha256": "9d0103a2b4297059a602b05a28eb3452c5f139ecbd0c86bb70666272bd72e557",
+      "bytes": 379
+    },
+    {
+      "path": "this-pass/retired-rules/tools-file.mdc",
+      "sha256": "f656c192236add1fa57124280d813e0d177e19af57adb54b07b6baffb016b85b",
+      "bytes": 296
+    },
+    {
+      "path": "this-pass/retired-rules/working-memory.mdc",
+      "sha256": "222aebf1da1f377701c6441bb69cbfd1308be3da0c01f3105ff1fab55e8e7665",
+      "bytes": 353
+    }
+  ],
+  "file_count": 120,
+  "checks": {
+    "json_parse": "this file",
+    "relative_links_spot_checked": true,
+    "secrets_in_pack": "not reproduced",
+    "live_canary_moved": false
+  }
+}

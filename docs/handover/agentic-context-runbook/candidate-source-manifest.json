@@ -1,0 +1,559 @@
+{
+  "artifact_type": "read_only_source_snapshot",
+  "schema_version": 2,
+  "recorded_at_utc": "2026-09-17T13:11:46.637326Z",
+  "research_snapshot_date": "2026-09-17",
+  "source_root": "/Users/camdouglas/agent-instructions",
+  "state": "candidate_after_R1_first_pass",
+  "scope": "shared authored source only; excludes .git, .agents (untracked duplicate skills), OS metadata",
+  "runtime_loaded_tokens": null,
+  "billed_tokens": null,
+  "core_seven_file_bytes": 43401,
+  "rules_bytes_total": 6322,
+  "rules_always_on_bytes": 4027,
+  "rule_count": 8,
+  "rules_always_on_count": 3,
+  "files": [
+    {
+      "path": ".cursor/AGENTS.md",
+      "sha256": "83628301ba4f24a11290ae75a4b1f851035c2b0349eb9a7f0b921b0de7a64e3e",
+      "bytes": 12196,
+      "category": "mandatory_core"
+    },
+    {
+      "path": ".cursor/BOOTSTRAP.md",
+      "sha256": "b8dcc08f2492679b14f14c02e93c65b91ebabdd322777e4f5cb4c055eb2f7831",
+      "bytes": 8671,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/INSTRUCTIONS.md",
+      "sha256": "bd8cabd83ee090b8fe9f882291bd1f291ebf326b4846882ca8e751cdc179b48f",
+      "bytes": 2538,
+      "category": "mandatory_core"
+    },
+    {
+      "path": ".cursor/README.md",
+      "sha256": "0a506864e25624eeb355380b06816b6030aeb9817e09d3294745f825869bf3b9",
+      "bytes": 4195,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/SKILLS.md",
+      "sha256": "4efc1a9f1f66354b8f0677b33b83a089c409742d42dd477c63aaa61dc4cf891e",
+      "bytes": 4643,
+      "category": "mandatory_core"
+    },
+    {
+      "path": ".cursor/STATE.md",
+      "sha256": "4be2bf72f608cba117c51ecd8f2b55144d44ef621c0cb1f13ccf308b2cfb6650",
+      "bytes": 1275,
+      "category": "mandatory_core"
+    },
+    {
+      "path": ".cursor/TOOLS.md",
+      "sha256": "29ac2510846f8d4461ed2cd6ed064c7e80f24f9de352971454c0344ebfaba496",
+      "bytes": 15663,
+      "category": "mandatory_core"
+    },
+    {
+      "path": ".cursor/USER.md",
+      "sha256": "79fd41e757ac2644fa279e082b595797c3e48bbbc6d8aaa0d2c0509e0529d5f4",
+      "bytes": 3317,
+      "category": "mandatory_core"
+    },
+    {
+      "path": ".cursor/agents/growth-marketing-subagent.md",
+      "sha256": "ffc5d869d7761c1832a022feccfb2ade1fceebaf572896cea1c81f908d041226",
+      "bytes": 1734,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/agents/product-manager-subagent.md",
+      "sha256": "8496b7037a3527fde45bd3747f012d8b9ba45cf65ddb7dd9d2808bf3a8f2fbfb",
+      "bytes": 1656,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/agents/project-lead-subagent.md",
+      "sha256": "2feea50449938799c1bb1d00a9701a0695e7af53dc31539c5b46840e8d399479",
+      "bytes": 1800,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/agents/security-engineer-subagent.md",
+      "sha256": "01edf2be0677632d64c8ca23d464cd2332a5d20c078d37bfad051ad672f23c0f",
+      "bytes": 1804,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/agents/software-engineer-subagent.md",
+      "sha256": "ca8be7cc448c9880c6fa5b2c3bdf4a7f39ab51f96eb3e3cb5e454f88d86489bd",
+      "bytes": 1751,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/agents/ui-ux-developer-subagent.md",
+      "sha256": "6db5ecf5c482732ad7f6ec1855573608c30e469c5db7f866c592543f77f814c5",
+      "bytes": 1654,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/cli.json",
+      "sha256": "5cd58f8b57e71d8012ecd6d8f5566d8006dfecfd4b650eb59ced13ee7b2b70d1",
+      "bytes": 3497,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/config/README.md",
+      "sha256": "198746e408cd56a99c3ad33c88cbeddcff3bbd36f763068d746cbea62996649c",
+      "bytes": 1781,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/config/settings.json",
+      "sha256": "cb37b0184b725a10435559570cb4ec91d54142fe67ce432f3d4fe5787e419766",
+      "bytes": 66,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/hooks.json",
+      "sha256": "453c42782c29b280d8181fd05b9b2eab6e3b43aa2ffbd98cde1b4f4df486234e",
+      "bytes": 781,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/hooks/policy.mjs",
+      "sha256": "09405d970672c13dcbbcee369a969e005065d68e2f48afd0cd67f89fc350fb37",
+      "bytes": 8880,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/hooks/policy.test.mjs",
+      "sha256": "acdb327e36e5ff0060349e689650d08a602d9113ed2eb9a256690cfbdacd001b",
+      "bytes": 7526,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/instructions/LAUNCH.md",
+      "sha256": "9814c8ca341001f8a00658cf7188a8814b53a6b8eb52dd13bdbd738aa9febeb0",
+      "bytes": 15888,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/instructions/PROJECT_PLANNING.md",
+      "sha256": "92ff3bc2da6cbfce2dcb73c830211b0e8cab9f11332cd2ee2cca8b4ff17ce2ca",
+      "bytes": 6474,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/instructions/ROLES.md",
+      "sha256": "e548ceffb4b2ae7185e80089f6d8a63797ee0fc8dd215ca52fae198673586ec1",
+      "bytes": 57638,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/instructions/STRATEGY.md",
+      "sha256": "c1ea2204f10ffd8c1b3aa446084c349d5a431c92e422cbaed711b716adc58161",
+      "bytes": 8764,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/instructions/SUBAGENTS.md",
+      "sha256": "e97584e5d3bd973269c88aab23781fc29ba3384d69a7da1413ffd01693cecf22",
+      "bytes": 4073,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/memory/MEMORY.md",
+      "sha256": "5c476f324c73ac3bb05d45b05e73fab10d6ca158276e70db9c98e596fce99cc7",
+      "bytes": 3769,
+      "category": "mandatory_core"
+    },
+    {
+      "path": ".cursor/memory/blockers-fixed/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/memory/blockers/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/memory/memories/.gitkeep",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/memory/memories/2026-08-18-continuation.md",
+      "sha256": "c4ed9b97621df01b63ed341bc87227e1b3aee19cd9ccb10a6e797be0d1d20fca",
+      "bytes": 6884,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/memory/memories/2026-09-17-continuation.md",
+      "sha256": "4b70e8fcd88bfd714fc05de7b14ebdb3486e9d8c25992afb770bf36fc82f5a81",
+      "bytes": 1726,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/memory/runbooks/agent-config-bootstrap.md",
+      "sha256": "1754ab944a73958456109aa83f87192f1e51b09dce9bd16687aa0c82e7f7fade",
+      "bytes": 1143,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/memory/runbooks/agent-workspace.md",
+      "sha256": "7e07ca4039ed44b63ec3021bbac7ba7845f19a977aad0b7fb7836c1ea0ef364a",
+      "bytes": 3294,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/memory/runbooks/supabase-cli-macos.md",
+      "sha256": "c1e22fa4a233cdd9bb9288033e0e03cd4d9cd3df3037d73703366dc624ae7581",
+      "bytes": 2296,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/memory/runbooks/vercel-workflow.md",
+      "sha256": "b27fcb1c16992d4daa2ab6896b39aa1247880e6e26bd18ee61e41e624487596c",
+      "bytes": 1549,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/permissions.json",
+      "sha256": "68276a49e121be01b5d92a0ccf149276f17b4b14c9eab2d59596a04715bc6a41",
+      "bytes": 689,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/rules/00-core-routing.mdc",
+      "sha256": "01e4541a91819695bb4053f58343224682236389fcb07651be6f0d84413de021",
+      "bytes": 2635,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/blocker-governance.mdc",
+      "sha256": "6b5aec8cc53f2aa34119336e4574b801e0160190744b7d8ee9b26ae082d875d0",
+      "bytes": 399,
+      "category": "rule",
+      "alwaysApply_true": false
+    },
+    {
+      "path": ".cursor/rules/git-privacy-and-secrets.mdc",
+      "sha256": "96417bc70a4549fc883484cb270734de904a2ac96205668e7c3294ec92ea6fff",
+      "bytes": 723,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/karpathy-guidelines.mdc",
+      "sha256": "9cd3afd9f923725201c6fca69991360f8bfc9963374a55e486a37ea9858ef1ee",
+      "bytes": 669,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/memory-governance.mdc",
+      "sha256": "9870d255fd95404770225efe119adad0c8736f87e35f99e367a3f7dfbce68802",
+      "bytes": 371,
+      "category": "rule",
+      "alwaysApply_true": false
+    },
+    {
+      "path": ".cursor/rules/project-planning.mdc",
+      "sha256": "3ea46ac6b139690490879a4e0c3a4e8c9838c44b0a9a20e1abc443163b5d5fd8",
+      "bytes": 633,
+      "category": "rule",
+      "alwaysApply_true": false
+    },
+    {
+      "path": ".cursor/rules/runbook-governance.mdc",
+      "sha256": "5b047917fcf962591b64048f3ef80f436315528340d837cc6aa27a7ea3fd6432",
+      "bytes": 320,
+      "category": "rule",
+      "alwaysApply_true": false
+    },
+    {
+      "path": ".cursor/rules/subagent-orchestration.mdc",
+      "sha256": "0538141ddd906d10c26f416b4b14e9e7e39b73e1aabfcdc68be53dc00f0b21de",
+      "bytes": 572,
+      "category": "rule",
+      "alwaysApply_true": false
+    },
+    {
+      "path": ".cursor/sandbox.json",
+      "sha256": "14a55e8ed069ae2ee45124f965c6207a388113153ccb270068ff2aefd042eea6",
+      "bytes": 536,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/scripts/bootstrap.sh",
+      "sha256": "3a9ef3c9e18e4856d992ab327c6f244c623ddafd57bafc7d4cc0dd9c4d50cbc9",
+      "bytes": 6389,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/scripts/validate-agent-config.mjs",
+      "sha256": "1ed3f68e409627f16c30e29eac4ce96a35ca6480311ef1cf1695f9cc126c0227",
+      "bytes": 10264,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/settings.json",
+      "sha256": "cb37b0184b725a10435559570cb4ec91d54142fe67ce432f3d4fe5787e419766",
+      "bytes": 66,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/git-safety/SKILL.md",
+      "sha256": "aa6021d938d45876cc074d7569ef242aa2f105b44649ae3d56b0d33f21c8f4b1",
+      "bytes": 2448,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/git-safety/payloads/agent-governance.yml",
+      "sha256": "c37b44d3c30ee4603d058f55fecfeb5a4e23726084eefe24019330ce1467e276",
+      "bytes": 647,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/git-safety/payloads/bootstrap.sh",
+      "sha256": "a27c65fd6e73fa7777c2917eedb3a464f452d26357acf9c1ddb55c15b265e315",
+      "bytes": 5116,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/git-safety/payloads/cli.json",
+      "sha256": "5cd58f8b57e71d8012ecd6d8f5566d8006dfecfd4b650eb59ced13ee7b2b70d1",
+      "bytes": 3497,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/git-safety/payloads/git-privacy-and-secrets.mdc",
+      "sha256": "96417bc70a4549fc883484cb270734de904a2ac96205668e7c3294ec92ea6fff",
+      "bytes": 723,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/git-safety/payloads/policy.mjs",
+      "sha256": "09405d970672c13dcbbcee369a969e005065d68e2f48afd0cd67f89fc350fb37",
+      "bytes": 8880,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/git-safety/payloads/policy.test.mjs",
+      "sha256": "acdb327e36e5ff0060349e689650d08a602d9113ed2eb9a256690cfbdacd001b",
+      "bytes": 7526,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/git-safety/payloads/validate-agent-config.mjs",
+      "sha256": "3414ef98af2b710e686d7242e00919024db38346a919a5ee227171c7548786a2",
+      "bytes": 8133,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/git-safety/scripts/git-safety.mjs",
+      "sha256": "1b89cf6560d772e899f6b3344bd4a131b91d7e37f5af65383c3433769617cc7e",
+      "bytes": 10010,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/git-safety/scripts/git-safety.test.mjs",
+      "sha256": "5452a4f9b079deb0feb6baf6ed0e4323bf666ab64e777f564a93709d5711cf12",
+      "bytes": 3102,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/launch-pipeline/SKILL.md",
+      "sha256": "cd216ad6b705aeab829d6241893bf6ab48d08e1742ff397f85f033f568c1a670",
+      "bytes": 7096,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/launch-pipeline/scripts/preflight.mjs",
+      "sha256": "72680da9f50692356189c2418b061cf04a402406d61e5203535c16847a5bf55d",
+      "bytes": 7955,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/launch-pipeline/scripts/preflight.test.mjs",
+      "sha256": "a74e66b9d50bef63bb2f1bb649f0f88febf56c454c6144e9759d83cb84bb0448",
+      "bytes": 2900,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/launch-pipeline/scripts/validate-launch.mjs",
+      "sha256": "81bd8f19999d1fb6640ddcb393c3ed8f30222a071a32b1a93a3cffb47911e6d9",
+      "bytes": 11506,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/supabase-linked-migrations/SKILL.md",
+      "sha256": "f825be86cbaf2febde7d75243364771d82881d6527867ae160a1f5975aded06b",
+      "bytes": 2561,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/supabase-linked-migrations/assets/skill-feedback-template.md",
+      "sha256": "0f67a0f911d4655eea6e298d4a7155bc5e6a7fcb6316e1cd9f5d2af963a149f5",
+      "bytes": 225,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/supabase-linked-migrations/references/agent-handover.md",
+      "sha256": "f8fe5df0778c0effba1b7975ef63f4bf5d16e667b59868f8c5b983d88343a668",
+      "bytes": 190,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/supabase-linked-migrations/references/macos-gatekeeper.md",
+      "sha256": "a68e93f2d02951dd3d97f9a2152981500553c8f0cb061eadf393f4f1c51ce4d0",
+      "bytes": 142,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/supabase-linked-migrations/references/upstream-supabase-skill.md",
+      "sha256": "26e7db0a211c948c3bd160d60834337016aa879cfe2b20a2ad962a568088d499",
+      "bytes": 145,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/vercel-deploy-workflow/SKILL.md",
+      "sha256": "52374144a2193dbb213539dfd0ee3f43232993634d7d402531005512e608344b",
+      "bytes": 2419,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/vercel-deploy-workflow/assets/skill-feedback-template.md",
+      "sha256": "23a8ec017331842d2245168e44c7adf491ec69890ec8912358b60175b5267b69",
+      "bytes": 221,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/vercel-deploy-workflow/references/agent-handover.md",
+      "sha256": "52db673574175e5478c49a783d2060c9a344742fd07982cc417fb93a7f1d56b4",
+      "bytes": 194,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/skills/vercel-deploy-workflow/references/official-cli-docs.md",
+      "sha256": "aba9f0b14c1c950dab706a330947ebc0afa9240b412be120c4e9cf59feb02185",
+      "bytes": 163,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/templates/agent-governance-operator-setup.md",
+      "sha256": "8d54992347f89878a4ecba5edf8f4a49e0839e620bd12c29bd9fcbe4fe5f333e",
+      "bytes": 1145,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/templates/cursorignore",
+      "sha256": "758bf095d193f27be87a44153ddf531e5f69c6f1ec69b88370291001f9d772e2",
+      "bytes": 346,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/templates/docs-readme.md",
+      "sha256": "3383e9c76d811eb4d272fb50238399657632072c8fdf27a0bebb1a9f184e8517",
+      "bytes": 728,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/templates/final-implementation-checklist-template.md",
+      "sha256": "5d017e3d6090ddbe0ee3128d2cefca475bbef4e8f9fc783dd1a8b88af72fa461",
+      "bytes": 1981,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/templates/owner-handoff-template.md",
+      "sha256": "94dec3a3c4a427cb530b6665e6582f7052cd761996a641a0258aff2869cea58b",
+      "bytes": 1382,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/templates/phase-plan-template.md",
+      "sha256": "34cff487a704d8f47605c9061d1075438583c4d896cbc3105e0ae1259dc851ed",
+      "bytes": 2727,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/templates/plans-readme.md",
+      "sha256": "eb305901aae620d7accbf8895ddffb600c05e960f78ff43384dfd6ed76ee653b",
+      "bytes": 636,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/templates/role-charter-template.md",
+      "sha256": "ad91f1db6e7d2ffc0073e0811cdbe9027ed84206dfd9519257a4af7e585c5d2c",
+      "bytes": 1659,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/templates/role-evidence-template.md",
+      "sha256": "a4c78424074af86dd95668536d105de37bb37442123b2cb6af569d40efd8c1aa",
+      "bytes": 741,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/templates/role-handoff-template.md",
+      "sha256": "7c74d5a3da1dd4ff4eb76c45a80bd9047e34515409fe6a791761e10b728b7731",
+      "bytes": 1927,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/templates/role-plan-template.md",
+      "sha256": "5c2918c6ad075e8da9def75f18ba6f812ea985d32a078d0179f6c3b69eeb5be0",
+      "bytes": 1349,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/templates/root-agents.md",
+      "sha256": "ce0279af246587b64056ef6180aee24999aa19845411edf94c452226a068e84d",
+      "bytes": 2582,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/templates/workstream-manifest-template.md",
+      "sha256": "9c855f1669fcd2c63862ba1e8aeea0da9e1b3d4dc3fd83e9e9ef035fc99ad346",
+      "bytes": 2085,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/templates/workstreams-readme.md",
+      "sha256": "5b199d86e36743f248a0db242eb27fd6663da74081e34289c96035a054eb3b43",
+      "bytes": 937,
+      "category": "supporting"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "10d8fb2494ee019a06e013cd4870d305e8bec9bc4a1094993bc67b595f11927b",
+      "bytes": 188,
+      "category": "supporting"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "5323bb79427b724c538868307cfaf2665a18ad778f12724a88e8d057b60cfbad",
+      "bytes": 1068,
+      "category": "supporting"
+    },
+    {
+      "path": "README.md",
+      "sha256": "5ef8fe821905f9fd328deb7ddc1d528c278600d5710a35520ecd04a159cfa0a4",
+      "bytes": 5309,
+      "category": "supporting"
+    }
+  ],
+  "limitations": [
+    "Byte counts are file sizes, not tokenizer or billing measurements.",
+    "Effective client loading is observed only through the fixture proxy runs recorded in 11-IMPLEMENTATION-RECEIPT.md.",
+    "No instruction body, task state content or credential value is reproduced."
+  ]
+}

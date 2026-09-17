@@ -1,0 +1,38 @@
+# Validator and test outputs — template repository (not a consumer; root files intentionally absent)
+
+$ node .cursor/scripts/validate-agent-config.mjs
+validation error: AGENTS.md is missing
+validation error: .cursorignore is missing
+validation error: docs/README.md is missing
+validation error: docs/workstreams/README.md is missing
+validation error: docs/handover/agent-governance-operator-setup.md is missing
+validation error: .github/workflows/agent-governance.yml is missing
+
+$ node .cursor/skills/launch-pipeline/scripts/validate-launch.mjs
+launch validation error: AGENTS.md is missing
+launch validation error: docs/README.md is missing
+launch validation error: docs/plans/README.md is missing
+launch validation error: docs/workstreams/README.md is missing
+launch validation error: docs is missing
+launch validation error: docs/blueprints is missing
+launch validation error: docs/plans is missing
+launch validation error: docs/decisions is missing
+launch validation error: docs/handover is missing
+launch validation error: docs/workstreams is missing
+launch validation error: .cursor/AGENTS.md is not linked by AGENTS.md using .cursor/AGENTS.md
+
+$ node --test .cursor/hooks/policy.test.mjs
+ℹ tests 11
+ℹ pass 11
+ℹ fail 0
+
+$ node --test .cursor/skills/git-safety/scripts/git-safety.test.mjs
+ℹ tests 5
+ℹ pass 5
+ℹ fail 0
+
+$ node --test .cursor/skills/launch-pipeline/scripts/preflight.test.mjs
+ℹ tests 7
+ℹ pass 7
+ℹ fail 0
+
