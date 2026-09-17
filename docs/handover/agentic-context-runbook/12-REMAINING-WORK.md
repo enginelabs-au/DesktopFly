@@ -1,6 +1,6 @@
 # 12 · Remaining-work register
 
-Status after Cursor v1.3 (2026-09-17). Labels: implemented / validated / proposed / deferred / blocked.
+Status after Cursor v1.3 (2026-09-17). Pack completeness snapshot is v1.4; remaining-work statuses are unchanged. Labels: implemented / validated / proposed / deferred / blocked.
 
 | ID | Status |
 |---|---|

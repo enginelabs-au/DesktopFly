@@ -12,7 +12,7 @@ Phase: independent review of Claude R1, native validation attempt (W1/W2), R2 de
 | Global client config touched | none |
 | Branch | `cursor/context-optimization-r2-0433` |
 | Apply route | `docs/handover/apply-context-optimization-r2.sh` |
-| Pack | `docs/handover/agentic-context-runbook/` v1.3 |
+| Pack | `docs/handover/agentic-context-runbook/` v1.4 (v1.3 corpus plus `this-pass/` snapshot of every other in-repo artefact) |
 
 ## Rollback
 
@@ -50,6 +50,7 @@ Protected files must be restored via git or a new owner apply script, not by wea
 
 - No Customize panel. Headless `agent` CLI not used (prior login blocker still applies).
 - Shared-source working tree not on disk; do not treat DesktopFly as a byte-identical copy of `/Users/camdouglas/agent-instructions`.
+- Pack v1.4 copies those in-repo artefacts into `this-pass/` so GPT review can use one folder. Live files remain at their original paths. Out-of-repo artefacts listed in `this-pass/INVENTORY.json` are still absent.
 - Home-directory-as-workspace was not implemented (likely expands search/index).
 - W5 not performed.
 - This session is a Cloud Agent run; that is more expensive than local Ask, which conflicts with the cost objective for future work but was required for this implementation request.

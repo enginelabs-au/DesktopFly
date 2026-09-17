@@ -66,3 +66,10 @@ Not changed: hooks, `cli.json`, `sandbox.json`, `permissions.json`, `hooks/polic
 | D9 | DesktopFly consumer | add | R1+R2 propagated via `docs/handover/apply-context-optimization-r2.sh` |
 
 Hooks, permissions, sandbox, and `policy.mjs` still unchanged. No credentials rotated. Token savings not claimed.
+
+## E. Pack completeness (v1.3 → v1.4)
+
+| # | Where | Tag | Change | Why |
+|---|---|---|---|---|
+| E1 | [this-pass/](this-pass/) | add | Snapshot every in-repo artefact from the DesktopFly canary that lived outside this pack: live control-plane copies, apply script, payloads, workstream, plans, decision, operator note. Retired rules restored from `origin/main` into `this-pass/retired-rules/`. Unified diff of non-pack PR files in `this-pass/desktopfly-outside-pack.patch`. | Owner asked for one folder containing everything Cursor worked on. Live canary files were copied, not moved. |
+| E2 | [INDEX](INDEX.md), [13](13-CURSOR-RECEIPT.md), `pack-manifest.json` | correct | Pack version 1.4; reading order includes `this-pass/README.md`; out-of-repo items remain explicit. | Completeness without claiming Mac/global artefacts that were never on this VM. |
