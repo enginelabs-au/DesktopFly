@@ -13,7 +13,7 @@
 - Hook fix [PR #6](https://github.com/enginelabs-au/DesktopFly/pull/6) is on `main`: read-only `merge-base`/`merge-tree` and paths containing `-merge-` no longer trip the identity check.
 - Screen-aware fly interaction is implemented locally: opt-in coarse screen features, bounded surface contact, and an attributed fly renderer are wired into the desktop shell.
 - Motion fix: the connectome motor readout now includes a bounded `turn` steering command from the existing fixed left/right gains, so the fly walks curved 2D tracks (previously a 1-D left/right rail). Cursor flee is visible but bounded (140 pt radius, 150 pt/s cap, 0.6 s bursts).
-- **Open owner decision:** the 4 ms per-block deadline latch still trips after seconds-to-minutes on this Mac because idle-wake timing spikes (~1 in 1,500-6,000 blocks exceed 4 ms) are an OS scheduling effect, not neural compute. The guard is unchanged; see the 2026-10-06 continuation log.
+- Owner decision (2026-10-06, approved): isolated late neural blocks are tolerated and reported instead of permanently stopping the fly. Fixed policy values: more than 2 late in a row, more than 6 late within one second, or any block over 50 ms still hard-faults permanently. The 4 ms budget, no-auto-resume, and `allow_threshold_relaxation=false` are unchanged. A 120 s live run survived 1 real late block (4.7 ms).
 - Cursor interaction is now wired through bounded native cursor polling outside the neural tick; the existing cursor-yield rule applies to connectome-driven presentation without granting app-action authority.
 
 ## Project Phase

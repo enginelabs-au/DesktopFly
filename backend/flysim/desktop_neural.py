@@ -9,7 +9,8 @@ import time
 from typing import Any
 
 from flysim.config import load_policy_dict
-from flysim.presentation import BlockDeadlineExceeded, ConnectomePresentationEngine
+from flysim.deadline import BlockDeadlineExceeded, LateBlockGuard
+from flysim.presentation import ConnectomePresentationEngine
 
 # Young-generation collection between (never inside) timed blocks, bounded and cheap.
 _GC_YOUNG_COLLECT_EVERY_BLOCKS = 200
@@ -43,6 +44,7 @@ def main() -> None:
         _reply({"ok": False, "error": str(exc)})
         return
     configure_realtime_gc()
+    guard = LateBlockGuard.from_policy(policy)
     blocks_since_collect = 0
     _reply({"ok": True, "event": "ready", "technical": engine.status()})
     for line in sys.stdin:
@@ -69,19 +71,20 @@ def main() -> None:
                 started = time.perf_counter()
                 result = engine.step(dt, features)
                 elapsed_s = time.perf_counter() - started
-                budget_s = float(policy["max_block_compute_s"])
                 result["technical"]["last_block_compute_s"] = elapsed_s
-                if elapsed_s > budget_s:
-                    engine.worker.stop()
-                    raise BlockDeadlineExceeded(elapsed_s, budget_s)
+                guard.observe(elapsed_s)
+                result["technical"]["timing"] = guard.status()
             except BlockDeadlineExceeded as exc:
+                engine.worker.stop()
+                technical = engine.status()
+                technical["timing"] = guard.status()
                 _reply(
                     {
                         "ok": False,
                         "error": str(exc),
                         "fault": "deadline_exceeded",
                         "faulted": True,
-                        "technical": engine.status(),
+                        "technical": technical,
                     }
                 )
                 break

@@ -71,3 +71,11 @@
 - Residual: the latch still trips within seconds to about a minute. The guard was NOT relaxed. Relaxing it (for example tolerating isolated late blocks without catching up simulated time) is an owner decision recorded as an open item.
 - Validation: Node 32 passed, backend 59 passed, foundations and launch validation passed. One combined shell command including the protected policy-test paths was blocked by the policy hook and was not retried; those files were not modified.
 
+## Owner-approved late-block tolerance (implemented)
+
+- Decision: Cam chose to tolerate isolated late blocks (option 2) after the evidence above. Implemented as a fixed, validated, static policy (`late_block_max_consecutive=2`, `late_block_max_per_second=6`, `late_block_hard_cap_s=0.05`); defaults when absent are strict (zero tolerance). Pure guard in `backend/flysim/deadline.py`; wired in `desktop_neural.py`; policy schema bounds in `config.py` (consecutive <= 4, per-second <= 12, cap <= 0.05 s, cap >= budget, booleans rejected).
+- Unchanged: the 4 ms per-block budget, permanent stop with no automatic resume, `auto_restart_after_hard_fault=false`, `recovery.allow_threshold_relaxation=false` (that flag forbids automatic runtime relaxation; this is a reviewed static owner decision). Nothing adapts or widens after a fault. Simulated time is not caught up for a late block (presentation clock caps catch-up at 50 ms).
+- Visibility: worker status now carries `timing` (late total, in a row, last second, worst, limits); the Health card says "on time, with N brief late moments so far (longest X ms); more than 2 in a row stops the fly".
+- Evidence: backend 70 passed, JS 33 passed. Live Node-to-Python run for 120 s: no fault, moving 100 percent of ticks, track 404 x 415 points, 1 late block (4.7 ms) tolerated and reported.
+- Not verified: behavior over multi-hour sessions; behavior under heavy system load (a genuinely sustained slowdown is expected to hard-fault, by design).
+

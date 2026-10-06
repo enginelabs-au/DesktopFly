@@ -73,6 +73,15 @@ export function mapLifecycleToStatus(lifecycle, { quiet = false, approachingLimi
   return "review_required";
 }
 
+/** Plain-language timing line. Late moments are shown, never hidden. */
+export function describeKeepingUp(timing) {
+  const late = Number(timing?.late_blocks_total);
+  if (!Number.isFinite(late) || late <= 0) return "on time";
+  const worstMs = Math.round(Number(timing.worst_late_block_s || 0) * 1000);
+  const word = late === 1 ? "moment" : "moments";
+  return `on time, with ${late} brief late ${word} so far (longest ${worstMs} ms); more than ${timing.late_block_max_in_a_row ?? 0} in a row stops the fly`;
+}
+
 export function buildHealthDashboard(supervisorStatus) {
   const lifecycle = supervisorStatus?.lifecycle || "REVIEW_REQUIRED";
   const technical = supervisorStatus?.health?.technical || supervisorStatus || {};
@@ -108,7 +117,7 @@ export function buildHealthDashboard(supervisorStatus) {
         : "within limits",
       movement: motionLabel,
       surroundings: "input current",
-      keeping_up: "on time",
+      keeping_up: describeKeepingUp(technical.timing),
       rules_intact: "checked",
       automatic_recovery:
         status === "review_required"

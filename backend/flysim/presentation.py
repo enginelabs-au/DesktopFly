@@ -9,23 +9,12 @@ from typing import Any, Mapping
 
 import numpy as np
 
+from flysim.deadline import BlockDeadlineExceeded  # noqa: F401  (re-exported)
 from flysim.lif import LifWorkerHandle, start_lif_worker
 from flysim.lif_torch import prefer_torch_for_graph, start_torch_lif_worker
 from flysim.motor import MotorCommand
 from flysim.runtime_loader import load_compiled_runtime
 from flysim.sensory import FixedSensoryEncoder, build_sensory_map
-
-
-class BlockDeadlineExceeded(RuntimeError):
-    """Raised when a neural block misses the configured compute budget."""
-
-    def __init__(self, elapsed_s: float, budget_s: float) -> None:
-        self.elapsed_s = elapsed_s
-        self.budget_s = budget_s
-        super().__init__(
-            f"neural block exceeded compute budget: "
-            f"{elapsed_s:.6f}s > {budget_s:.6f}s"
-        )
 
 
 def decode_schema_motor(

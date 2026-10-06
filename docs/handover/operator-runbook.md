@@ -20,6 +20,7 @@ node --test ../src/pet/*.test.mjs ../src/live/*.test.mjs ../src/telemetry/*.test
 - **Start:** Electron main (`desktop/`) starts the session; neural worker starts when `real_graph_enabled` and a graph are available.
 - **Pause:** Tray/menu Pause or bridge `pause` — no modeled deterioration while paused.
 - **Stop:** Tray STOP sets the supervisor stop latch immediately (not via React). No auto-restart after hard fault.
+- **Late timing moments (owner-approved 2026-10-06):** the 4 ms per-block budget is unchanged. On macOS an idle background process is occasionally woken late, so an isolated slow block (measured: about 1 in 1,500-6,000) is counted and shown on the Health card ("on time, with N brief late moments") instead of stopping the fly. Simulated time is not caught up for it. The fly still stops permanently, with no automatic resume, if more than 2 blocks in a row are late, more than 6 are late within one second, or any single block takes over 50 ms. These are fixed values in `config/policy.json` (`late_block_*`); nothing adjusts them at runtime, and `recovery.allow_threshold_relaxation` stays `false`. Setting them to `0` restores the strict "any late block stops the fly" rule.
 
 ## Find fly / Find cursor
 

@@ -80,6 +80,11 @@ class Policy(BaseModel):
     max_spike_rate_hz: float = Field(gt=0)
     max_block_start_lateness_s: float = Field(gt=0)
     max_block_compute_s: float = Field(gt=0)
+    # Owner-approved fixed tolerance for isolated late blocks. Defaults are the
+    # strict behavior (any late block is a hard fault) so absence never relaxes.
+    late_block_max_consecutive: int = Field(default=0, ge=0, le=4)
+    late_block_max_per_second: int = Field(default=0, ge=0, le=12)
+    late_block_hard_cap_s: float | None = Field(default=None, gt=0, le=0.05)
     heartbeat_timeout_s: float = Field(gt=0)
     cooperative_stop_grace_s: float = Field(gt=0)
     terminate_grace_s: float = Field(gt=0)
@@ -129,6 +134,18 @@ class Policy(BaseModel):
             raise ValueError("must be finite")
         return float(value)
 
+    @field_validator(
+        "late_block_max_consecutive",
+        "late_block_max_per_second",
+        "late_block_hard_cap_s",
+        mode="before",
+    )
+    @classmethod
+    def _reject_bool_late_block(cls, value: Any) -> Any:
+        if isinstance(value, bool):
+            raise ValueError("must be a number, not bool")
+        return value
+
     @model_validator(mode="after")
     def _cross_checks(self) -> Policy:
         expected_physics = self.neural_dt_s * self.neural_steps_per_block
@@ -138,6 +155,17 @@ class Policy(BaseModel):
             raise ValueError("max_spike_rate_hz must be <= 1/neural_dt_s")
         if not (self.voltage_min < self.voltage_reset < self.voltage_threshold < self.voltage_max):
             raise ValueError("invalid voltage ordering")
+        if (
+            self.late_block_hard_cap_s is not None
+            and self.late_block_hard_cap_s < self.max_block_compute_s
+        ):
+            raise ValueError("late_block_hard_cap_s must be >= max_block_compute_s")
+        if self.late_block_max_per_second < self.late_block_max_consecutive and (
+            self.late_block_max_per_second != 0
+        ):
+            raise ValueError(
+                "late_block_max_per_second must be >= late_block_max_consecutive"
+            )
         if self.auto_restart_after_hard_fault is not False:
             raise ValueError("auto_restart_after_hard_fault must be false")
         if self.recovery.allow_runtime_weight_updates or self.recovery.allow_threshold_relaxation:
