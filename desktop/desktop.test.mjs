@@ -137,7 +137,7 @@ test("tickPresentation moves pet from connectome motor (not neuralWander)", asyn
   assert.equal(pose.transitionSource, "connectome");
 });
 
-test("desktop cursor position reaches the connectome only as measured numbers", async () => {
+test("desktop cursor reaches the connectome only as looming numbers, and moves nothing itself", async () => {
   let t = 1_000;
   const seen = [];
   const connectomeDriver = {
@@ -153,15 +153,15 @@ test("desktop cursor position reaches the connectome only as measured numbers", 
   await session.attachConnectomeDriver(connectomeDriver);
   session.lease.beat();
   const before = session.status().pose;
-  session.setCursorPoint({ x: before.x + 10, y: before.y + 40 }, { moving: true });
-  t += 50;
-  await session.tickPresentation();
-  t += 50;
-  await session.tickPresentation();
+  for (let i = 0; i < 6; i += 1) {
+    session.setCursorPoint({ x: before.x, y: before.y + 300 - i * 40 }, { moving: true });
+    t += 50;
+    await session.tickPresentation();
+  }
   const pose = session.status().pose;
-  assert.ok(Object.values(seen.at(-1)).every((v) => Number.isFinite(v) && v >= 0 && v <= 1));
-  assert.ok(seen.at(-1).cursor_right > 0 || seen.at(-1).cursor_left > 0);
-  // No code moves the fly: the network readout was 0, so it stays put.
+  const f = seen.at(-1);
+  assert.ok(Object.values(f).every((v) => Number.isFinite(v) && v >= 0 && v <= 1));
+  assert.ok(f.loom_left > 0 || f.loom_right > 0);
   assert.equal(pose.x, before.x);
   assert.equal(pose.y, before.y);
   assert.equal(pose.transitionSource, "connectome");
@@ -244,7 +244,7 @@ test("screen features reach the worker only as bounded numeric inputs", async ()
   assert.equal(received.turn_bias, 0.8);
   assert.deepEqual(
     Object.keys(received).sort(),
-    ["ambient_drive", "cursor_left", "cursor_right", "edge_left", "edge_right", "turn_bias"],
+    ["ambient_drive", "loom_left", "loom_right", "turn_bias"],
   );
   assert.equal(session.status().vision.permission, "granted");
 });

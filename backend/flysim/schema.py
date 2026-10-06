@@ -23,6 +23,6 @@ DECISIONS = frozenset({"include", "clamp", "exclude"})
 MODULATORY = frozenset({"no", "yes", "unknown"})
 ROLES = frozenset({"sensory", "interneuron", "readout", "none"})
 MAPPING_KINDS = frozenset({"anatomical", "engineered"})
-OUTPUT_CHANNELS = frozenset({"left", "right", "forward"})
+OUTPUT_CHANNELS = frozenset({"left", "right", "forward", "takeoff"})
 
 JS_SAFE_INTEGER_MAX = 2**53 - 1

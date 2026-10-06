@@ -110,6 +110,16 @@ class FrozenLIF:
         self._beta = math.exp(-self.p.dt / self.p.rate_tau)
         self._isi = int(math.ceil(1 / (self.p.max_hz * self.p.dt)))
         self._weight_fingerprint = self._w.tobytes()
+        # Outgoing edges grouped by source neuron, so a step only touches the
+        # edges of neurons that actually spiked. Same sums, built once, read-only.
+        order = np.argsort(self._src, kind="stable")
+        self._csr_dst = self._dst[order]
+        self._csr_w = self._w[order]
+        self._csr_ptr = np.concatenate(
+            [[0], np.cumsum(np.bincount(self._src, minlength=self.n))]
+        ).astype(np.int64)
+        for arr in (self._csr_dst, self._csr_w, self._csr_ptr):
+            arr.setflags(write=False)
 
     def initial_state(self) -> NeuralState:
         z = np.zeros(self.n, dtype=np.float32)
@@ -136,8 +146,19 @@ class FrozenLIF:
         safe_input = np.where(self._allowed, external, 0.0).astype(np.float32)
         prior_spikes = np.where(self._allowed, old.spikes, 0.0).astype(np.float32)
         synaptic = np.zeros_like(old.v)
-        if len(self._src):
-            np.add.at(synaptic, self._dst, self._w * prior_spikes[self._src])
+        active = np.flatnonzero(prior_spikes)
+        if active.size and len(self._src):
+            starts = self._csr_ptr[active]
+            counts = self._csr_ptr[active + 1] - starts
+            total = int(counts.sum())
+            if total:
+                offsets = np.repeat(starts - (np.cumsum(counts) - counts), counts)
+                edge_idx = offsets + np.arange(total)
+                synaptic = np.bincount(
+                    self._csr_dst[edge_idx],
+                    weights=self._csr_w[edge_idx] * prior_spikes[active].repeat(counts),
+                    minlength=self.n,
+                ).astype(old.v.dtype)
         u = self._alpha * old.v + (1.0 - self._alpha) * safe_input + synaptic
         u = np.clip(u, self.p.v_min, self.p.v_max)
         refractory = np.maximum(old.refractory - 1, 0)

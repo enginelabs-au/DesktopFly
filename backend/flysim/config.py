@@ -58,6 +58,8 @@ class Policy(BaseModel):
     require_reviewed_subset: bool
     graph_mode: GraphMode = "full"
     max_neurons_initial: int = Field(ge=1, le=1_000_000)
+    # Which reviewed subset files to load ("" = the original 256-neuron subset).
+    reviewed_subset_name: str = Field(default="", pattern=r"^[a-z0-9-]{0,32}$")
     max_edges_initial: int = Field(ge=1, le=100_000_000)
     torch_lif_min_neurons: int = Field(ge=1, default=256)
     device: Literal["mps", "cpu"]

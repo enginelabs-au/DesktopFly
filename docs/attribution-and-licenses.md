@@ -49,6 +49,32 @@ FlyWire is a female adult brain atlas with a separate `flywire:` identifier
 namespace. It is available through `FlyWireAdapter`, but is not the default
 runtime graph and must not be mixed with MaleCNS identifiers.
 
+## Looming-escape circuit: published sources and model assumptions
+
+The reviewed escape subset (`scripts/build_malecns_escape_subset.py`) uses MaleCNS v1.0
+data (see above). Which cells are looming detectors and which neuron is the giant fiber
+follows the published literature; this project does not claim to have discovered it.
+
+- Ache et al. 2019, "Neural basis for looming size and velocity encoding in the
+  Drosophila giant fiber escape pathway", Current Biology.
+- von Reyn et al. 2017, "Feature integration drives probabilistic behavior in the
+  Drosophila escape response", Neuron.
+- Wu et al. 2016, "Visual projection neurons in the Drosophila lobula link feature
+  detection to distinct behavioral programs", eLife.
+- Klapoetke et al. 2017, "Ultra-selective looming detection from radial motion
+  opponency", Nature.
+- Card and Dickinson 2008, "Visually mediated motor planning in the escape response of
+  Drosophila", Current Biology (motivates turning away from a looming object).
+
+Model assumptions made by this project (not findings): neurotransmitter signs follow the
+MaleCNS `consensus_nt` label (acetylcholine +1, GABA -1, glutamate -1; unclear or
+modulatory neurons are excluded); the left/right/forward readout over descending neurons
+and its contralateral steering convention are engineered; the cursor is treated as a
+fixed-size object whose visual angle and expansion rate are fed equally to every looming
+detector on that eye (the data has no per-neuron field position); the constant intrinsic
+noise (`config/policy.json`) is applied to central neurons only. None of this is a claim
+about subjective experience.
+
 ## Combined index
 
 | Material | File |

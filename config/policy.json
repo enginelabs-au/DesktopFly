@@ -6,7 +6,7 @@
   "graph_mode": "reviewed_subset",
   "max_neurons_initial": 256,
   "max_edges_initial": 5000,
-  "torch_lif_min_neurons": 1024,
+  "torch_lif_min_neurons": 5000,
   "device": "mps",
   "allow_cpu_fallback": false,
   "runtime_dtype": "float32",
@@ -32,8 +32,8 @@
   "late_block_hard_cap_s": 0.25,
   "late_block_wall_fault": false,
   "scheduled_state_reset_s": 300,
-  "resting_drive": 1.0,
-  "intrinsic_noise_amplitude": 1.0,
+  "resting_drive": 0.0,
+  "intrinsic_noise_amplitude": 1.6,
   "intrinsic_noise_seed": 7,
   "heartbeat_timeout_s": 0.25,
   "cooperative_stop_grace_s": 0.2,
@@ -62,5 +62,6 @@
   "network_bind": "127.0.0.1",
   "max_ws_message_bytes": 65536,
   "max_displayed_neurons": 512,
-  "source_kind": "predicted"
+  "source_kind": "predicted",
+  "reviewed_subset_name": "escape"
 }

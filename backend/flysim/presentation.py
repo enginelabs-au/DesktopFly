@@ -14,7 +14,7 @@ from flysim.lif import LifWorkerHandle, start_lif_worker
 from flysim.lif_torch import prefer_torch_for_graph, start_torch_lif_worker
 from flysim.motor import MotorCommand
 from flysim.runtime_loader import load_compiled_runtime
-from flysim.sensory import FixedSensoryEncoder, build_sensory_map, world_bridge_rows
+from flysim.sensory import FixedSensoryEncoder, build_sensory_map
 
 
 def decode_schema_motor(
@@ -42,6 +42,7 @@ def decode_schema_motor(
     heading = 0.0
     left_sum = 0.0
     right_sum = 0.0
+    takeoff_sum = 0.0
     for row in motor_rows:
         nid = str(row["neuron_id"])
         if nid not in index:
@@ -57,6 +58,8 @@ def decode_schema_motor(
             right_sum += val
         elif channel == "forward":
             speed += val
+        elif channel == "takeoff":
+            takeoff_sum += val
         elif channel == "backward":
             speed -= val
         else:
@@ -77,7 +80,10 @@ def decode_schema_motor(
         turn = float(
             np.clip(turn_gain * (right_sum - left_sum) / total, -max_turn_rad_s, max_turn_rad_s)
         )
-    return MotorCommand(dx=dx, dy=dy, heading=heading, speed=speed, turn=turn)
+    takeoff = float(np.clip(takeoff_sum, 0.0, 1.0))
+    return MotorCommand(
+        dx=dx, dy=dy, heading=heading, speed=speed, turn=turn, takeoff=takeoff
+    )
 
 
 @dataclass
@@ -96,6 +102,9 @@ class ConnectomePresentationEngine:
     resting_drive: float = 0.0
     noise_amplitude: float = 0.0
     _rng: Any = None
+    # 1.0 where intrinsic baseline/noise applies (central neurons); 0.0 for the
+    # visual detectors and the takeoff command, which respond only to input.
+    _intrinsic_mask: Any = None
     _last_block_compute_s: float = 0.0
     _last_spike_count: int = 0
 
@@ -116,9 +125,15 @@ class ConnectomePresentationEngine:
                 graph=compiled.graph,
                 graph_source=graph_source,
             )
-        base_rows = list(tables.get("sensory_map", []))
-        sensory = build_sensory_map(
-            compiled.selected_ids, [*base_rows, *world_bridge_rows(base_rows)]
+        sensory = build_sensory_map(compiled.selected_ids, tables.get("sensory_map", []))
+        driven_only = {str(r["neuron_id"]) for r in tables.get("sensory_map", [])} | {
+            str(r["neuron_id"])
+            for r in tables.get("motor_map", [])
+            if r.get("output_channel") == "takeoff"
+        }
+        intrinsic_mask = np.array(
+            [0.0 if nid in driven_only else 1.0 for nid in compiled.selected_ids],
+            dtype=np.float32,
         )
         encoder = FixedSensoryEncoder(sensory, external_max=float(policy.get("external_input_max", 2.0)))
         steps = int(policy.get("neural_steps_per_block", 5))
@@ -135,6 +150,7 @@ class ConnectomePresentationEngine:
             resting_drive=float(policy.get("resting_drive", 0.0)),
             noise_amplitude=float(policy.get("intrinsic_noise_amplitude", 0.0)),
             _rng=np.random.default_rng(int(policy.get("intrinsic_noise_seed", 0))),
+            _intrinsic_mask=intrinsic_mask,
         )
 
     def scheduled_reset(self) -> None:
@@ -183,15 +199,22 @@ class ConnectomePresentationEngine:
             raise ValueError("invalid dt_s")
         started = time.perf_counter()
         feat = dict(features or {})
-        # No scripted drive: a constant resting input from the policy file unless
-        # a measured value (for example opt-in screen brightness) is supplied.
-        feat.setdefault("ambient_drive", self.resting_drive)
+        # No scripted drive. Inputs: measured loom features, plus fixed baseline and noise.
         external = self.encoder.encode(feat)
+        mask = self._intrinsic_mask
+        if self.resting_drive > 0:
+            external = np.clip(
+                external + self.resting_drive * mask, 0.0, self.external_max
+            ).astype(np.float32)
         diag_last: dict[str, Any] = {}
         for _ in range(self.steps_per_block):
             step_input = external
             if self.noise_amplitude > 0:
-                noise = self._rng.random(external.shape, dtype=np.float32) * self.noise_amplitude
+                noise = (
+                    self._rng.random(external.shape, dtype=np.float32)
+                    * self.noise_amplitude
+                    * mask
+                )
                 step_input = np.clip(external + noise, 0.0, self.external_max).astype(np.float32)
             self.worker.state, diag_last = self.worker.step(step_input)
         activity = self._rate_ema_numpy()

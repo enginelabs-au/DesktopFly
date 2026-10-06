@@ -114,9 +114,15 @@ def resolve_runtime_tables(
             tables = _load_tables(MALECNS_FULL_DEV_FIXTURE)
             return tables, str(tables.get("fixture_kind", "malecns-full"))
 
-    if DERIVED_META.is_file():
+    subset_name = str(policy.get("reviewed_subset_name") or "")
+    meta_path = (
+        DERIVED_META.parent / f"malecns-{subset_name}-meta.json"
+        if subset_name
+        else DERIVED_META
+    )
+    if meta_path.is_file():
         try:
-            return _tables_from_derived_meta(DERIVED_META)
+            return _tables_from_derived_meta(meta_path)
         except FileNotFoundError:
             pass
 

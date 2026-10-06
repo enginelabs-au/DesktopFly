@@ -172,7 +172,7 @@ test("the screen clamp is the only edge rule: no code steers the fly away from a
   assert.equal(last.headingRad, 0);
 });
 
-test("cursor and edges are measured as numbers and never move the fly by themselves", async () => {
+test("the cursor never moves the fly by itself; only the network readout does", async () => {
   let ms = 0;
   const motion = createPetMotionController({
     controllerKind: "lif",
@@ -197,39 +197,76 @@ test("cursor and edges are measured as numbers and never move the fly by themsel
   assert.equal(end.transitionSource, "connectome");
 });
 
-test("world features describe the surroundings relative to the fly's heading", () => {
-  const c = new AuthoredAnimationController({
-    bounds: { x: 0, y: 0, width: 1000, height: 800 },
-  });
-  // Heading east at the centre: south is the fly's right, north is its left.
-  c.pose = { ...c.pose, x: 500, y: 400, headingRad: 0 };
-  assert.deepEqual(c.worldSensoryFeatures(), {
-    cursor_left: 0,
-    cursor_right: 0,
-    edge_left: 0,
-    edge_right: 0,
-  });
-  c.setCursor({ x: 500, y: 500 });
-  let f = c.worldSensoryFeatures();
-  assert.ok(f.cursor_right > 0.3 && f.cursor_left === 0, JSON.stringify(f));
-  c.setCursor({ x: 500, y: 300 });
-  f = c.worldSensoryFeatures();
-  assert.ok(f.cursor_left > 0.3 && f.cursor_right === 0, JSON.stringify(f));
-  c.setCursor({ x: 500, y: 5000 });
-  assert.equal(c.worldSensoryFeatures().cursor_right, 0, "out of range is zero");
-  // Near the north edge while heading east: the edge is on the fly's left.
-  c.setCursor(null);
-  c.pose = { ...c.pose, y: 20 };
-  f = c.worldSensoryFeatures();
-  assert.ok(f.edge_left > 0.5 && f.edge_right === 0, JSON.stringify(f));
-  // Facing the east edge: both sides see it.
-  c.pose = { ...c.pose, x: 980, y: 400 };
-  f = c.worldSensoryFeatures();
-  assert.ok(f.edge_left > 0 && f.edge_right > 0 && f.edge_left === f.edge_right, JSON.stringify(f));
-  for (const v of Object.values(f)) assert.ok(v >= 0 && v <= 1);
+function eyes() {
+  const c = new AuthoredAnimationController({ bounds: { x: 0, y: 0, width: 2000, height: 1200 } });
+  c.pose = { ...c.pose, x: 1000, y: 600, headingRad: 0 };
+  return c;
+}
+
+test("a cursor that is not getting bigger produces no looming signal", () => {
+  const c = eyes();
+  c.setCursor({ x: 1000, y: 700 });
+  for (let i = 0; i < 10; i += 1) {
+    const f = c.loomFeatures(0.05);
+    assert.deepEqual(f, { loom_left: 0, loom_right: 0 });
+  }
+  const none = eyes();
+  assert.deepEqual(none.loomFeatures(0.05), { loom_left: 0, loom_right: 0 });
 });
 
-test("measured surroundings are sent to the connectome with each tick", async () => {
+test("an approaching cursor loomed on the side it comes from, receding gives none", () => {
+  // Heading east: south is the fly's right, north its left.
+  for (const [side, y] of [["loom_right", 1] , ["loom_left", -1]]) {
+    const c = eyes();
+    let f;
+    for (let i = 0; i < 12; i += 1) {
+      const d = 400 - i * 30; // closing at 600 points/s
+      c.setCursor({ x: 1000, y: 600 + y * d });
+      f = c.loomFeatures(0.05);
+    }
+    const other = side === "loom_right" ? "loom_left" : "loom_right";
+    assert.ok(f[side] > 0.3, `${side} ${JSON.stringify(f)}`);
+    assert.equal(f[other], 0, "far eye sees nothing at 90 degrees");
+    for (const v of Object.values(f)) assert.ok(v >= 0 && v <= 1);
+  }
+  const c = eyes();
+  let f;
+  for (let i = 0; i < 12; i += 1) {
+    c.setCursor({ x: 1000, y: 600 + 100 + i * 30 });
+    f = c.loomFeatures(0.05);
+  }
+  assert.deepEqual(f, { loom_left: 0, loom_right: 0 });
+});
+
+test("the blind zone behind the fly sees no looming; head-on is seen by both eyes", () => {
+  const behind = eyes();
+  let f;
+  for (let i = 0; i < 12; i += 1) {
+    behind.setCursor({ x: 1000 - (400 - i * 30), y: 600 });
+    f = behind.loomFeatures(0.05);
+  }
+  assert.deepEqual(f, { loom_left: 0, loom_right: 0 });
+  const ahead = eyes();
+  for (let i = 0; i < 12; i += 1) {
+    ahead.setCursor({ x: 1000 + (400 - i * 30), y: 600 });
+    f = ahead.loomFeatures(0.05);
+  }
+  assert.ok(f.loom_left > 0.1 && Math.abs(f.loom_left - f.loom_right) < 1e-9, JSON.stringify(f));
+});
+
+test("the giant-fiber takeoff readout only labels the pose as flight; speed stays the readout", async () => {
+  let takeoff = 0;
+  const { motion, tick, start } = steeredController(() => ({ speed: 100, turn: 0, takeoff }));
+  await start();
+  await tick();
+  assert.equal(motion.getPose().locomotion, "crawl");
+  takeoff = 0.8;
+  await tick();
+  assert.equal(motion.getPose().locomotion, "flight");
+  assert.equal(motion.getPose().speedPointsS, 100);
+});
+
+test("loom signals are sent to the connectome with each tick", async () => {
   let ms = 0;
   const seen = [];
   const motion = createPetMotionController({
@@ -245,13 +282,13 @@ test("measured surroundings are sent to the connectome with each tick", async ()
   });
   await motion.step();
   const p = motion.getPose();
-  motion.setCursor({ x: p.x, y: p.y + 100 });
-  ms += 50;
-  await motion.step({ neuralFeatures: { ambient_drive: 0.9 } });
+  for (let i = 0; i < 6; i += 1) {
+    ms += 50;
+    motion.setCursor({ x: p.x, y: p.y + 300 - i * 40 });
+    await motion.step({ neuralFeatures: { ambient_drive: 0.9 } });
+  }
   const f = seen.at(-1);
   assert.equal(f.ambient_drive, 0.9, "opt-in screen features still pass through");
-  assert.ok(f.cursor_right > 0);
-  assert.deepEqual(Object.keys(f).sort(), [
-    "ambient_drive", "cursor_left", "cursor_right", "edge_left", "edge_right",
-  ]);
+  assert.ok(f.loom_right > 0);
+  assert.deepEqual(Object.keys(f).sort(), ["ambient_drive", "loom_left", "loom_right"]);
 });

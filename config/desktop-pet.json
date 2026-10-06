@@ -30,6 +30,8 @@
   "accessibility_read_enabled": false,
   "vision_text_boxes_enabled": false,
   "cloud_capabilities_enabled": false,
-  "sense_cursor_range_points": 300,
-  "sense_edge_range_points": 150
+  "loom_object_radius_points": 24,
+  "loom_rate_ref_rad_s": 2,
+  "loom_smoothing_s": 0.1,
+  "takeoff_flight_threshold": 0.5
 }

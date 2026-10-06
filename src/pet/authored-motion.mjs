@@ -163,8 +163,10 @@ export class AuthoredMotionConfig {
     cursorYieldCooldownS = 0.75,
     depthTransitionS = 0.8,
     wingBeatHz = 8,
-    senseCursorRangePoints = 300,
-    senseEdgeRangePoints = 150,
+    loomObjectRadiusPoints = 24,
+    loomRateRefRadS = 2,
+    loomSmoothingS = 0.1,
+    takeoffFlightThreshold = 0.5,
   } = {}) {
     this.physicsDtS = physicsDtS;
     this.cruiseSpeedPointsS = cruiseSpeedPointsS;
@@ -176,8 +178,10 @@ export class AuthoredMotionConfig {
     this.cursorYieldCooldownS = cursorYieldCooldownS;
     this.depthTransitionS = depthTransitionS;
     this.wingBeatHz = wingBeatHz;
-    this.senseCursorRangePoints = senseCursorRangePoints;
-    this.senseEdgeRangePoints = senseEdgeRangePoints;
+    this.loomObjectRadiusPoints = loomObjectRadiusPoints;
+    this.loomRateRefRadS = loomRateRefRadS;
+    this.loomSmoothingS = loomSmoothingS;
+    this.takeoffFlightThreshold = takeoffFlightThreshold;
   }
 
   static fromDesktopPet(data = {}) {
@@ -190,8 +194,10 @@ export class AuthoredMotionConfig {
       cursorYieldCooldownS: (Number(data.cursor_yield_cooldown_ms) || 750) / 1000,
       depthTransitionS: (Number(data.depth_transition_ms) || 800) / 1000,
       wingBeatHz: Number(data.wing_beat_hz) || 8,
-      senseCursorRangePoints: Number(data.sense_cursor_range_points) || 300,
-      senseEdgeRangePoints: Number(data.sense_edge_range_points) || 150,
+      loomObjectRadiusPoints: Number(data.loom_object_radius_points) || 24,
+      loomRateRefRadS: Number(data.loom_rate_ref_rad_s) || 2,
+      loomSmoothingS: Number(data.loom_smoothing_s) || 0.1,
+      takeoffFlightThreshold: Number(data.takeoff_flight_threshold) || 0.5,
     });
   }
 }
@@ -236,6 +242,8 @@ export class AuthoredAnimationController {
     this._depthActive = false;
     this._hidden = false;
     this._accumulatorS = 0;
+    this._loomPrevTheta = null;
+    this._loomRate = 0;
   }
 
   setBounds(bounds) {
@@ -411,55 +419,38 @@ export class AuthoredAnimationController {
   }
 
   /**
-   * Measured surroundings as plain numbers for the connectome, relative to the
-   * fly's heading: how close the cursor and the screen edges are on its left
-   * and right (0 = out of range, 1 = touching). This only describes the world;
-   * it never decides a response. The wiring into the network is fixed and
-   * engineered (backend/flysim/sensory.py), not a movement rule.
+   * What the fly's two eyes see of the cursor, as plain numbers. The cursor is
+   * treated as a fixed-size object; its visual angle and how fast that angle
+   * grows (looming) is measured, smoothed briefly, and split between the left
+   * and right eye by bearing. Eyes cover about 150 degrees to each side with a
+   * small binocular overlap, and there is a blind zone behind. This only
+   * describes the stimulus; the network alone decides any response. The same
+   * signal goes to every looming-detector neuron on that side (no per-neuron
+   * retinotopy is available in the data).
    */
-  worldSensoryFeatures() {
-    const { x, y, headingRad } = this.pose;
-    const hx = Math.cos(headingRad);
-    const hy = Math.sin(headingRad);
-    // Right-hand side in screen coordinates (y grows downward).
-    const rx = -hy;
-    const ry = hx;
-    const out = { cursor_left: 0, cursor_right: 0, edge_left: 0, edge_right: 0 };
-    const add = (side, value) => {
-      out[side] = Math.min(1, out[side] + value);
-    };
-    const sense = (ux, uy, closeness) => {
-      if (closeness <= 0) return;
-      const fwd = Math.max(0, ux * hx + uy * hy);
-      const lateral = ux * rx + uy * ry;
-      return { fwd, lateral, closeness };
-    };
-    const apply = (prefix, s) => {
-      if (!s) return;
-      add(`${prefix}_left`, s.closeness * (0.5 * s.fwd + Math.max(0, -s.lateral)));
-      add(`${prefix}_right`, s.closeness * (0.5 * s.fwd + Math.max(0, s.lateral)));
-    };
-    if (this._cursor) {
-      const dx = this._cursor[0] - x;
-      const dy = this._cursor[1] - y;
-      const dist = Math.hypot(dx, dy);
-      const range = this.config.senseCursorRangePoints;
-      if (dist > 0 && dist < range) {
-        apply("cursor", sense(dx / dist, dy / dist, 1 - dist / range));
-      }
+  loomFeatures(dtS) {
+    const none = { loom_left: 0, loom_right: 0 };
+    if (!this._cursor || !(dtS > 0)) {
+      this._loomPrevTheta = null;
+      this._loomRate = 0;
+      return none;
     }
-    const b = this.bounds;
-    const range = this.config.senseEdgeRangePoints;
-    const edges = [
-      [-1, 0, x - b.x],
-      [1, 0, b.x + b.width - x],
-      [0, -1, y - b.y],
-      [0, 1, b.y + b.height - y],
-    ];
-    for (const [ux, uy, dist] of edges) {
-      if (dist < range) apply("edge", sense(ux, uy, 1 - Math.max(0, dist) / range));
-    }
-    return out;
+    const cfg = this.config;
+    const dx = this._cursor[0] - this.pose.x;
+    const dy = this._cursor[1] - this.pose.y;
+    const dist = Math.max(Math.hypot(dx, dy), 1e-3);
+    const theta = 2 * Math.atan(cfg.loomObjectRadiusPoints / dist);
+    const rate = this._loomPrevTheta == null ? 0 : (theta - this._loomPrevTheta) / dtS;
+    this._loomPrevTheta = theta;
+    this._loomRate += (1 - Math.exp(-dtS / cfg.loomSmoothingS)) * (rate - this._loomRate);
+    // Only expansion counts as looming.
+    const strength = Math.min(1, Math.max(0, this._loomRate / cfg.loomRateRefRadS));
+    const bearing = wrapHeading(Math.atan2(dy, dx) - this.pose.headingRad); // + = right
+    const deg = (bearing * 180) / Math.PI;
+    const clamp01 = (v) => Math.min(1, Math.max(0, v));
+    const left = deg >= -150 ? clamp01((20 - deg) / 40) : 0;
+    const right = deg <= 150 ? clamp01((deg + 20) / 40) : 0;
+    return { loom_left: strength * left, loom_right: strength * right };
   }
 
   /**
@@ -476,7 +467,13 @@ export class AuthoredAnimationController {
       speedPointsS: speed,
       turnRateRadS: turn,
       bounds: this.bounds,
-      locomotion: speed > 0.2 ? "crawl" : "idle",
+      // Label only (drives wing display): takeoff is the giant-fiber readout.
+      locomotion:
+        Number(motor?.takeoff) >= cfg.takeoffFlightThreshold
+          ? "flight"
+          : speed > 0.2
+            ? "crawl"
+            : "idle",
       depth01: this.pose.depth01,
       transitionSource,
     });
@@ -543,8 +540,8 @@ export function createPetMotionController({
         const blocks = Math.floor(motion._accumulatorS / block + 1e-9);
         if (blocks <= 0) return motion.pose;
         motion._accumulatorS -= blocks * block;
-        // Measured surroundings plus any opt-in screen features; numbers only.
-        const features = { ...neuralFeatures, ...motion.worldSensoryFeatures() };
+        // What the eyes see of the cursor, plus any opt-in screen features; numbers only.
+        const features = { ...neuralFeatures, ...motion.loomFeatures(dt) };
         try {
           let motors = [];
           let source = "connectome";
