@@ -36,6 +36,45 @@ copy_if_missing() {
 copy_if_missing "$AGENT_CONFIG_DIR/templates/docs-readme.md" "$REPO_ROOT/docs/README.md"
 copy_if_missing "$AGENT_CONFIG_DIR/templates/plans-readme.md" "$REPO_ROOT/docs/plans/README.md"
 copy_if_missing "$AGENT_CONFIG_DIR/templates/workstreams-readme.md" "$REPO_ROOT/docs/workstreams/README.md"
+copy_if_missing "$AGENT_CONFIG_DIR/templates/root-agents.md" "$REPO_ROOT/AGENTS.md"
+copy_if_missing "$AGENT_CONFIG_DIR/templates/cursorignore" "$REPO_ROOT/.cursorignore"
+copy_if_missing "$AGENT_CONFIG_DIR/templates/agent-governance-operator-setup.md" "$REPO_ROOT/docs/handover/agent-governance-operator-setup.md"
+mkdir -p "$REPO_ROOT/.github/workflows"
+copy_if_missing "$AGENT_CONFIG_DIR/skills/git-safety/payloads/agent-governance.yml" "$REPO_ROOT/.github/workflows/agent-governance.yml"
+
+write_githook_if_missing() {
+  hook=$1
+  mode=$2
+  purpose=$3
+  dst="$REPO_ROOT/.githooks/$hook"
+  if [ -e "$dst" ]; then
+    return 0
+  fi
+  cat > "$dst" <<HOOK
+#!/bin/sh
+set -eu
+
+REPO_ROOT=\$(git rev-parse --show-toplevel)
+SCRIPT="\$REPO_ROOT/.cursor/skills/git-safety/scripts/git-safety.mjs"
+
+if [ ! -f "\$SCRIPT" ]; then
+  printf 'git-safety: missing %s\\n' "\$SCRIPT" >&2
+  exit 1
+fi
+
+if ! command -v node >/dev/null 2>&1; then
+  printf 'git-safety: node is required to enforce $purpose\\n' >&2
+  exit 1
+fi
+
+node "\$SCRIPT" $mode
+HOOK
+  chmod +x "$dst"
+}
+
+write_githook_if_missing pre-commit commit "anonymous git identity and secret blocking"
+write_githook_if_missing commit-msg identity "anonymous git identity"
+write_githook_if_missing pre-push push "anonymous git identity"
 
 for dir in \
   "$AGENT_CONFIG_DIR/memory/memories" \

@@ -1,0 +1,8 @@
+.cursor/rules/00-read-agent-context-first.mdc
+.cursor/rules/core-operating-context.mdc
+.cursor/rules/instruction-routing.mdc
+.cursor/rules/root-canonical.mdc
+.cursor/rules/skills-file.mdc
+.cursor/rules/state-and-compactification.mdc
+.cursor/rules/tools-file.mdc
+.cursor/rules/working-memory.mdc
