@@ -37,6 +37,16 @@ export function assertDesktopPetDefaults(pet = loadDesktopPetConfig()) {
   if (pet.screen_capture_enabled !== false) {
     throw new Error("screen_capture_enabled must be false by default");
   }
+  if (pet.screen_capture_user_opt_in_available !== true) {
+    throw new Error("screen capture opt-in must be explicit and available");
+  }
+  if (
+    !Number.isFinite(pet.screen_feature_sample_hz) ||
+    pet.screen_feature_sample_hz <= 0 ||
+    pet.screen_feature_sample_hz > 10
+  ) {
+    throw new Error("screen feature sample rate must be between 0 and 10 Hz");
+  }
   return true;
 }
 

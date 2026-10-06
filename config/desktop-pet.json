@@ -23,6 +23,10 @@
   "max_surfaces": 256,
   "max_contour_vertices": 16,
   "screen_capture_enabled": false,
+  "screen_capture_user_opt_in_available": true,
+  "screen_feature_sample_hz": 5,
+  "screen_feature_thumbnail_size": 64,
+  "screen_feature_stale_after_ms": 500,
   "accessibility_read_enabled": false,
   "vision_text_boxes_enabled": false,
   "cloud_capabilities_enabled": false

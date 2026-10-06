@@ -50,8 +50,32 @@ export function findFlyPose({ hostRect, bounds, headingRad = 0 }) {
     locomotion: "idle",
     visible: true,
     hostSurfaceId,
+    surfaceContact: hostRect ? "host-window-surface" : "none",
     transitionSource: "operator",
   };
+}
+
+export function detectSurfaceContact({
+  pose,
+  bounds,
+  hostRect = null,
+  edgeTolerance = 8,
+} = {}) {
+  if (!pose || !bounds) return "none";
+  const atScreenEdge =
+    Math.abs(pose.x - bounds.x) <= edgeTolerance ||
+    Math.abs(pose.x - (bounds.x + bounds.width)) <= edgeTolerance ||
+    Math.abs(pose.y - bounds.y) <= edgeTolerance ||
+    Math.abs(pose.y - (bounds.y + bounds.height)) <= edgeTolerance;
+  if (atScreenEdge) return "screen-edge";
+  if (hostRect) {
+    const insideX = pose.x >= hostRect.x && pose.x <= hostRect.x + hostRect.width;
+    const surfaceY = hostRect.y + hostRect.height * 0.12;
+    if (insideX && Math.abs(pose.y - surfaceY) <= edgeTolerance * 2) {
+      return "host-window-surface";
+    }
+  }
+  return "none";
 }
 
 export class PresentationClock {
@@ -190,6 +214,7 @@ export class AuthoredAnimationController {
       speedPointsS: 0,
       depth01: 0,
       locomotion: "idle",
+      surfaceContact: "none",
       visible: true,
       hostSurfaceId: null,
       transitionSource: "authored",
@@ -294,6 +319,13 @@ export class AuthoredAnimationController {
         speed = Math.min(this.config.cruiseSpeedPointsS, dist * 2);
         locomotion = this.pose.depth01 < 0.15 ? "crawl" : "flight";
         source = "geometry";
+      } else if (this.pose.surfaceContact === "host-window-surface") {
+        // Neutral contact: deterministic walking along the approved host
+        // surface. This is geometry, not hunger, reward, or avoidance.
+        speed = Math.min(this.config.cursorYieldMaxSpeedPointsS, 18);
+        turn = this.config.wanderTurnRadS * 0.5;
+        locomotion = "crawl";
+        source = "neutral-contact";
       } else if (this.neuralWander) {
         locomotion = "flight";
         speed = this.config.cruiseSpeedPointsS * 0.55;
@@ -337,6 +369,11 @@ export class AuthoredAnimationController {
       depth01: depth,
       transitionSource: source,
     });
+    this.pose.surfaceContact = detectSurfaceContact({
+      pose: this.pose,
+      bounds: this.bounds,
+      hostRect: this._hostRect,
+    });
     this.pose.hostSurfaceId = hostSurfaceId;
 
     if (this._hidden && depth >= 0.99) {
@@ -379,6 +416,11 @@ export class AuthoredAnimationController {
       locomotion,
       depth01: this.pose.depth01,
       transitionSource,
+    });
+    this.pose.surfaceContact = detectSurfaceContact({
+      pose: this.pose,
+      bounds: this.bounds,
+      hostRect: this._hostRect,
     });
     const hostSurfaceId = this._hostRect ? "host-window" : null;
     this.pose.hostSurfaceId = hostSurfaceId;
@@ -430,7 +472,7 @@ export function createPetMotionController({
   let lastConnectomeMotor = null;
 
   return {
-    async step() {
+    async step({ neuralFeatures = {}, screenFeatures = null } = {}) {
       if (connectomeDriver) {
         const dt = motion.clock.advance();
         motion._accumulatorS += dt;
@@ -438,7 +480,7 @@ export function createPetMotionController({
           const block = motion.config.physicsDtS;
           motion._accumulatorS -= block;
           try {
-            const msg = await connectomeDriver.step(block);
+            const msg = await connectomeDriver.step(block, neuralFeatures);
             lastConnectomeMotor = msg.motor;
             motion._applyConnectomeMotor(block, msg.motor, msg.transition_source || "connectome");
           } catch {
@@ -453,6 +495,7 @@ export function createPetMotionController({
         }
         return motion.pose;
       }
+      motion._screenFeatures = screenFeatures;
       return motion.step();
     },
     findFly() {

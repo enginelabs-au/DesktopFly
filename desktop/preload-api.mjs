@@ -9,6 +9,8 @@ export const IPC = Object.freeze({
   SET_MODE: "fly:set-mode",
   OPEN_HEALTH: "fly:open-health",
   OPEN_WORKBENCH: "fly:open-workbench",
+  ENABLE_VISION: "fly:enable-vision",
+  DISABLE_VISION: "fly:disable-vision",
   HOST_LEASE_BEAT: "fly:host-lease-beat",
   POSE_FRAME: "fly:pose-frame",
 });
@@ -33,6 +35,12 @@ export function validatePoseFrame(frame) {
   if (!["idle", "crawl", "flight"].includes(p.locomotion)) {
     throw new Error("invalid locomotion");
   }
+  if (
+    p.surfaceContact !== undefined &&
+    !["none", "screen-edge", "host-window-surface"].includes(p.surfaceContact)
+  ) {
+    throw new Error("invalid surface contact");
+  }
   if (!["authored-animation", "lif"].includes(frame.controller)) {
     throw new Error("unknown controller");
   }
@@ -51,6 +59,8 @@ export function preloadApiShape() {
     "setMode",
     "openHealth",
     "openWorkbench",
+    "enableVision",
+    "disableVision",
     "onPoseFrame",
   ];
 }

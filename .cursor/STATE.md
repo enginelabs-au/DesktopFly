@@ -11,6 +11,7 @@
 - MaleCNS v1.0 and FlyWire v783 data are downloaded locally, checksummed, materialized, and covered by the separate adapters.
 - Context-optimization: implementation complete. Security gate PASS. Project lead CONDITIONAL (fresh-session W1 + owner W5).
 - Hook fix [PR #6](https://github.com/enginelabs-au/DesktopFly/pull/6) is on `main`: read-only `merge-base`/`merge-tree` and paths containing `-merge-` no longer trip the identity check.
+- Screen-aware fly interaction is implemented locally: opt-in coarse screen features, bounded surface contact, and an attributed fly renderer are wired into the desktop shell.
 
 ## Project Phase
 
@@ -28,7 +29,7 @@
 
 ## Active Role and Gate
 
-- Product validation on `main` after PR #9 (2026-10-06): backend pytest 56 passed; node 22 passed; foundations PASS; launch validation PASS; Electron 5-second smoke launch PASS.
+- Product validation on `main` after PR #9 (2026-10-06): backend pytest 56 passed; node 28 passed; foundations PASS; launch validation PASS; policy tests 19 passed; Electron 5-second smoke launch PASS.
 - Context-optimization: `project-lead-subagent` CONDITIONAL. Owner decision pending.
 
 ## Owner Decision
@@ -55,6 +56,7 @@
 - Full-connectome launcher: `scripts/run-full-sim.sh`; verified 211,577 neurons / 25,074,842 synapses, 86.77 s load, 178.97 ms first block, and 4 ms budget miss. It is diagnostic-only.
 - Full MPS sparse-matvec optimization was measured: steady-state blocks improved to about 43–46 ms, but still miss the 4 ms budget. Full real-time execution remains unachieved; the desktop app stays on the reviewed subset.
 - All former project branches are merged or superseded and have been removed from the remote.
+- Screen vision is disabled by default and remains permission-gated; coarse numeric features fail closed on denial, staleness, oversize input, or invalid data. macOS Screen Recording verification is still owner-only.
 
 ## Open Blockers
 
@@ -68,3 +70,4 @@
 ## Last Updated
 
 - 2026-10-06: PRs #2, #6, #7, #8, and #9 merged; dataset branch removed; `main` re-validated. Guarded reviewed-subset simulation is ready for a bounded local run.
+- 2026-10-06: Screen-aware interaction implementation validated locally: backend 56 passed, Node 28 passed, foundations/launch/config validation passed, policy tests 19 passed, and Electron smoke launch exited 0.

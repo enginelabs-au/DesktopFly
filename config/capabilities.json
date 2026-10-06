@@ -2,5 +2,7 @@
   "schema_version": 1,
   "allowlist": [],
   "neural_output_may_invoke_connectors": false,
-  "screen_capture_enabled": false
+  "screen_capture_enabled": false,
+  "screen_capture_user_opt_in_available": true,
+  "screen_feature_max_age_ms": 500
 }

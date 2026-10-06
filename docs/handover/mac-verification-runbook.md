@@ -6,7 +6,7 @@ Everything below is prepared on the branch; Cam runs it on a Mac.
 ## Prerequisites
 
 1. macOS with Apple Silicon (or Intel + verified CPU profile).
-2. Clone `cursor/phase-0-foundations-a5d1` / PR #2.
+2. Use `main` after the merged dataset and screen-interaction changes.
 3. Node 20+, Python 3.12, `uv`, Xcode CLT.
 
 ## Backend
@@ -40,6 +40,13 @@ Checklist:
 - [ ] Tray **Stop** latches supervisor independently of renderer
 - [ ] Find fly works with neural worker stopped or running
 - [ ] Health… opens `src/telemetry/health.html`
+- [ ] Menu → **Enable local vision…** is the only path that requests Screen
+      Recording; approve it in System Settings → Privacy & Security →
+      Screen Recording.
+- [ ] With permission granted, Health/diagnostics show coarse vision as
+      active; no raw pixels, OCR, titles, URLs, or text are exposed.
+- [ ] With permission denied, the pet continues in geometry-only mode and
+      reports the vision feature as unavailable/stale.
 
 ## Swift DesktopContext
 

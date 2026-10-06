@@ -4,6 +4,7 @@ import {
   AuthoredAnimationController,
   PresentationClock,
   clampCursorYieldSpeed,
+  detectSurfaceContact,
   findFlyPose,
   scaleForDepth,
 } from "./authored-motion.mjs";
@@ -28,6 +29,27 @@ test("findFly works without neural worker", () => {
   assert.equal(pose.transitionSource, "operator");
   assert.equal(pose.depth01, 0);
   assert.equal(pose.x, 200);
+  assert.equal(pose.surfaceContact, "host-window-surface");
+});
+
+test("surface contact is bounded to screen and approved host geometry", () => {
+  const bounds = { x: 0, y: 0, width: 1000, height: 800 };
+  assert.equal(
+    detectSurfaceContact({ pose: { x: 0, y: 400 }, bounds }),
+    "screen-edge",
+  );
+  assert.equal(
+    detectSurfaceContact({
+      pose: { x: 200, y: 98 },
+      bounds,
+      hostRect: { x: 100, y: 50, width: 200, height: 400 },
+    }),
+    "host-window-surface",
+  );
+  assert.equal(
+    detectSurfaceContact({ pose: { x: 500, y: 400 }, bounds }),
+    "none",
+  );
 });
 
 test("LIF presentation wanders in open space", () => {

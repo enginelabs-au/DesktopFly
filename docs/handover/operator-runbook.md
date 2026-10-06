@@ -33,6 +33,13 @@ Open **Health…** → `src/telemetry/health.html`. Menu-bar status should mirro
 
 - Accessibility: only for precise window geometry; denial → open-space / simpler scene.
 - Screen Recording: off by default (`screen_capture_enabled: false`).
+- Local vision is enabled only after the explicit menu action **Enable local
+  vision…**. It samples a small screen thumbnail in Electron's main process
+  and forwards only bounded brightness, color-bias, and motion numbers.
+  Denial or staleness returns to geometry-only behavior.
+- Screen pixels, OCR, window titles, URLs, arbitrary text, and plugin output
+  never enter neural state. “Neutral contact” means a bounded landing/
+  inspection presentation state, not eating, reward, need, or collection.
 - No microphone/camera/contacts.
 
 ## Dataset

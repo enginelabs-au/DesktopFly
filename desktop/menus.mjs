@@ -21,6 +21,8 @@ export function buildApplicationMenuTemplate(actions) {
         { label: "Find cursor", click: () => actions.findCursor() },
         { label: "Health…", click: () => actions.openHealth() },
         { label: "Workbench…", click: () => actions.openWorkbench() },
+        { label: "Enable local vision…", click: () => actions.enableVision() },
+        { label: "Disable local vision", click: () => actions.disableVision() },
         { label: "Settings…", click: () => actions.openSettings() },
       ],
     },
@@ -32,12 +34,20 @@ export function buildApplicationMenuTemplate(actions) {
   ];
 }
 
-export function buildTrayMenuTemplate(actions, { exploreHide = false, canResume = false } = {}) {
+export function buildTrayMenuTemplate(
+  actions,
+  { exploreHide = false, canResume = false, visionEnabled = false } = {},
+) {
   requireActions(actions);
   return [
     { id: "health", label: "Healthy — checks look normal", enabled: false },
     { label: "Find fly", click: () => actions.findFly() },
     { label: "Find cursor", click: () => actions.findCursor() },
+    {
+      label: visionEnabled ? "Disable local vision" : "Enable local vision…",
+      click: () =>
+        visionEnabled ? actions.disableVision() : actions.enableVision(),
+    },
     {
       label: "Explore and hide",
       type: "checkbox",
@@ -68,6 +78,8 @@ function requireActions(actions) {
     "exportDiagnostics",
     "findFly",
     "findCursor",
+    "enableVision",
+    "disableVision",
     "setExploreHide",
     "pause",
     "resume",

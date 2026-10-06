@@ -30,6 +30,7 @@ Neural / LIF **enabled**. Agent closeout finished everything that does not need 
 - [x] Asyncio loopback WebSocket bridge
 - [x] Device report (`reports/device.json`) — MPS unavailable on Linux CI
 - [x] CPU fallback disabled for the desktop profile; missed neural deadlines permanently stop the worker
+- [x] Opt-in coarse local vision boundary, neutral surface-contact state, and improved procedural fly renderer
 - [x] Mac verification runbook: `docs/handover/mac-verification-runbook.md`
 - [x] Linux tests green
 
@@ -41,6 +42,7 @@ Neural / LIF **enabled**. Agent closeout finished everything that does not need 
 - [ ] Optional: Screen Recording only if screen-vision profile enabled later
 - [ ] Legal/license review of cobanov template (recorded, not lawyer-reviewed)
 - [ ] Full MaleCNS graph performance optimization and biological circuit validation
+- [ ] Manual Mac verification of granted and denied Screen Recording flows
 
 ## Not Cam-blocked
 

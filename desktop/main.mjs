@@ -11,6 +11,7 @@ import {
   scaleForDepth,
 } from "../src/pet/authored-motion.mjs";
 import { startConnectomeDriver } from "../src/neural/connectome-driver.mjs";
+import { ScreenFeatureCapture } from "./capabilities/screen-features.mjs";
 import { FocusTracker, LayerCoordinator, SceneBuilder } from "./focus.mjs";
 import { HostLease } from "./host-lease.mjs";
 import { buildApplicationMenuTemplate, buildTrayMenuTemplate } from "./menus.mjs";
@@ -43,6 +44,7 @@ export function createDesktopSession({
   petConfig = loadDesktopPetConfig(),
   now = () => Date.now(),
   connectomeDriver = null,
+  screenFeatures = null,
 } = {}) {
   assertDesktopPetDefaults(petConfig);
   const controller = defaultControllerKind(policy);
@@ -50,6 +52,8 @@ export function createDesktopSession({
   let neuralError = null;
   let motionDriver = controller === "lif" ? "connectome-pending" : "authored-animation";
   let connectomeTechnical = null;
+  let latestScreenFeatures = null;
+  let visionError = null;
   try {
     assertNeuralWorkerMayStart(policy);
     neuralStatus = connectomeDriver ? "running" : "starting";
@@ -63,11 +67,11 @@ export function createDesktopSession({
   const driverProxy =
     controller === "lif"
       ? {
-          step: (dtS) => {
+          step: (dtS, features = {}) => {
             if (!driverRef.current) {
               return Promise.reject(new Error("connectome worker not ready"));
             }
-            return driverRef.current.step(dtS);
+            return driverRef.current.step(dtS, features);
           },
           status: () => driverRef.current?.status?.() ?? connectomeTechnical,
         }
@@ -127,6 +131,14 @@ export function createDesktopSession({
         motionDriver,
         connectome: connectomeTechnical,
         real_graph_enabled: policy.real_graph_enabled,
+        vision: screenFeatures?.status?.() || {
+          enabled: false,
+          permission: "unavailable",
+          stale: true,
+          lastSampleAtS: null,
+          reason: "screen_capture_capability_unavailable",
+        },
+        visionError,
         lease: lease.status(),
       };
     },
@@ -138,6 +150,26 @@ export function createDesktopSession({
     },
     findCursor() {
       return { kind: "locator-ring", durationMs: 2000, clickThrough: true };
+    },
+    async enableVision() {
+      if (!screenFeatures) {
+        return { ok: false, reason: "screen_capture_capability_unavailable" };
+      }
+      try {
+        const vision = await screenFeatures.enable();
+        latestScreenFeatures = screenFeatures.latestIfFresh?.() || null;
+        visionError = null;
+        return { ok: true, vision };
+      } catch (error) {
+        latestScreenFeatures = null;
+        visionError = error instanceof Error ? error.message : String(error);
+        return { ok: false, reason: "screen_capture_unavailable", error: visionError };
+      }
+    },
+    disableVision() {
+      latestScreenFeatures = null;
+      visionError = null;
+      return screenFeatures?.disable?.() || { enabled: false, reason: "already_disabled" };
     },
     setExploreHide(enabled) {
       mode = enabled ? "explore_and_hide" : "follow_my_window";
@@ -184,6 +216,14 @@ export function createDesktopSession({
       connectome: connectomeTechnical,
       real_graph_enabled: policy.real_graph_enabled === true,
       connectome_mode: Boolean(connectomeTechnical?.connectome_mode),
+      vision: screenFeatures?.status?.() || {
+        enabled: false,
+        permission: "unavailable",
+        stale: true,
+        lastSampleAtS: null,
+        reason: "screen_capture_capability_unavailable",
+      },
+      visionError,
       focus: focus.snapshot(),
       scene: scene.snapshot(),
       layer: layers.planPlacement({}),
@@ -205,6 +245,7 @@ export function createDesktopSession({
         speedPointsS: pose.speedPointsS,
         depth01: pose.depth01,
         locomotion: pose.locomotion,
+        surfaceContact: pose.surfaceContact || "none",
       },
     };
     return validatePoseFrame(frame);
@@ -235,10 +276,28 @@ export function createDesktopSession({
       if (paused || leaseStatus.paused) {
         return pose;
       }
+      if (screenFeatures?.enabled) {
+        try {
+          await screenFeatures.sample();
+          latestScreenFeatures = screenFeatures.latestIfFresh?.() || null;
+          visionError = null;
+        } catch (error) {
+          latestScreenFeatures = null;
+          visionError = error instanceof Error ? error.message : String(error);
+        }
+      }
       motion.setBounds(presentationBounds);
       motion.setMode(mode);
       motion.syncFocusSnapshot(focus.snapshot());
-      pose = await motion.step();
+      pose = await motion.step({
+        neuralFeatures: latestScreenFeatures
+          ? {
+              ambient_drive: latestScreenFeatures.ambient_drive,
+              turn_bias: latestScreenFeatures.turn_bias,
+            }
+          : {},
+        screenFeatures: latestScreenFeatures,
+      });
       return pose;
     },
     async attachConnectomeDriver(driver) {
@@ -270,6 +329,7 @@ export function createDesktopSession({
       buildTrayMenuTemplate(actions, {
         exploreHide: mode === "explore_and_hide",
         canResume: paused,
+        visionEnabled: Boolean(screenFeatures?.enabled),
       }),
   };
 }
@@ -308,9 +368,26 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
     );
   }
 
-  const { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, screen } =
-    electron;
-  const session = createDesktopSession();
+  const {
+    app,
+    BrowserWindow,
+    Menu,
+    Tray,
+    ipcMain,
+    nativeImage,
+    screen,
+    desktopCapturer,
+    systemPreferences,
+  } = electron;
+  const petConfig = loadDesktopPetConfig();
+  const screenFeatures = new ScreenFeatureCapture({
+    desktopCapturer,
+    systemPreferences,
+    sampleHz: petConfig.screen_feature_sample_hz,
+    staleAfterMs: petConfig.screen_feature_stale_after_ms,
+    thumbnailSize: petConfig.screen_feature_thumbnail_size,
+  });
+  const session = createDesktopSession({ petConfig, screenFeatures });
   await session.startConnectomeWorker();
   const preloadPath = join(__dirname, "preload.cjs");
   const overlaySize = session.petConfig.overlay_size_points || 256;
@@ -391,12 +468,36 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
     return syncPetWindow(petWin);
   }
 
+  function refreshTrayMenu() {
+    if (!desktopTray) return;
+    const current = session.status();
+    desktopTray.setContextMenu(
+      Menu.buildFromTemplate(
+        buildTrayMenuTemplate(guiActions, {
+          exploreHide: current.mode === "explore_and_hide",
+          canResume: current.paused,
+          visionEnabled: Boolean(current.vision?.enabled),
+        }),
+      ),
+    );
+  }
+
   const guiActions = {
     ...session.actions,
     openHealth: openHealthWindow,
     openSettings: openSettingsWindow,
     findFly() {
       return findFlyAndShow(win);
+    },
+    async enableVision() {
+      const result = await session.actions.enableVision();
+      refreshTrayMenu();
+      return result;
+    },
+    disableVision() {
+      const result = session.actions.disableVision();
+      refreshTrayMenu();
+      return result;
     },
     quit() {
       app.quit();
@@ -431,6 +532,7 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
       buildTrayMenuTemplate(guiActions, {
         exploreHide: session.status().mode === "explore_and_hide",
         canResume: session.status().paused,
+        visionEnabled: Boolean(session.status().vision?.enabled),
       }),
     ),
   );
@@ -445,6 +547,8 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   ipcMain.handle(IPC.SET_MODE, (_e, mode) => session.setMode(mode));
   ipcMain.handle(IPC.OPEN_HEALTH, () => openHealthWindow());
   ipcMain.handle(IPC.OPEN_WORKBENCH, () => session.actions.openWorkbench());
+  ipcMain.handle(IPC.ENABLE_VISION, () => session.actions.enableVision());
+  ipcMain.handle(IPC.DISABLE_VISION, () => session.actions.disableVision());
   ipcMain.on(IPC.HOST_LEASE_BEAT, () => session.lease.beat());
 
   win.once("ready-to-show", () => {

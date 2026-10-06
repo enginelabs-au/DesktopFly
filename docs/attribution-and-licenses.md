@@ -21,6 +21,11 @@ Modified versions must state that modifications were made. See
 [ATTRIBUTION.md](https://github.com/cobanov/fly-connectome-template/blob/main/ATTRIBUTION.md)
 for UI placement rules.
 
+The current desktop pet image is an original procedural canvas rendering in
+`desktop/renderer/pet.js`; it uses no untracked third-party image asset. The
+repository still preserves the required template credit because the project
+is a modified derivative.
+
 ## Male CNS connectome data
 
 - **Dataset:** Male CNS v1.0 (default connectome for the LIF graph path)

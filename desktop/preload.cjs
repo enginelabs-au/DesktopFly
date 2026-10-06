@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld("flyDesktop", {
   setMode: (mode) => ipcRenderer.invoke(IPC.SET_MODE, mode),
   openHealth: () => ipcRenderer.invoke(IPC.OPEN_HEALTH),
   openWorkbench: () => ipcRenderer.invoke(IPC.OPEN_WORKBENCH),
+  enableVision: () => ipcRenderer.invoke(IPC.ENABLE_VISION),
+  disableVision: () => ipcRenderer.invoke(IPC.DISABLE_VISION),
   beatHostLease: () => ipcRenderer.send(IPC.HOST_LEASE_BEAT),
   onPoseFrame: (cb) => {
     const handler = (_event, frame) => cb(frame);

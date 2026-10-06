@@ -162,6 +162,58 @@ test("connectome fault becomes a permanent stopped session", async () => {
   assert.equal(shutdowns, 1);
 });
 
+test("screen features reach the worker only as bounded numeric inputs", async () => {
+  let received = null;
+  const connectomeDriver = {
+    async step(_dtS, features) {
+      received = features;
+      return {
+        motor: { dx: 10, dy: 0, heading: 0, speed: 10 },
+        transition_source: "connectome",
+      };
+    },
+    status() {
+      return { motion_driver: "connectome-lif", connectome_mode: true };
+    },
+  };
+  const screenFeatures = {
+    enabled: true,
+    async sample() {},
+    latestIfFresh() {
+      return {
+        capturedAtS: 1,
+        ambient_drive: 1.2,
+        turn_bias: 0.8,
+        brightness: 0.5,
+        motion: 0.2,
+      };
+    },
+    status() {
+      return {
+        enabled: true,
+        permission: "granted",
+        stale: false,
+        lastSampleAtS: 1,
+        reason: "active_coarse_features",
+      };
+    },
+  };
+  let t = 1_000;
+  const session = createDesktopSession({
+    now: () => t,
+    connectomeDriver,
+    screenFeatures,
+  });
+  await session.attachConnectomeDriver(connectomeDriver);
+  session.lease.beat();
+  t += 50;
+  await session.tickPresentation();
+  t += 50;
+  await session.tickPresentation();
+  assert.deepEqual(received, { ambient_drive: 1.2, turn_bias: 0.8 });
+  assert.equal(session.status().vision.permission, "granted");
+});
+
 test("menu template requires typed actions", () => {
   const session = createDesktopSession();
   const template = buildApplicationMenuTemplate(session.actions);

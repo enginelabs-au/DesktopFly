@@ -48,3 +48,10 @@
 - Validation: backend 56 passed; Node 22 passed; foundations and launch validation passed; policy tests 19 passed; Electron 5-second smoke launch exited 0.
 - Added `scripts/run-full-sim.sh` / `scripts/run_full_connectome.py` for bounded full-connectome diagnostics without changing the safe desktop policy. Verified full MaleCNS: 211,577 neurons, 25,074,842 synapses, 86.77 s load, 178.97 ms first block, and a 4 ms budget miss.
 - Added policy-derived LIF timing and an MPS sparse-matvec operator. Full-graph steady-state timing improved to 43–46 ms per 5 ms block, still far above the 4 ms deadline; no guard was relaxed and the desktop default remains the reviewed subset.
+
+## Screen-aware interaction implementation
+
+- Added explicit opt-in coarse screen-feature capability with Screen Recording permission, bounded thumbnail input, staleness/size validation, and fail-closed geometry-only fallback. Raw pixels, OCR, text, titles, URLs, and plugin output remain outside neural state.
+- Added bounded cursor yielding and neutral walking along screen edges or approved host-window surfaces; no needs, reward, collection, deprivation, or connector authority were introduced.
+- Replaced the placeholder pet silhouette with an attributed procedural fly renderer while preserving transparent click-through behavior.
+- Updated operator, configuration, attribution, and macOS verification documentation. Validation passed: backend 56, Node 28, policy tests 19, foundations/launch/config checks, and a 5-second Electron smoke launch. Owner-only manual Screen Recording permission checks remain.

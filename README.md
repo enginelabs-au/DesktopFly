@@ -85,3 +85,8 @@ policy:
 The launcher uses the local full MaleCNS graph, keeps CPU fallback disabled,
 limits the run to 120 blocks, and reports when blocks exceed the 4 ms desktop
 budget. It is an offline diagnostic; it does not claim real-time behavior.
+
+The desktop menu includes **Enable local vision…** as an explicit opt-in.
+When permitted, Electron reduces a small screen thumbnail to bounded
+brightness, color-bias, and motion features before the neural step. Screen
+pixels, OCR, text, and window metadata are not forwarded to neural state.
