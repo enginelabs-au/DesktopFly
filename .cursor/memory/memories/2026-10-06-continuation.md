@@ -14,6 +14,12 @@
 - Policy probe on merged `main`: `merge-base`, `merge-tree`, and `worktree add /tmp/x-merge-0433` allowed; plain `merge`, compound `merge-base && merge`, and `merge` with a private email denied; `merge` with the anonymous identity allowed.
 - `validate-agent-config.mjs` is not runnable by the agent shell (protected path); CI ran it green on both PRs.
 
+## Pre-push defect found and fixed (same PR as this log)
+
+- With hooks installed, any new-branch push failed: `pre-push` scanned the full ancestry, which includes GitHub web-merge commits (committer `noreply@github.com`) and one historic `cursoragent@cursor.com` commit. Merging `main` into an existing branch hit the same problem.
+- Fix: the push check now inspects only commits not on any remote ref (`<sha> --not --remotes`), and `noreply@github.com` (GitHub's web committer) is an allowed address. Private inboxes in new commits are still rejected. Regression test builds a temp repo (published private-email commit passes; new private-email commit fails).
+- Node tests: 47 pass, 0 fail.
+
 ## Stale remote branches (owner to delete)
 
 - `cursor/rename-lauch-to-launch-8c4d` (squash-merged PR #1)
