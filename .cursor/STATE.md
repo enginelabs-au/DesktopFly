@@ -12,6 +12,7 @@
 - Context-optimization: implementation complete. Security gate PASS. Project lead CONDITIONAL (fresh-session W1 + owner W5).
 - Hook fix [PR #6](https://github.com/enginelabs-au/DesktopFly/pull/6) is on `main`: read-only `merge-base`/`merge-tree` and paths containing `-merge-` no longer trip the identity check.
 - Screen-aware fly interaction is implemented locally: opt-in coarse screen features, bounded surface contact, and an attributed fly renderer are wired into the desktop shell.
+- Cursor interaction is now wired through bounded native cursor polling outside the neural tick; the existing cursor-yield rule applies to connectome-driven presentation without granting app-action authority.
 
 ## Project Phase
 
@@ -29,7 +30,7 @@
 
 ## Active Role and Gate
 
-- Product validation on `main` after PR #9 (2026-10-06): backend pytest 56 passed; node 28 passed; foundations PASS; launch validation PASS; policy tests 19 passed; Electron 5-second smoke launch PASS.
+- Product validation on `main` after PR #9 (2026-10-06): backend pytest 56 passed; Node 30 passed after cursor wiring; foundations PASS; launch validation PASS; policy tests 19 passed; Electron 5-second smoke launch PASS.
 - Context-optimization: `project-lead-subagent` CONDITIONAL. Owner decision pending.
 
 ## Owner Decision
@@ -71,3 +72,4 @@
 
 - 2026-10-06: PRs #2, #6, #7, #8, and #9 merged; dataset branch removed; `main` re-validated. Guarded reviewed-subset simulation is ready for a bounded local run.
 - 2026-10-06: Screen-aware interaction implementation validated locally: backend 56 passed, Node 28 passed, foundations/launch/config validation passed, policy tests 19 passed, and Electron smoke launch exited 0.
+- 2026-10-06: Cursor wiring fix `f9ec613` validated with Node 30 passed and the updated Electron app restarted successfully; cursor polling remains geometry-only and bounded to a 40-point yield radius.

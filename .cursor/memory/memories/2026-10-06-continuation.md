@@ -55,3 +55,9 @@
 - Added bounded cursor yielding and neutral walking along screen edges or approved host-window surfaces; no needs, reward, collection, deprivation, or connector authority were introduced.
 - Replaced the placeholder pet silhouette with an attributed procedural fly renderer while preserving transparent click-through behavior.
 - Updated operator, configuration, attribution, and macOS verification documentation. Validation passed: backend 56, Node 28, policy tests 19, foundations/launch/config checks, and a 5-second Electron smoke launch. Owner-only manual Screen Recording permission checks remain.
+
+## Cursor interaction correction
+
+- Diagnosis: the desktop shell had a cursor-yield implementation but never supplied native cursor coordinates, so the running pet could not respond to the pointer. The connectome path also applied motor output without the geometry-only yield overlay.
+- Fix `f9ec613`: poll `screen.getCursorScreenPoint()` on a bounded 50 ms timer outside the neural tick, normalize the point at the motion boundary, and apply the existing capped yield velocity to connectome presentation. No neural weights, graph, permissions, or app-action authority are changed.
+- Validation: Node 30 passed; foundations and launch validation passed; updated Electron instance restarted successfully.
