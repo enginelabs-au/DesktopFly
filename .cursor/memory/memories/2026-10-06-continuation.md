@@ -61,3 +61,13 @@
 - Diagnosis: the desktop shell had a cursor-yield implementation but never supplied native cursor coordinates, so the running pet could not respond to the pointer. The connectome path also applied motor output without the geometry-only yield overlay.
 - Fix `f9ec613`: poll `screen.getCursorScreenPoint()` on a bounded 50 ms timer outside the neural tick, normalize the point at the motion boundary, and apply the existing capped yield velocity to connectome presentation. No neural weights, graph, permissions, or app-action authority are changed.
 - Validation: Node 30 passed; foundations and launch validation passed; updated Electron instance restarted successfully.
+
+## Static-fly diagnosis (live observation)
+
+- Symptom: fly moved briefly then sat static and ignored the cursor. Two independent causes found by running the real Node-to-Python pipeline, not by unit tests.
+- Cause 1, motion shape: the motor decoder only produced left/right/forward and `dy` was always 0, so the pet slid on one horizontal line and flipped heading 180 degrees. Fix: `MotorCommand.turn` (bounded +/-3 rad/s, normalized right-minus-left imbalance x fixed gain, existing gains only, no new circuit mapping); the presentation integrates heading from it and steers back inward near screen edges (geometry rule). A 20 s live run covered x 327 / y 359 points and moved 99 percent of ticks.
+- Cause 2, cursor: configured flee was 40 pt radius / 40 pt/s / 250 ms (about 10 points of movement). Now 140 pt / 150 pt/s (cap 160) / 600 ms / 200 ms cooldown, still bounded and still geometry-only.
+- Cause 3, freeze: the hard 4 ms block-deadline latch trips and permanently stops the worker (by design). Measured block time: 0.19 ms median back-to-back (max <1 ms, GC off), but with the idle gaps of the real app the median is 0.5-0.8 ms and about 0.02-0.17 percent of blocks exceed 4 ms (occasional 8-31 ms). The Python cyclic GC was one spike source (82 ms seen); the worker now disables it outside timed blocks (gen-0 collect every 200 blocks, outside timing). A macOS USER_INTERACTIVE QoS hint was tested and made no difference, so it was not added.
+- Residual: the latch still trips within seconds to about a minute. The guard was NOT relaxed. Relaxing it (for example tolerating isolated late blocks without catching up simulated time) is an owner decision recorded as an open item.
+- Validation: Node 32 passed, backend 59 passed, foundations and launch validation passed. One combined shell command including the protected policy-test paths was blocked by the policy hook and was not retried; those files were not modified.
+

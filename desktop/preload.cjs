@@ -11,6 +11,8 @@ const IPC = {
   SET_MODE: "fly:set-mode",
   OPEN_HEALTH: "fly:open-health",
   OPEN_WORKBENCH: "fly:open-workbench",
+  ENABLE_VISION: "fly:enable-vision",
+  DISABLE_VISION: "fly:disable-vision",
   HOST_LEASE_BEAT: "fly:host-lease-beat",
   POSE_FRAME: "fly:pose-frame",
 };

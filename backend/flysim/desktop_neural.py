@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gc
 import json
 import sys
 import time
@@ -9,6 +10,21 @@ from typing import Any
 
 from flysim.config import load_policy_dict
 from flysim.presentation import BlockDeadlineExceeded, ConnectomePresentationEngine
+
+# Young-generation collection between (never inside) timed blocks, bounded and cheap.
+_GC_YOUNG_COLLECT_EVERY_BLOCKS = 200
+
+
+def configure_realtime_gc() -> None:
+    """Keep the cyclic collector from pausing inside a timed neural block.
+
+    Measured: with the collector enabled a single block spiked to ~82 ms and
+    tripped the 4 ms deadline; with it disabled 20k blocks peaked near 1 ms.
+    This removes a pause source only; the deadline guard is unchanged.
+    """
+    gc.collect()
+    gc.freeze()
+    gc.disable()
 
 
 def _reply(payload: dict[str, Any]) -> None:
@@ -26,6 +42,8 @@ def main() -> None:
     except Exception as exc:  # noqa: BLE001 — surface to desktop host
         _reply({"ok": False, "error": str(exc)})
         return
+    configure_realtime_gc()
+    blocks_since_collect = 0
     _reply({"ok": True, "event": "ready", "technical": engine.status()})
     for line in sys.stdin:
         line = line.strip()
@@ -80,6 +98,10 @@ def main() -> None:
                 )
                 break
             _reply({"ok": True, **result})
+            blocks_since_collect += 1
+            if blocks_since_collect >= _GC_YOUNG_COLLECT_EVERY_BLOCKS:
+                blocks_since_collect = 0
+                gc.collect(0)
             continue
         _reply({"ok": False, "error": f"unknown op {op!r}"})
 

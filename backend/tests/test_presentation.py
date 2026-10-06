@@ -61,3 +61,48 @@ def test_malecns_fixture_is_not_synthetic_ids():
     tables = json.loads(MALECNS_FULL_DEV.read_text(encoding="utf-8"))
     for neuron in tables["neurons"]:
         assert neuron["neuron_id"].startswith("male-cns:")
+
+
+def _steering_rows():
+    return [
+        {"neuron_id": "a", "output_channel": "left", "fixed_gain": 1.0},
+        {"neuron_id": "b", "output_channel": "right", "fixed_gain": 1.0},
+        {"neuron_id": "c", "output_channel": "forward", "fixed_gain": 1.0},
+    ]
+
+
+def test_decode_turn_is_bounded_signed_steering_from_left_right():
+    import numpy as np
+
+    ids = ("a", "b", "c")
+    rows = _steering_rows()
+    right = decode_schema_motor(ids, rows, np.array([0.1, 0.9, 0.5], dtype=np.float32))
+    left = decode_schema_motor(ids, rows, np.array([0.9, 0.1, 0.5], dtype=np.float32))
+    balanced = decode_schema_motor(ids, rows, np.array([0.5, 0.5, 0.5], dtype=np.float32))
+    assert right.turn > 0 > left.turn
+    assert balanced.turn == 0.0
+    assert abs(right.turn) <= 3.0 and abs(left.turn) <= 3.0
+    assert "turn" in right.as_dict()
+
+
+def test_connectome_motor_reports_steering_over_time():
+    engine = ConnectomePresentationEngine.create(load_policy_dict())
+    turns = []
+    for _ in range(600):
+        turns.append(engine.step(0.005)["motor"]["turn"])
+    assert max(turns) - min(turns) > 0.0
+    assert all(abs(t) <= 3.0 for t in turns)
+
+
+def test_worker_gc_is_configured_outside_timed_blocks():
+    import gc
+
+    from flysim.desktop_neural import configure_realtime_gc
+
+    was_enabled = gc.isenabled()
+    try:
+        configure_realtime_gc()
+        assert gc.isenabled() is False
+    finally:
+        if was_enabled:
+            gc.enable()

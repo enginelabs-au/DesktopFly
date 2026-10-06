@@ -405,17 +405,36 @@ export class AuthoredAnimationController {
   }
 
   _applyConnectomeMotor(dtS, motor, transitionSource = "connectome") {
-    const dx = Number(motor?.dx) || 0;
-    const dy = Number(motor?.dy) || 0;
+    const steering = motor && Number.isFinite(Number(motor.turn));
     const yieldVel = this._cursorYieldVelocity();
-    const vx = dx + yieldVel.vx;
-    const vy = dy + yieldVel.vy;
-    const speed = Math.hypot(vx, vy);
+    let vx;
+    let vy;
     let heading = this.pose.headingRad;
-    if (speed > 1e-3) {
+    if (steering) {
+      // Steered walk: forward speed along a heading that integrates the
+      // connectome turn readout, so paths are curved 2D tracks, not a rail.
+      const forward = Math.max(0, Number(motor.speed) || 0);
+      let turn = Number(motor.turn) || 0;
+      turn += this._edgeAvoidTurn(heading);
+      heading = wrapHeading(heading + turn * dtS);
+      vx = Math.cos(heading) * forward + yieldVel.vx;
+      vy = Math.sin(heading) * forward + yieldVel.vy;
+    } else {
+      vx = (Number(motor?.dx) || 0) + yieldVel.vx;
+      vy = (Number(motor?.dy) || 0) + yieldVel.vy;
+    }
+    let speed = Math.hypot(vx, vy);
+    if (speed > this.config.maxSpeedPointsS) {
+      const k = this.config.maxSpeedPointsS / speed;
+      vx *= k;
+      vy *= k;
+      speed = this.config.maxSpeedPointsS;
+    }
+    if (speed > 1e-3 && (!steering || yieldVel.vx || yieldVel.vy)) {
       heading = Math.atan2(vy, vx);
     }
     const locomotion = speed > 2 ? "flight" : speed > 0.2 ? "crawl" : "idle";
+    // integratePose applies the turn first, then moves along the new heading.
     this.pose = integratePose(this.pose, {
       dtS,
       speedPointsS: speed,
@@ -432,6 +451,26 @@ export class AuthoredAnimationController {
     });
     const hostSurfaceId = this._hostRect ? "host-window" : null;
     this.pose.hostSurfaceId = hostSurfaceId;
+  }
+
+  /**
+   * Bounded geometry rule: within a margin of the screen edge and heading
+   * outward, steer back toward the screen center. Not a need or avoidance.
+   */
+  _edgeAvoidTurn(heading, margin = 60, maxTurnRadS = 3) {
+    const b = this.bounds;
+    const { x, y } = this.pose;
+    const nearEdge =
+      x - b.x < margin ||
+      b.x + b.width - x < margin ||
+      y - b.y < margin ||
+      b.y + b.height - y < margin;
+    if (!nearEdge) return 0;
+    const cx = b.x + b.width * 0.5;
+    const cy = b.y + b.height * 0.5;
+    const err = wrapHeading(Math.atan2(cy - y, cx - x) - heading);
+    if (Math.abs(err) < 0.35) return 0;
+    return Math.max(-maxTurnRadS, Math.min(maxTurnRadS, err * 3));
   }
 
   _cursorYieldVelocity() {

@@ -34,8 +34,15 @@ def decode_schema_motor(
     activity: np.ndarray,
     *,
     max_speed_points_s: float = 120.0,
+    max_turn_rad_s: float = 3.0,
+    turn_gain: float = 8.0,
 ) -> MotorCommand:
-    """Decode rate/spike activity using schema channels left/right/forward."""
+    """Decode rate/spike activity using schema channels left/right/forward.
+
+    ``left``/``right`` also yield a bounded steering readout (``turn``): the
+    normalized right-minus-left imbalance scaled by a fixed gain and clipped.
+    It reuses the existing fixed gains; no new circuit mapping is introduced.
+    """
     index = {nid: i for i, nid in enumerate(neuron_ids)}
     activity = np.asarray(activity, dtype=np.float32)
     if activity.shape != (len(neuron_ids),):
@@ -44,6 +51,8 @@ def decode_schema_motor(
     dy = 0.0
     speed = 0.0
     heading = 0.0
+    left_sum = 0.0
+    right_sum = 0.0
     for row in motor_rows:
         nid = str(row["neuron_id"])
         if nid not in index:
@@ -53,8 +62,10 @@ def decode_schema_motor(
         channel = str(row["output_channel"])
         if channel == "left":
             dx -= val
+            left_sum += val
         elif channel == "right":
             dx += val
+            right_sum += val
         elif channel == "forward":
             speed += val
         elif channel == "backward":
@@ -71,7 +82,13 @@ def decode_schema_motor(
         heading = 0.0
         dx = speed
         dy = 0.0
-    return MotorCommand(dx=dx, dy=dy, heading=heading, speed=speed)
+    total = left_sum + right_sum
+    turn = 0.0
+    if total > 1e-6:
+        turn = float(
+            np.clip(turn_gain * (right_sum - left_sum) / total, -max_turn_rad_s, max_turn_rad_s)
+        )
+    return MotorCommand(dx=dx, dy=dy, heading=heading, speed=speed, turn=turn)
 
 
 @dataclass

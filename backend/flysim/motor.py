@@ -49,6 +49,8 @@ class MotorCommand:
     dy: float
     heading: float
     speed: float
+    # Steering readout (rad/s) from the fixed left/right gains; 0.0 when unused.
+    turn: float = 0.0
 
     def as_dict(self) -> dict[str, float]:
         return {
@@ -56,6 +58,7 @@ class MotorCommand:
             "dy": self.dy,
             "heading": self.heading,
             "speed": self.speed,
+            "turn": self.turn,
         }
 
 
