@@ -9,3 +9,5 @@ Plans are generated and executed sequentially.
 Each substantive plan links its `docs/workstreams/<task-id>/manifest.md`, records every canonical role as required or skipped, and closes only after required role gates have evidence-backed verdicts.
 
 Canonical process: `/instructions/PROJECT_PLANNING.md` and `/instructions/ROLES.md`.
+
+The control-plane (context-optimization) plan and checklist live in `context-optimization/`.

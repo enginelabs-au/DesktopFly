@@ -197,27 +197,93 @@ try {
   // Invalid JSON is reported above.
 }
 
+const alwaysOnRules = ["00-core-routing.mdc", "git-privacy-and-secrets.mdc", "karpathy-guidelines.mdc"];
+const retiredRules = [
+  "01-per-turn-read-contract.mdc",
+  "00-read-agent-context-first.mdc",
+  "core-operating-context.mdc",
+  "instruction-routing.mdc",
+  "root-canonical.mdc",
+  "tools-file.mdc",
+  "skills-file.mdc",
+  "working-memory.mdc",
+  "state-and-compactification.mdc",
+];
+const eagerLoadPhrases = [
+  /read every (?:existing )?file under/i,
+  /on every (?:substantive|new) (?:turn|user message)[^.\n]*\bread\b/i,
+  /\bread\b[^.\n]*on every (?:substantive|new) (?:turn|user message)/i,
+  /even if it was read earlier/i,
+  /read it on every substantive turn/i,
+  /reread .{0,40}(?:every|each) (?:substantive )?turn/i,
+];
+
+function rejectEagerLoad(relativePath, text) {
+  for (const pattern of eagerLoadPhrases) {
+    expect(
+      !pattern.test(text),
+      `${relativePath} reintroduces a per-turn read-all mandate (matched ${pattern})`,
+    );
+  }
+}
+
 try {
   const ruleDir = pathFor(".cursor/rules");
   const rules = readdirSync(ruleDir).filter((name) => name.endsWith(".mdc"));
   expect(rules.length > 0, "no project rules found");
-  expect(
-    !rules.includes("01-per-turn-read-contract.mdc"),
-    "duplicate per-turn rule still exists",
-  );
-  expect(
-    rules.includes("git-privacy-and-secrets.mdc"),
-    "git-privacy-and-secrets rule is missing",
-  );
+  for (const retired of retiredRules) {
+    expect(
+      !rules.includes(retired),
+      `retired rule ${retired} still exists; its content lives in 00-core-routing.mdc`,
+    );
+  }
+  for (const required of alwaysOnRules) {
+    expect(rules.includes(required), `${required} rule is missing`);
+  }
   for (const name of rules) {
     const text = read(`.cursor/rules/${name}`);
+    const frontmatter = text.match(/^---\n([\s\S]*?)\n---/);
+    expect(Boolean(frontmatter), `.cursor/rules/${name} lacks YAML frontmatter`);
+    if (!frontmatter) continue;
+    const body = frontmatter[1];
+    const alwaysOn = /^alwaysApply:\s*true\s*$/m.test(body);
+    const conditional = /^alwaysApply:\s*false\s*$/m.test(body);
+    const hasDescription = /^description:\s*\S/m.test(body);
+    const hasGlobs = /^globs:\s*\S/m.test(body);
     expect(
-      /^---\n[\s\S]*?\nalwaysApply:\s*true\s*\n---/m.test(text),
-      `.cursor/rules/${name} lacks valid alwaysApply frontmatter`,
+      alwaysOn || conditional,
+      `.cursor/rules/${name} must declare alwaysApply: true or alwaysApply: false`,
     );
+    if (alwaysOnRules.includes(name)) {
+      expect(alwaysOn, `.cursor/rules/${name} must remain always-on`);
+    }
+    if (conditional) {
+      expect(
+        hasDescription || hasGlobs,
+        `.cursor/rules/${name} is conditional but has neither a description nor globs, so the agent cannot discover it`,
+      );
+    }
+    rejectEagerLoad(`.cursor/rules/${name}`, text);
   }
 } catch (error) {
   errors.push(`could not validate rules: ${error.message}`);
+}
+
+for (const relativePath of [
+  "AGENTS.md",
+  ".cursor/AGENTS.md",
+  ".cursor/INSTRUCTIONS.md",
+  ".cursor/BOOTSTRAP.md",
+  ".cursor/memory/MEMORY.md",
+  ".cursor/instructions/ROLES.md",
+  ".cursor/instructions/SUBAGENTS.md",
+  ".cursor/skills/launch-pipeline/SKILL.md",
+]) {
+  try {
+    rejectEagerLoad(relativePath, read(relativePath));
+  } catch {
+    // Missing file is reported above.
+  }
 }
 
 for (const [relativePath, terms] of [

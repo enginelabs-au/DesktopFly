@@ -1,0 +1,210 @@
+{
+  "artifact_type": "read_only_source_snapshot",
+  "schema_version": 1,
+  "recorded_at_utc": "2026-09-17T12:20:33.477745+00:00",
+  "research_snapshot_date": "2026-09-17",
+  "source_root": "/Users/camdouglas/agent-instructions",
+  "scope": "shared authored source only; excludes application repositories and credential configs",
+  "runtime_loaded_tokens": null,
+  "billed_tokens": null,
+  "core_characters": 45966,
+  "rules_characters": 6843,
+  "rule_count": 15,
+  "files": [
+    {
+      "path": ".cursor/AGENTS.md",
+      "sha256": "f2dfd5d471eb3aa2a3dd71f242d60d93da8c8f5f488a60526c4fdbd3511e08a0",
+      "bytes": 11777,
+      "unicode_characters": 11733,
+      "category": "mandatory_core"
+    },
+    {
+      "path": ".cursor/USER.md",
+      "sha256": "79fd41e757ac2644fa279e082b595797c3e48bbbc6d8aaa0d2c0509e0529d5f4",
+      "bytes": 3317,
+      "unicode_characters": 3313,
+      "category": "mandatory_core"
+    },
+    {
+      "path": ".cursor/STATE.md",
+      "sha256": "b5c56081f5d6ee239becbe515c9ba6949aec6a51fe7b6630df21e568297a94a9",
+      "bytes": 4467,
+      "unicode_characters": 4463,
+      "category": "mandatory_core"
+    },
+    {
+      "path": ".cursor/INSTRUCTIONS.md",
+      "sha256": "f4815ce7364458998b9c47f8e1e5a1484713ef7e9d07d183f7e2249916823d9a",
+      "bytes": 2473,
+      "unicode_characters": 2473,
+      "category": "mandatory_core"
+    },
+    {
+      "path": ".cursor/SKILLS.md",
+      "sha256": "4efc1a9f1f66354b8f0677b33b83a089c409742d42dd477c63aaa61dc4cf891e",
+      "bytes": 4643,
+      "unicode_characters": 4631,
+      "category": "mandatory_core"
+    },
+    {
+      "path": ".cursor/TOOLS.md",
+      "sha256": "29ac2510846f8d4461ed2cd6ed064c7e80f24f9de352971454c0344ebfaba496",
+      "bytes": 15663,
+      "unicode_characters": 15651,
+      "category": "mandatory_core"
+    },
+    {
+      "path": ".cursor/memory/MEMORY.md",
+      "sha256": "e6c90fa02b31809039775c52b0de2cd4d31c4ed226978b5384182f8724713130",
+      "bytes": 3702,
+      "unicode_characters": 3702,
+      "category": "mandatory_core"
+    },
+    {
+      "path": ".cursor/instructions/ROLES.md",
+      "sha256": "e1e3d7651e0bb780eccb43a37bfd054125974e1d6f4dbbaf05b9578174babafe",
+      "bytes": 57326,
+      "unicode_characters": 57290,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/scripts/validate-agent-config.mjs",
+      "sha256": "3414ef98af2b710e686d7242e00919024db38346a919a5ee227171c7548786a2",
+      "bytes": 8133,
+      "unicode_characters": 8133,
+      "category": "supporting"
+    },
+    {
+      "path": "README.md",
+      "sha256": "736404d891af5b0b6b05d03a558a12cc8d428a004b1586823d634f8c44b2e8eb",
+      "bytes": 4720,
+      "unicode_characters": 4696,
+      "category": "supporting"
+    },
+    {
+      "path": ".cursor/rules/00-read-agent-context-first.mdc",
+      "sha256": "58484cf22ac8777d8278cfc2b13fdb1d1812a7d42f05638740a88a64d0a519a7",
+      "bytes": 671,
+      "unicode_characters": 671,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/blocker-governance.mdc",
+      "sha256": "8d7aea1b8049a119e409be3443224c44d7a61af614b10150eba85f0337f9d3c3",
+      "bytes": 362,
+      "unicode_characters": 362,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/core-operating-context.mdc",
+      "sha256": "e51d379213d380778a976d0e0c7a2af38c1478e1e5704cc7bb55aa678c6da56e",
+      "bytes": 345,
+      "unicode_characters": 345,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/git-privacy-and-secrets.mdc",
+      "sha256": "96417bc70a4549fc883484cb270734de904a2ac96205668e7c3294ec92ea6fff",
+      "bytes": 723,
+      "unicode_characters": 723,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/instruction-routing.mdc",
+      "sha256": "9d0ae9657c90d8ffc8d0c28df520dd4fad56d3aa8208915542af2cc922ce0ac0",
+      "bytes": 497,
+      "unicode_characters": 497,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/karpathy-guidelines.mdc",
+      "sha256": "9cd3afd9f923725201c6fca69991360f8bfc9963374a55e486a37ea9858ef1ee",
+      "bytes": 669,
+      "unicode_characters": 669,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/memory-governance.mdc",
+      "sha256": "b24bf1a477d71535d178583354f586476e784df3d099d7169340e5876cc25191",
+      "bytes": 351,
+      "unicode_characters": 351,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/project-planning.mdc",
+      "sha256": "e5bdd71cdf9546b55cd0bdafca72375d5f6e2a2bf4b47d8139f0915c0d2b9b5b",
+      "bytes": 574,
+      "unicode_characters": 574,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/root-canonical.mdc",
+      "sha256": "3aa9726d6faa4b68316611477db9e06ec484fdae722dd6b1f85bde9e889a63e7",
+      "bytes": 502,
+      "unicode_characters": 502,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/runbook-governance.mdc",
+      "sha256": "cf4705d5d873d9c92d87ffff64b5519f866859a462c8f1f5204b150d4673c019",
+      "bytes": 306,
+      "unicode_characters": 306,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/skills-file.mdc",
+      "sha256": "0dbbf4e6c368fef411f9ec95af478807db85928484bac27e8365c42be985293d",
+      "bytes": 301,
+      "unicode_characters": 301,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/state-and-compactification.mdc",
+      "sha256": "9d0103a2b4297059a602b05a28eb3452c5f139ecbd0c86bb70666272bd72e557",
+      "bytes": 379,
+      "unicode_characters": 379,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/subagent-orchestration.mdc",
+      "sha256": "cd81c2af1b5a73e6d1246fcbc151a8f3fe65d7159c572b7f31766d573548d949",
+      "bytes": 514,
+      "unicode_characters": 514,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/tools-file.mdc",
+      "sha256": "f656c192236add1fa57124280d813e0d177e19af57adb54b07b6baffb016b85b",
+      "bytes": 296,
+      "unicode_characters": 296,
+      "category": "rule",
+      "alwaysApply_true": true
+    },
+    {
+      "path": ".cursor/rules/working-memory.mdc",
+      "sha256": "222aebf1da1f377701c6441bb69cbfd1308be3da0c01f3105ff1fab55e8e7665",
+      "bytes": 353,
+      "unicode_characters": 353,
+      "category": "rule",
+      "alwaysApply_true": true
+    }
+  ],
+  "limitations": [
+    "Source content is observed; effective client loading is unmeasured.",
+    "Character counts are not tokenizer or billing measurements.",
+    "No instruction body, task state content or credential value is reproduced."
+  ]
+}
