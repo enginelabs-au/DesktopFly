@@ -4,6 +4,7 @@ import {
   AuthoredAnimationController,
   PresentationClock,
   clampCursorYieldSpeed,
+  createPetMotionController,
   detectSurfaceContact,
   findFlyPose,
   scaleForDepth,
@@ -68,5 +69,28 @@ test("LIF presentation wanders in open space", () => {
   assert.ok(Math.abs(ctrl.pose.x - startX) > 8, "expected visible wander on x");
   assert.ok(ctrl.pose.speedPointsS > 0);
   assert.equal(ctrl.pose.locomotion, "flight");
+});
+
+test("cursor yield is applied to connectome-driven presentation", async () => {
+  let ms = 0;
+  const motion = createPetMotionController({
+    controllerKind: "lif",
+    now: () => ms,
+    bounds: { x: 0, y: 0, width: 1000, height: 800 },
+    connectomeDriver: {
+      async step() {
+        return {
+          motor: { dx: 0, dy: 0 },
+          transition_source: "connectome",
+        };
+      },
+    },
+  });
+  motion.setCursor({ x: 490, y: 400 }, { moving: true });
+  await motion.step();
+  ms = 50;
+  const pose = await motion.step();
+  assert.ok(pose.speedPointsS > 0);
+  assert.equal(pose.transitionSource, "geometry");
 });
 

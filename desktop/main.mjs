@@ -271,6 +271,9 @@ export function createDesktopSession({
       motion.setBounds(presentationBounds);
       return presentationBounds;
     },
+    setCursorPoint(point, options) {
+      motion.setCursor(point, options);
+    },
     async tickPresentation() {
       const leaseStatus = lease.tick();
       if (paused || leaseStatus.paused) {
@@ -395,6 +398,21 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   let healthWin = null;
   /** @type {import('electron').BrowserWindow | null} */
   let settingsWin = null;
+  let lastCursorPoint = null;
+  let cursorPollTimer = null;
+
+  function pollCursorPoint() {
+    try {
+      const point = screen.getCursorScreenPoint();
+      const moving =
+        lastCursorPoint == null ||
+        Math.hypot(point.x - lastCursorPoint.x, point.y - lastCursorPoint.y) >= 1;
+      session.setCursorPoint(point, { moving });
+      lastCursorPoint = point;
+    } catch {
+      session.setCursorPoint(null, { moving: false });
+    }
+  }
 
   function refreshPresentationBounds() {
     const primary = screen.getPrimaryDisplay();
@@ -509,6 +527,8 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
     app.dock.show();
   }
   refreshPresentationBounds();
+  pollCursorPoint();
+  cursorPollTimer = setInterval(pollCursorPoint, 50);
   screen.on("display-metrics-changed", () => {
     refreshPresentationBounds();
     if (desktopPetWindow && !desktopPetWindow.isDestroyed()) {
@@ -590,7 +610,10 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
     });
   }, tickMs);
 
-  app.on("before-quit", () => clearInterval(timer));
+  app.on("before-quit", () => {
+    clearInterval(timer);
+    clearInterval(cursorPollTimer);
+  });
 
   app.on("activate", () => {
     if (win && !win.isDestroyed()) {

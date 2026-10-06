@@ -137,6 +137,28 @@ test("tickPresentation moves pet from connectome motor (not neuralWander)", asyn
   assert.equal(pose.transitionSource, "connectome");
 });
 
+test("desktop cursor geometry reaches the connectome presentation boundary", async () => {
+  let t = 1_000;
+  const connectomeDriver = {
+    async step() {
+      return { motor: { dx: 0, dy: 0 }, transition_source: "connectome" };
+    },
+    status() {
+      return { motion_driver: "connectome-lif", connectome_mode: true };
+    },
+  };
+  const session = createDesktopSession({ now: () => t, connectomeDriver });
+  await session.attachConnectomeDriver(connectomeDriver);
+  session.lease.beat();
+  session.setCursorPoint({ x: 710, y: 450 }, { moving: true });
+  t += 50;
+  await session.tickPresentation();
+  t += 50;
+  await session.tickPresentation();
+  assert.equal(session.status().pose.transitionSource, "geometry");
+  assert.ok(session.status().pose.speedPointsS > 0);
+});
+
 test("connectome fault becomes a permanent stopped session", async () => {
   let shutdowns = 0;
   const connectomeDriver = {

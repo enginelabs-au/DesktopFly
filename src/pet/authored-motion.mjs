@@ -245,7 +245,12 @@ export class AuthoredAnimationController {
   }
 
   setCursor(point, { moving = false } = {}) {
-    this._cursor = point;
+    const x = Array.isArray(point) ? point[0] : point?.x;
+    const y = Array.isArray(point) ? point[1] : point?.y;
+    this._cursor =
+      Number.isFinite(Number(x)) && Number.isFinite(Number(y))
+        ? [Number(x), Number(y)]
+        : null;
     this._cursorMoving = moving;
   }
 
@@ -402,10 +407,13 @@ export class AuthoredAnimationController {
   _applyConnectomeMotor(dtS, motor, transitionSource = "connectome") {
     const dx = Number(motor?.dx) || 0;
     const dy = Number(motor?.dy) || 0;
-    const speed = Math.hypot(dx, dy);
+    const yieldVel = this._cursorYieldVelocity();
+    const vx = dx + yieldVel.vx;
+    const vy = dy + yieldVel.vy;
+    const speed = Math.hypot(vx, vy);
     let heading = this.pose.headingRad;
     if (speed > 1e-3) {
-      heading = Math.atan2(dy, dx);
+      heading = Math.atan2(vy, vx);
     }
     const locomotion = speed > 2 ? "flight" : speed > 0.2 ? "crawl" : "idle";
     this.pose = integratePose(this.pose, {
@@ -415,7 +423,7 @@ export class AuthoredAnimationController {
       bounds: this.bounds,
       locomotion,
       depth01: this.pose.depth01,
-      transitionSource,
+      transitionSource: yieldVel.vx || yieldVel.vy ? "geometry" : transitionSource,
     });
     this.pose.surfaceContact = detectSurfaceContact({
       pose: this.pose,
@@ -435,12 +443,13 @@ export class AuthoredAnimationController {
     const dy = this.pose.y - cy;
     const dist = Math.hypot(dx, dy);
     if (dist > cfg.cursorYieldRadiusPoints || dist === 0) return { vx: 0, vy: 0 };
-    if (now < this._yieldCooldownUntilS) return { vx: 0, vy: 0 };
-    if (now > this._yieldUntilS) {
+    if (now >= this._yieldUntilS && now < this._yieldCooldownUntilS) {
+      return { vx: 0, vy: 0 };
+    }
+    if (now >= this._yieldUntilS) {
       this._yieldUntilS = now + cfg.cursorYieldDurationS;
       this._yieldCooldownUntilS = this._yieldUntilS + cfg.cursorYieldCooldownS;
     }
-    if (now > this._yieldUntilS) return { vx: 0, vy: 0 };
     const nx = dx / dist;
     const ny = dy / dist;
     const tx = -ny;
@@ -510,6 +519,9 @@ export function createPetMotionController({
     setMode(nextMode) {
       motion.setMode(nextMode);
       if (nextMode === "explore_and_hide") motion.beginHideFlight();
+    },
+    setCursor(point, options) {
+      motion.setCursor(point, options);
     },
     syncFocusSnapshot(focusSnap) {
       const host = focusSnap?.host;
