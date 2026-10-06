@@ -21,6 +21,7 @@ id_ecdsa
 id_dsa
 node_modules/
 .venv/
+backend/.venv/
 .cache/
 __pycache__/
 *.pyc
@@ -34,3 +35,12 @@ coverage/
 .vercel/
 .turbo/
 *.log
+data/raw/*
+!data/raw/.gitkeep
+data/derived/*
+!data/derived/.gitkeep
+*.feather
+*.safetensors
+
+native/DesktopContext/.build/
+desktop/node_modules/

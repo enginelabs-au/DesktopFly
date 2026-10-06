@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "allowlist": [],
+  "neural_output_may_invoke_connectors": false,
+  "screen_capture_enabled": false
+}

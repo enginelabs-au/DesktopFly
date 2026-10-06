@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "transport": "loopback-framed-json",
+  "bind": "127.0.0.1",
+  "auth": "per-launch-token",
+  "messages": {
+    "hello": {
+      "fields": ["version", "token", "helperBuild"]
+    },
+    "focus_snapshot": {
+      "fields": ["focusEpoch", "hostId", "rect", "displayId", "preciseFocusAvailable"]
+    },
+    "scene_snapshot": {
+      "fields": ["sceneRevision", "windows", "truncated"]
+    },
+    "permission_status": {
+      "fields": ["accessibility", "screenCapture"]
+    },
+    "error": {
+      "fields": ["code", "message"]
+    }
+  },
+  "prohibited_fields": ["title", "url", "text", "credentials", "nativeHandle"]
+}

@@ -1,0 +1,6 @@
+{
+  "neural_output_may_invoke_connectors": false,
+  "connectors_enabled": [],
+  "broker": "desktop/capabilities/broker.mjs",
+  "manifests": "desktop/connectors/manifests.mjs"
+}

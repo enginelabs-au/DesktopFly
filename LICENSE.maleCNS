@@ -1,0 +1,25 @@
+Male CNS Connectome dataset — license notice
+SPDX-License-Identifier: CC-BY-4.0
+
+The Male CNS connectome data used by DesktopFly (default pin: male-cns:v1.0) is
+licensed under the Creative Commons Attribution 4.0 International License
+(CC BY 4.0).
+
+- License deed: https://creativecommons.org/licenses/by/4.0/
+- Legal code: https://creativecommons.org/licenses/by/4.0/legalcode
+- Official download page (license statement): https://male-cns.janelia.org/download/
+
+DesktopFly does not redistribute the feather files in this repository. When you
+download them with scripts/download_malecns.py, you receive data under CC BY 4.0
+and must comply with that license for any redistribution or public use of the
+dataset or derivatives that incorporate it.
+
+Pinned file list, URLs, checksums, and retrieval dates: provenance/malecns-v1.0.json
+
+Suggested attribution (adapt to your use; verify against the CC BY 4.0 requirements):
+
+  Male CNS Connectome v1.0, Howard Hughes Medical Institute / Janelia Research Campus.
+  https://male-cns.janelia.org/
+
+DesktopFly's simulation and UI code are separate from the dataset; this notice
+covers connectome tables and annotations obtained from the Male CNS project only.

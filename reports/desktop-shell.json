@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "phase": 3,
+  "controller": "lif",
+  "real_graph_enabled": true,
+  "neural_worker": "running",
+  "host_lease": {
+    "paused": false,
+    "reason": null,
+    "lastBeatMs": 1789563305133,
+    "staleAfterMs": 250
+  },
+  "find_fly": {
+    "x": 520,
+    "y": 172,
+    "headingRad": 0,
+    "speedPointsS": 0,
+    "depth01": 0,
+    "locomotion": "idle",
+    "visible": true,
+    "hostSurfaceId": "host-window",
+    "transitionSource": "operator"
+  },
+  "electron_modules": [
+    "desktop/main.mjs",
+    "desktop/preload.cjs",
+    "desktop/pet-window.mjs",
+    "desktop/host-lease.mjs",
+    "desktop/menus.mjs",
+    "desktop/focus.mjs"
+  ],
+  "swift_scaffold": [
+    "native/DesktopContext/Package.swift",
+    "native/DesktopContext/Sources/DesktopContext/DesktopContextMain.swift"
+  ],
+  "technical_blockers": {
+    "male_cns_weights_present": false,
+    "male_cns_weights_path": "data/raw/connectome-weights-male-cns-v1.0-minconf-0.5.feather",
+    "electron_gui_launch": "optionalDependency; not required for Linux unit tests",
+    "appkit_compile": "macOS-only; Swift sources scaffolded"
+  },
+  "notes": "Cam enabled neural sim. LIF policy flag is true. MaleCNS feather not downloaded — use synthetic graph for CI LIF. Electron GUI not launched on Linux."
+}

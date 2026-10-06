@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "name": "fly-connectome-template",
+  "url": "https://github.com/cobanov/fly-connectome-template",
+  "git_sha": "38f55332055328d38c29e72474c4ad5b6876101f",
+  "pinned_at": "2026-09-16",
+  "vendored": false,
+  "license": "LicenseRef-Cobanov-Template-Attribution-1.0",
+  "license_file": "LICENSE.fly-connectome-template",
+  "license_url": "https://github.com/cobanov/fly-connectome-template/blob/main/LICENSE",
+  "dataset_default": "male-cns:v1.0"
+}
