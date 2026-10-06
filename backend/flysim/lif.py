@@ -68,6 +68,21 @@ class LIFPolicy:
             raise ValueError("Invalid voltage bounds")
 
 
+def lif_policy_from_dict(policy: dict[str, Any]) -> LIFPolicy:
+    """Build the frozen kernel policy from the validated runtime document."""
+    defaults = LIFPolicy()
+    return LIFPolicy(
+        dt=float(policy.get("neural_dt_s", defaults.dt)),
+        tau_m=float(policy.get("tau_m_s", defaults.tau_m)),
+        rate_tau=float(policy.get("rate_ema_tau_s", defaults.rate_tau)),
+        max_hz=float(policy.get("max_spike_rate_hz", defaults.max_hz)),
+        external_max=float(policy.get("external_input_max", defaults.external_max)),
+        v_min=float(policy.get("voltage_min", defaults.v_min)),
+        v_max=float(policy.get("voltage_max", defaults.v_max)),
+        threshold=float(policy.get("voltage_threshold", defaults.threshold)),
+    )
+
+
 @dataclass(frozen=True)
 class NeuralState:
     v: np.ndarray
@@ -176,7 +191,7 @@ def start_lif_worker(
             "LIF worker technical blocker: no StaticGraph provided "
             "(MaleCNS weights not loaded; pass synthetic fixture for CI)"
         )
-    lif = FrozenLIF(graph)
+    lif = FrozenLIF(graph, policy=lif_policy_from_dict(policy))
     return LifWorkerHandle(
         policy=policy,
         lif=lif,

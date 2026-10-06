@@ -47,3 +47,4 @@
 - Timing report: `reports/connectome-timing.json`; 40 blocks passed with max 0.000333 s against the 0.004 s budget.
 - Validation: backend 56 passed; Node 22 passed; foundations and launch validation passed; policy tests 19 passed; Electron 5-second smoke launch exited 0.
 - Added `scripts/run-full-sim.sh` / `scripts/run_full_connectome.py` for bounded full-connectome diagnostics without changing the safe desktop policy. Verified full MaleCNS: 211,577 neurons, 25,074,842 synapses, 86.77 s load, 178.97 ms first block, and a 4 ms budget miss.
+- Added policy-derived LIF timing and an MPS sparse-matvec operator. Full-graph steady-state timing improved to 43–46 ms per 5 ms block, still far above the 4 ms deadline; no guard was relaxed and the desktop default remains the reviewed subset.

@@ -53,6 +53,7 @@
 - Dataset setup: `scripts/download_malecns.py`, `scripts/download_flywire.py`, `scripts/build_malecns_subset.py`, and `provenance/flywire-v783.json`.
 - Default runtime: reviewed MaleCNS subset, 256 neurons / 2,021 edges; timing evidence is `reports/connectome-timing.json`. Full MaleCNS remains an offline graph until optimized and biologically validated.
 - Full-connectome launcher: `scripts/run-full-sim.sh`; verified 211,577 neurons / 25,074,842 synapses, 86.77 s load, 178.97 ms first block, and 4 ms budget miss. It is diagnostic-only.
+- Full MPS sparse-matvec optimization was measured: steady-state blocks improved to about 43–46 ms, but still miss the 4 ms budget. Full real-time execution remains unachieved; the desktop app stays on the reviewed subset.
 - All former project branches are merged or superseded and have been removed from the remote.
 
 ## Open Blockers

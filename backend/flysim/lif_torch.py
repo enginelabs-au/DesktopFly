@@ -10,7 +10,13 @@ import numpy as np
 
 from flysim.device import select_device
 from flysim.ingest import StaticGraph
-from flysim.lif import LIFPolicy, LifStartRefused, NeuralState, assert_lif_may_start
+from flysim.lif import (
+    LIFPolicy,
+    LifStartRefused,
+    NeuralState,
+    assert_lif_may_start,
+    lif_policy_from_dict,
+)
 
 
 @dataclass(frozen=True)
@@ -52,6 +58,28 @@ class TorchLIF:
         self._dst = torch.tensor(graph.dst, dtype=torch.long, device=self.device)
         self._w = torch.tensor(graph.weights, dtype=torch.float32, device=self.device)
         self._allowed = torch.tensor(graph.allowed, dtype=torch.bool, device=self.device)
+        self._allowed_host = np.asarray(graph.allowed, dtype=np.bool_)
+        self.operator = "edge-index"
+        self._sparse_matrix = None
+        if self.device.type == "mps" and len(graph.src) >= 1_000_000:
+            try:
+                indices = torch.from_numpy(
+                    np.vstack((graph.dst, graph.src)).astype(np.int64, copy=False)
+                ).to(self.device)
+                values = torch.from_numpy(
+                    np.array(graph.weights, dtype=np.float32, copy=True)
+                ).to(self.device)
+                self._sparse_matrix = torch.sparse_coo_tensor(
+                    indices,
+                    values,
+                    (self.n, self.n),
+                    device=self.device,
+                ).coalesce()
+                self.operator = "sparse-matvec"
+            except Exception as exc:  # noqa: BLE001
+                raise RuntimeError(
+                    f"MPS sparse connectome operator unavailable: {exc}"
+                ) from exc
         self._alpha = math.exp(-self.p.dt / self.p.tau_m)
         self._beta = math.exp(-self.p.dt / self.p.rate_tau)
         self._isi = int(math.ceil(1 / (self.p.max_hz * self.p.dt)))
@@ -75,19 +103,23 @@ class TorchLIF:
 
         if external.shape != (self.n,):
             raise ValueError("Invalid input shape")
-        ext = torch.tensor(external, dtype=torch.float32, device=self.device)
-        if not torch.isfinite(ext).all():
+        if not np.isfinite(external).all():
             raise ValueError("Non-finite input")
-        if torch.any(ext < 0) or torch.any(ext > self.p.external_max):
+        if np.any(external < 0) or np.any(external > self.p.external_max):
             raise ValueError("Input out of range")
-        blocked_input = torch.any((~self._allowed) & (ext != 0))
-        if bool(blocked_input.item()):
+        if np.any((~self._allowed_host) & (external != 0)):
             raise ValueError("Blocked neuron received input")
 
+        ext = torch.tensor(external, dtype=torch.float32, device=self.device)
         safe_input = torch.where(self._allowed, ext, 0.0)
         prior_spikes = torch.where(self._allowed, old.spikes, 0.0)
-        synaptic = torch.zeros_like(old.v)
-        if len(self._src):
+        if self._sparse_matrix is not None:
+            synaptic = torch.sparse.mm(
+                self._sparse_matrix, prior_spikes.unsqueeze(1)
+            ).squeeze(1)
+        else:
+            synaptic = torch.zeros_like(old.v)
+        if self._sparse_matrix is None and len(self._src):
             synaptic.index_add_(0, self._dst, self._w * prior_spikes.index_select(0, self._src))
         u = self._alpha * old.v + (1.0 - self._alpha) * safe_input + synaptic
         u = torch.clamp(u, self.p.v_min, self.p.v_max)
@@ -102,10 +134,11 @@ class TorchLIF:
         )
         rate_ema = self._beta * old.rate_ema + (1.0 - self._beta) * (spikes / self.p.dt)
         rate_ema = torch.where(self._allowed, rate_ema, 0.0)
-        if self.device.type == "mps":
-            torch.mps.synchronize()
         diag = {
-            "spike_count": int(spikes.sum().item()),
+            # The presentation layer counts spikes after its single state
+            # transfer per physics block. Avoid synchronizing MPS five times
+            # for one published block.
+            "spike_count": 0,
             "live_controller": True,
             "backend": f"torch-{self.device.type}",
         }
@@ -146,6 +179,7 @@ def start_torch_lif_worker(
     try:
         lif = TorchLIF(
             graph,
+            policy=lif_policy_from_dict(policy),
             device_name=device,
             allow_cpu_fallback=allow,
         )

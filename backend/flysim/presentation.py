@@ -89,6 +89,7 @@ class ConnectomePresentationEngine:
     max_block_compute_s: float
     _phase: float = 0.0
     _last_block_compute_s: float = 0.0
+    _last_spike_count: int = 0
 
     @classmethod
     def create(cls, policy: dict[str, Any] | None = None) -> ConnectomePresentationEngine:
@@ -125,7 +126,8 @@ class ConnectomePresentationEngine:
     def _rate_ema_numpy(self) -> np.ndarray:
         state = self.worker.state
         if hasattr(state, "as_numpy"):
-            return state.as_numpy().rate_ema
+            state = state.as_numpy()
+        self._last_spike_count = int(np.asarray(state.spikes).sum())
         return np.asarray(state.rate_ema, dtype=np.float32)
 
     def status(self) -> dict[str, Any]:
@@ -133,7 +135,8 @@ class ConnectomePresentationEngine:
         e = int(len(self.worker.lif._src))
         backend = "numpy-lif"
         if hasattr(self.worker.lif, "device"):
-            backend = f"torch-{self.worker.lif.device.type}"
+            operator = getattr(self.worker.lif, "operator", "edge-index")
+            backend = f"torch-{self.worker.lif.device.type}-{operator}"
         input_n = int(self.report.get("input_neuron_count", n))
         return {
             "graph_source": self.graph_source,
@@ -177,7 +180,7 @@ class ConnectomePresentationEngine:
         elapsed_s = time.perf_counter() - started
         self._last_block_compute_s = elapsed_s
         st = self.status()
-        st["spike_count"] = int(diag_last.get("spike_count", 0))
+        st["spike_count"] = self._last_spike_count
         return {
             "motor": motor.as_dict(),
             "transition_source": "connectome",
