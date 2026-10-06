@@ -80,7 +80,7 @@ function drawLeg(idx, side, nowMs) {
 
 function drawWings() {
   const level = state.flight;
-  const flutter = level * 0.2 * Math.sin(state.wingPhase);
+  const flutter = (0.05 + level * 0.55) * Math.sin(state.wingPhase);
   ctx.fillStyle = `rgba(174, 216, 231, ${lerp(0.3, 0.34, level)})`;
   ctx.strokeStyle = "rgba(112, 161, 180, 0.6)";
   ctx.lineWidth = 1;
@@ -152,13 +152,13 @@ function draw(nowMs) {
   const pose = state.frame?.pose;
   if (pose && pose.visible === false) return;
   const depth = pose?.depth01 || 0;
-  const s = (1 - 0.35 * depth) * 1.1;
+  const airborne = state.flight;
+  const s = (1 - 0.55 * Math.max(depth, airborne * 0.8)) * 1.1;
   const speedNorm = Math.min(1, state.speed / 90);
-  // Slight yaw sway and bob with each stride.
-  const sway = state.speed > 2 ? 0.05 * speedNorm * Math.sin(state.gaitPhase * 2) : 0;
+  const sway = state.speed > 2 && airborne < 0.4 ? 0.05 * speedNorm * Math.sin(state.gaitPhase * 2) : 0;
 
   ctx.save();
-  ctx.translate(w / 2, h / 2);
+  ctx.translate(w / 2, h / 2 - airborne * 36);
   ctx.rotate(state.heading + sway);
   ctx.scale(s, s);
 
@@ -181,25 +181,25 @@ function step(nowMs) {
   if (pose) {
     // Smooth heading toward the latest pose (fast turns allowed, no snapping).
     const err = angDiff(pose.headingRad || 0, state.heading);
-    const maxStep = 22 * dt;
+    const maxStep = (22 + state.flight * 120) * dt;
     state.heading += Math.max(-maxStep, Math.min(maxStep, err));
     // Smooth speed so legs speed up and slow down instead of jumping.
     const target = pose.speedPointsS || 0;
     state.speed += (target - state.speed) * Math.min(1, dt * 14);
-    state.flight += ((pose.locomotion === "flight" ? 1 : 0) - state.flight) * Math.min(1, dt * 12);
+    const wing = Number.isFinite(Number(pose.takeoff)) ? Number(pose.takeoff) : 0;
+    state.flight += (wing - state.flight) * Math.min(1, dt * 12);
+    if (pose.groom > 0.5 && nowMs >= state.groomUntilMs) {
+      state.groomStartMs = nowMs;
+      state.groomUntilMs = nowMs + 1400;
+    }
   }
   if (state.speed > 2) {
     const gaitHz = 3 + state.speed / 12;
     state.gaitPhase = (state.gaitPhase + TAU * gaitHz * dt) % (TAU * 100);
     state.idleSinceMs = nowMs;
     state.groomUntilMs = 0;
-  } else if (nowMs > state.nextGroomMs && nowMs - state.idleSinceMs > 1500) {
-    // Cosmetic idle grooming after standing still for a while.
-    state.groomStartMs = nowMs;
-    state.groomUntilMs = nowMs + 1200 + Math.random() * 800;
-    state.nextGroomMs = state.groomUntilMs + 3000 + Math.random() * 5000;
   }
-  state.wingPhase = (state.wingPhase + TAU * 38 * dt * (0.15 + 0.85 * state.flight)) % TAU;
+  state.wingPhase = (state.wingPhase + TAU * (6 + 42 * state.flight) * dt) % TAU;
   draw(nowMs);
   requestAnimationFrame(step);
 }

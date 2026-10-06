@@ -143,6 +143,7 @@ export class ScreenFeatureCapture {
     this.lastSampleAtMs = 0;
     this.lastBrightness = null;
     this.latest = null;
+    this.luma = null;
     this.reason = this.enabled ? "user_opt_in_pending" : "disabled_by_default";
   }
 
@@ -178,9 +179,17 @@ export class ScreenFeatureCapture {
     return this.status();
   }
 
+  latestLumaIfFresh() {
+    if (!this.luma) return null;
+    const ageS = this.now() / 1000 - this.luma.capturedAtS;
+    if (!Number.isFinite(ageS) || ageS < -0.05 || ageS > this.staleAfterMs / 1000) return null;
+    return this.luma;
+  }
+
   disable() {
     this.enabled = false;
     this.latest = null;
+    this.luma = null;
     this.lastBrightness = null;
     this.reason = "disabled_by_user";
     return this.status();
@@ -212,8 +221,9 @@ export class ScreenFeatureCapture {
       return null;
     }
     const size = image.getSize();
+    const bitmap = image.toBitmap();
     const features = extractCoarseScreenFeatures({
-      bitmap: image.toBitmap(),
+      bitmap,
       width: size.width,
       height: size.height,
       capturedAtS: nowMs / 1000,
@@ -221,6 +231,19 @@ export class ScreenFeatureCapture {
     });
     this.lastBrightness = features.brightness;
     this.latest = features;
+    const samples = new Array(size.width * size.height);
+    for (let p = 0, offset = 0; p < samples.length; p += 1, offset += 4) {
+      const blue = bitmap[offset] / 255;
+      const green = bitmap[offset + 1] / 255;
+      const red = bitmap[offset + 2] / 255;
+      samples[p] = 0.114 * blue + 0.587 * green + 0.299 * red;
+    }
+    this.luma = {
+      width: size.width,
+      height: size.height,
+      samples,
+      capturedAtS: features.capturedAtS,
+    };
     this.permission = "granted";
     this.reason = "active_coarse_features";
     return features;

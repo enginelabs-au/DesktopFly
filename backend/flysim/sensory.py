@@ -13,6 +13,9 @@ class SensoryMap:
     feature_names: tuple[str, ...]
     neuron_ids: tuple[str, ...]
     gains: np.ndarray  # shape (n_features, n_neurons)
+    feat_index: np.ndarray = None  # type: ignore[assignment]
+    neuron_index: np.ndarray = None  # type: ignore[assignment]
+    nonzero_gains: np.ndarray = None  # type: ignore[assignment]
 
 
 def build_sensory_map(
@@ -43,7 +46,16 @@ def build_sensory_map(
             raise ValueError("non-finite sensory gain")
         gains[f_i, index[nid]] = gain
     gains.setflags(write=False)
-    return SensoryMap(tuple(features), tuple(neuron_ids), gains)
+    nonzero = np.flatnonzero(gains)
+    feat_i, neuron_i = np.unravel_index(nonzero, gains.shape)
+    return SensoryMap(
+        tuple(features),
+        tuple(neuron_ids),
+        gains,
+        feat_index=feat_i.astype(np.int32),
+        neuron_index=neuron_i.astype(np.int32),
+        nonzero_gains=gains.ravel()[nonzero].astype(np.float32),
+    )
 
 
 class FixedSensoryEncoder:
@@ -68,5 +80,16 @@ class FixedSensoryEncoder:
                     vec[i] = value
         if not np.isfinite(vec).all():
             raise ValueError("non-finite features")
-        current = self.map.gains.T @ vec
+        current = np.zeros(len(self.map.neuron_ids), dtype=np.float32)
+        idx = self.map.feat_index
+        if idx is not None and len(idx):
+            active = vec[idx] != 0
+            if np.any(active):
+                np.add.at(
+                    current,
+                    self.map.neuron_index[active],
+                    self.map.nonzero_gains[active] * vec[idx[active]],
+                )
+        else:
+            current = self.map.gains.T @ vec
         return np.clip(current, 0.0, self.external_max).astype(np.float32)

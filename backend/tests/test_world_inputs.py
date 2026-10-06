@@ -1,4 +1,4 @@
-"""Looming-escape circuit and fixed intrinsic activity (owner decisions 2026-10-06)."""
+"""Live MaleCNS slice: retina, agreed signs, motor-neuron readout."""
 
 from __future__ import annotations
 
@@ -13,10 +13,10 @@ from flysim.config import Policy, load_policy_dict
 from flysim.presentation import ConnectomePresentationEngine
 
 DERIVED = Path(__file__).resolve().parents[2] / "data" / "derived"
-META = DERIVED / "malecns-escape-meta.json"
+META = DERIVED / "malecns-live-meta.json"
 
 pytestmark = pytest.mark.skipif(
-    not META.is_file(), reason="run scripts/build_malecns_escape_subset.py first"
+    not META.is_file(), reason="run scripts/build_malecns_live_subset.py first"
 )
 
 
@@ -24,11 +24,11 @@ def _meta() -> dict:
     return json.loads(META.read_text(encoding="utf-8"))
 
 
-def test_committed_policy_selects_the_escape_subset_on_numpy():
+def test_committed_policy_selects_the_live_subset_on_numpy():
     policy = load_policy_dict()
-    assert policy["reviewed_subset_name"] == "escape"
+    assert policy["reviewed_subset_name"] == "live"
     assert policy["resting_drive"] == 0.0
-    assert policy["intrinsic_noise_amplitude"] == 1.6
+    assert policy["intrinsic_noise_amplitude"] == 0.0
     assert policy["torch_lif_min_neurons"] >= 5000  # measured: numpy is faster at this size
     status = ConnectomePresentationEngine.create(policy).status()
     assert status["lif_backend"] == "numpy-lif"
@@ -55,17 +55,14 @@ def test_seed_circuit_is_cholinergic_looming_detectors_and_two_giant_fibers():
         if t in ("LC4", "LPLC2", "DNp01"):
             assert sign[n] == 1, f"{t} is cholinergic (excitatory)"
     sensory = meta["sensory_map"]
-    assert {r["feature_name"] for r in sensory} == {"loom_left", "loom_right"}
-    assert all(r["mapping_kind"] == "anatomical" for r in sensory)
-    assert all(types[r["neuron_id"]] in ("LC4", "LPLC2") for r in sensory)
-    assert len({r["neuron_id"] for r in sensory}) == len(sensory), "each neuron has one eye"
+    assert sensory and all(r["feature_name"].startswith("hex_") for r in sensory)
+    assert all(r["mapping_kind"] == "engineered" for r in sensory)
     motor = meta["motor_map"]
-    takeoff = [r for r in motor if r["output_channel"] == "takeoff"]
+    takeoff = [r for r in motor if r["output_channel"] == "takeoff" and r["mapping_kind"] == "anatomical"]
     assert {r["neuron_id"] for r in takeoff} == set(gf)
-    assert all(r["mapping_kind"] == "anatomical" for r in takeoff)
-    engineered = [r for r in motor if r["output_channel"] in ("left", "right")]
-    assert engineered and all(r["mapping_kind"] == "engineered" for r in engineered)
-    assert all("not an anatomical claim" in r["evidence"] for r in engineered)
+    leg = [r for r in motor if r["output_channel"] in ("left", "right")]
+    assert leg and all("not an anatomical muscle map" in r["evidence"] for r in leg)
+    assert all(r["neuron_id"] not in set(gf) for r in leg)
 
 
 def test_policy_rejects_out_of_range_or_bool_settings():
@@ -98,31 +95,20 @@ def test_same_seed_repeats_exactly():
     assert np.array_equal(a[1], b[1])
 
 
-def test_giant_fiber_never_fires_from_intrinsic_noise_alone():
-    quiet_before, quiet_during = _run({}, pre=800, on=800)
+def test_without_input_the_network_stays_still():
+    quiet_before, quiet_during = _run({}, pre=200, on=200)
     assert quiet_before[:, 2].max() == 0.0 and quiet_during[:, 2].max() == 0.0
-    assert quiet_before[:, 0].mean() > 5, "wanders spontaneously from its own activity"
+    assert quiet_before[:, 0].max() == 0.0
 
 
-def test_a_looming_eye_drives_a_graded_escape_with_takeoff_and_a_turn_away():
-    base_before, _ = _run({})
-    _, weak = _run({"loom_left": 0.4})
-    _, mid = _run({"loom_left": 0.6})
-    _, left = _run({"loom_left": 0.9})
-    _, right = _run({"loom_right": 0.9})
-    assert weak[:, 2].max() == 0.0 and weak[:, 0].mean() < 60, "below threshold: no escape"
-    assert mid[:, 2].mean() < left[:, 2].mean(), "response grows with stimulus strength"
-    for resp in (left, right):
-        assert resp[:, 2].mean() > 0.3, "giant-fiber takeoff readout"
-        assert resp[:, 0].mean() > 3 * base_before[:, 0].mean(), "fast departure"
-        assert resp[:, 0].max() <= 120.0 and abs(resp[:, 1]).max() <= 3.0
-    # Contralateral steering convention: looming on the left turns the body right.
-    assert left[:, 1].mean() > 0.5
-    assert right[:, 1].mean() < -0.5
+def _eye(prefix: str) -> dict:
+    meta = _meta()
+    return {r["feature_name"]: 1.0 for r in meta["sensory_map"] if r["feature_name"].startswith(prefix)}
 
 
-def test_looming_on_both_eyes_runs_straight_and_faster_than_one_eye():
-    _, one = _run({"loom_left": 0.8})
-    _, both = _run({"loom_left": 0.8, "loom_right": 0.8})
-    assert both[:, 2].mean() > one[:, 2].mean()
-    assert abs(both[:, 1].mean()) < abs(one[:, 1].mean())
+def test_one_eye_changes_the_motor_readout_and_stays_inside_the_caps():
+    _, quiet = _run({}, pre=5, on=20)
+    _, right = _run(_eye("hex_R_"), pre=10, on=40)
+    assert quiet[:, 0].max() == 0.0
+    assert right[:, 0].max() > 0.0 or right[:, 2].max() > 0.0
+    assert right[:, 0].max() <= 120.0 and abs(right[:, 1]).max() <= 3.0

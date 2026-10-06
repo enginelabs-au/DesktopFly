@@ -69,11 +69,25 @@ follows the published literature; this project does not claim to have discovered
 Model assumptions made by this project (not findings): neurotransmitter signs follow the
 MaleCNS `consensus_nt` label (acetylcholine +1, GABA -1, glutamate -1; unclear or
 modulatory neurons are excluded); the left/right/forward readout over descending neurons
-and its contralateral steering convention are engineered; the cursor is treated as a
+uses soma side as the same screen side and is not flipped to force a turn away; the cursor is treated as a
 fixed-size object whose visual angle and expansion rate are fed equally to every looming
 detector on that eye (the data has no per-neuron field position); the constant intrinsic
 noise (`config/policy.json`) is applied to central neurons only. None of this is a claim
 about subjective experience.
+
+## Whole-brain tables and the compiled kernel
+
+`scripts/build_malecns_fullbrain.py` keeps every MaleCNS neuron whose `consensus_nt`
+label gives an agreed sign and drives lamina L1/L2/L3 cells by ommatidium column
+(`assignedOlHex1/2`) as a light decrement; the lamina mapping, the gain, and the VNC
+motor readout are engineered by this project, not findings. The compiled kernel
+(`backend/flysim/lif_fused.py`) uses Numba (BSD-2-Clause) and reproduces the reference
+numpy LIF step exactly. The per-synapse weight experiment recorded in
+`reports/full-brain-spike-timing.json` borrows the weight-to-threshold ratio of the
+published whole-brain leaky integrate-and-fire model (Shiu et al. 2024, "A Drosophila
+computational brain model reveals sensorimotor processing", Nature); the ratio was taken
+from memory and should be checked against the paper before it is quoted. That experiment
+is not shipped: it is a measurement.
 
 ## Combined index
 

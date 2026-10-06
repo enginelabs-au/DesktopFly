@@ -51,9 +51,8 @@ EVIDENCE_LOOM = (
 )
 EVIDENCE_GF = "DNp01 giant fiber takeoff command (von Reyn 2017; Ache 2019)"
 EVIDENCE_DN = (
-    "engineered descending-neuron readout by somaSide (contralateral steering convention, "
-    "chosen so that looming on one eye turns the body away, cf. Card & Dickinson 2008); "
-    "not an anatomical claim"
+    "descending-neuron readout uses somaSide as the same screen side; "
+    "not flipped to force avoidance; not an anatomical muscle map"
 )
 
 
@@ -257,8 +256,6 @@ def _motor_rows(gf_ids, dn_ids, annotations) -> list[dict]:
         nid = f"male-cns:{b}"
         rows.append({"neuron_id": nid, "output_channel": "takeoff", "fixed_gain": TAKEOFF_GAIN,
                      "evidence": EVIDENCE_GF, "mapping_kind": "anatomical"})
-        rows.append({"neuron_id": nid, "output_channel": "forward", "fixed_gain": FLIGHT_SPEED_GAIN,
-                     "evidence": EVIDENCE_GF, "mapping_kind": "anatomical"})
     for b in dn_ids:
         if b in gf:
             continue
@@ -266,24 +263,18 @@ def _motor_rows(gf_ids, dn_ids, annotations) -> list[dict]:
         side = annotations.get(b, {}).get("side")
         rows.append({"neuron_id": nid, "output_channel": "forward", "fixed_gain": FORWARD_GAIN,
                      "evidence": EVIDENCE_DN, "mapping_kind": "engineered"})
-        # Contralateral convention: a left-side descending neuron steers the body right.
-        steer = {"L": "right", "R": "left"}.get(side) if STEERING == "contralateral" else {
-            "L": "left", "R": "right"
-        }.get(side)
+        # Same side as the cell body. Not reversed to manufacture an escape turn.
+        steer = {"L": "left", "R": "right"}.get(side)
         if steer:
             rows.append({"neuron_id": nid, "output_channel": steer, "fixed_gain": TURN_GAIN,
                          "evidence": EVIDENCE_DN, "mapping_kind": "engineered"})
     return rows
 
 
-# Fixed readout scales (transducer units, set once from the measured activity range).
 # rate_ema is in Hz. takeoff = sum of giant-fiber rates / 40 Hz, clipped to 0..1.
 TAKEOFF_GAIN = 0.025
-# Points per second per Hz of giant-fiber rate, so takeoff is also a fast departure.
-FLIGHT_SPEED_GAIN = 3.0
 FORWARD_GAIN = 0.15
 TURN_GAIN = 0.15
-STEERING = "contralateral"
 
 
 def main() -> None:

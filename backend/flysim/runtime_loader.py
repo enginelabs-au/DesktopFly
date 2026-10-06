@@ -32,12 +32,23 @@ def _tables_from_derived_meta(meta_path: Path) -> tuple[dict[str, Any], str]:
     edge_path = derived / meta.get("edges_path", "edges.parquet")
     if not neuron_path.is_file() or not edge_path.is_file():
         raise FileNotFoundError("derived subset meta present but parquet tables missing")
+    import numpy as np
     import pyarrow.parquet as pq
 
     neurons_table = pq.read_table(neuron_path)
-    edges_table = pq.read_table(edge_path)
     neurons = neurons_table.to_pylist()
-    edges = edges_table.to_pylist()
+    edge_arrays = None
+    if edge_path.suffix == ".npz":
+        # Whole-brain edge lists are integer arrays; string rows would not load in time.
+        with np.load(edge_path) as data:
+            edge_arrays = {
+                "pre_body": np.asarray(data["pre_body"], dtype=np.int64),
+                "post_body": np.asarray(data["post_body"], dtype=np.int64),
+                "synapse_count": np.asarray(data["synapse_count"], dtype=np.int64),
+            }
+        edges = []
+    else:
+        edges = pq.read_table(edge_path).to_pylist()
     review_path = derived / meta.get("review_path", "")
     if review_path.is_file():
         review = pq.read_table(review_path).to_pylist()
@@ -57,6 +68,8 @@ def _tables_from_derived_meta(meta_path: Path) -> tuple[dict[str, Any], str]:
         "sensory_map": sensory_map,
         "motor_map": motor_map,
     }
+    if edge_arrays is not None:
+        tables["edge_arrays"] = edge_arrays
     return tables, str(meta.get("fixture_kind", "malecns-derived"))
 
 

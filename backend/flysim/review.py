@@ -199,26 +199,35 @@ def compile_reviewed_graph(tables: dict[str, Any], policy: dict[str, Any] | None
         raise ValueError("No eligible neurons; use an explicit synthetic fixture")
 
     index = {row["neuron_id"]: i for i, row in enumerate(selected)}
-    aggregated: dict[tuple[int, int], int] = {}
-    dropped_unknown = 0
-    for edge in edges:
-        pre_id, post_id = edge["pre_id"], edge["post_id"]
-        count = edge["synapse_count"]
-        if type(count) is not int or count <= 0:
-            raise ValueError("synapse_count must be a positive integer")
-        if type(pre_id) is not str or type(post_id) is not str:
-            raise ValueError("edge IDs must be strings")
-        if pre_id not in index or post_id not in index:
-            dropped_unknown += 1
-            continue
-        key = (index[pre_id], index[post_id])
-        aggregated[key] = aggregated.get(key, 0) + count
+    ids = [row["neuron_id"] for row in selected]
+    edge_arrays = tables.get("edge_arrays")
+    if edge_arrays is not None:
+        if edges:
+            raise ValueError("provide edge rows or edge arrays, not both")
+        src, dst, counts, dropped_unknown, input_edge_count = _edges_from_arrays(
+            edge_arrays, ids, expected_dataset
+        )
+    else:
+        aggregated: dict[tuple[int, int], int] = {}
+        dropped_unknown = 0
+        for edge in edges:
+            pre_id, post_id = edge["pre_id"], edge["post_id"]
+            count = edge["synapse_count"]
+            if type(count) is not int or count <= 0:
+                raise ValueError("synapse_count must be a positive integer")
+            if type(pre_id) is not str or type(post_id) is not str:
+                raise ValueError("edge IDs must be strings")
+            if pre_id not in index or post_id not in index:
+                dropped_unknown += 1
+                continue
+            key = (index[pre_id], index[post_id])
+            aggregated[key] = aggregated.get(key, 0) + count
+        src = [pair[0] for pair in aggregated]
+        dst = [pair[1] for pair in aggregated]
+        counts = [aggregated[pair] for pair in aggregated]
+        input_edge_count = len(edges)
     exclusion_counts["edges_not_in_subset"] = dropped_unknown
 
-    src = [pair[0] for pair in aggregated]
-    dst = [pair[1] for pair in aggregated]
-    counts = [aggregated[pair] for pair in aggregated]
-    ids = [row["neuron_id"] for row in selected]
     signs = [row["sign"] for row in selected]
     blocked = np.array([row["blocked"] for row in selected], dtype=np.bool_)
     graph = build_static_graph(ids, src, dst, counts, signs, blocked)
@@ -243,26 +252,33 @@ def compile_reviewed_graph(tables: dict[str, Any], policy: dict[str, Any] | None
             motor_gains[neuron_id] = 0.0 if neuron_id in blocked_ids else gain
 
     n = len(ids)
-    adjacency = [[] for _ in range(n)]
-    for source, dest in zip(graph.src.tolist(), graph.dst.tolist(), strict=True):
-        adjacency[source].append(dest)
-
-    def reachable(starts: list[int]) -> set[int]:
-        seen: set[int] = set()
-        stack = list(starts)
-        while stack:
-            node = stack.pop()
-            if node in seen:
-                continue
-            seen.add(node)
-            stack.extend(adjacency[node])
-        return seen
-
     sensory_idx = [i for i, row in enumerate(selected) if row["role"] == "sensory" and not row["blocked"]]
     readout_idx = [i for i, row in enumerate(selected) if row["role"] == "readout" and not row["blocked"]]
-    reached = reachable(sensory_idx) if sensory_idx else set()
-    orphan_readouts = [ids[i] for i in readout_idx if i not in reached]
-    components = _undirected_components(n, graph.src.tolist(), graph.dst.tolist())
+    if edge_arrays is not None:
+        reached_mask = _reachable_mask(n, graph.src, graph.dst, sensory_idx)
+        orphan_readouts = [ids[i] for i in readout_idx if not reached_mask[i]]
+        component_count = _component_count(n, graph.src, graph.dst)
+        source_hash = _hash_arrays(ids, edge_arrays)
+    else:
+        adjacency = [[] for _ in range(n)]
+        for source, dest in zip(graph.src.tolist(), graph.dst.tolist(), strict=True):
+            adjacency[source].append(dest)
+
+        def reachable(starts: list[int]) -> set[int]:
+            seen: set[int] = set()
+            stack = list(starts)
+            while stack:
+                node = stack.pop()
+                if node in seen:
+                    continue
+                seen.add(node)
+                stack.extend(adjacency[node])
+            return seen
+
+        reached = reachable(sensory_idx) if sensory_idx else set()
+        orphan_readouts = [ids[i] for i in readout_idx if i not in reached]
+        component_count = len(_undirected_components(n, graph.src.tolist(), graph.dst.tolist()))
+        source_hash = _hash_payload({"neurons": neurons, "edges": edges})
 
     incoming = np.bincount(graph.dst, weights=np.abs(graph.weights), minlength=n)
     report = {
@@ -271,7 +287,7 @@ def compile_reviewed_graph(tables: dict[str, Any], policy: dict[str, Any] | None
         "real_graph_enabled": bool(policy.get("real_graph_enabled")),
         "fixture_kind": tables.get("fixture_kind") or "reviewed",
         "input_neuron_count": len(neurons),
-        "input_edge_count": len(edges),
+        "input_edge_count": input_edge_count,
         "output_neuron_count": len(ids),
         "output_edge_count": int(len(graph.src)),
         "selected_ids": ids,
@@ -279,7 +295,7 @@ def compile_reviewed_graph(tables: dict[str, Any], policy: dict[str, Any] | None
         "unresolved_review_coverage": exclusion_counts.get("missing_review", 0)
         + exclusion_counts.get("unresolved_sign", 0),
         "blocked_nodes": blocked_ids,
-        "disconnected_component_count": len(components),
+        "disconnected_component_count": component_count,
         "orphan_readouts": orphan_readouts,
         "sensory_to_readout_reachability": bool(readout_idx) and not orphan_readouts,
         "weight_normalization": {
@@ -288,7 +304,7 @@ def compile_reviewed_graph(tables: dict[str, Any], policy: dict[str, Any] | None
             "weight_min": float(graph.weights.min()) if len(graph.weights) else 0.0,
             "weight_max": float(graph.weights.max()) if len(graph.weights) else 0.0,
         },
-        "source_hash": _hash_payload({"neurons": neurons, "edges": edges}),
+        "source_hash": source_hash,
         "review_hash": _hash_payload(reviews),
         "fixture_kind": tables.get("fixture_kind", "synthetic"),
     }
@@ -307,6 +323,94 @@ def compile_reviewed_graph(tables: dict[str, Any], policy: dict[str, Any] | None
         motor_gains=motor_gains,
         report=report,
     )
+
+
+def _edges_from_arrays(
+    edge_arrays: dict[str, Any], ids: list[str], dataset: str
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, int, int]:
+    """Integer edge lists keyed by body id. Same rules as the row path, vectorized."""
+    pre = np.asarray(edge_arrays["pre_body"], dtype=np.int64)
+    post = np.asarray(edge_arrays["post_body"], dtype=np.int64)
+    count = np.asarray(edge_arrays["synapse_count"])
+    if count.dtype.kind not in "iu" or pre.shape != post.shape or count.shape != pre.shape:
+        raise ValueError("edge arrays must be integer arrays of one length")
+    if np.any(count <= 0):
+        raise ValueError("synapse_count must be a positive integer")
+    prefix = dataset.split(":")[0] + ":"
+    bodies = np.empty(len(ids), dtype=np.int64)
+    for i, nid in enumerate(ids):
+        if not nid.startswith(prefix) or not nid[len(prefix):].isdigit():
+            raise ValueError("edge arrays need dataset-qualified numeric neuron ids")
+        bodies[i] = int(nid[len(prefix):])
+    order = np.argsort(bodies, kind="stable")
+    sorted_bodies = bodies[order]
+    if len(sorted_bodies) > 1 and np.any(np.diff(sorted_bodies) == 0):
+        raise ValueError("duplicate numeric neuron ids")
+
+    def _lookup(values: np.ndarray) -> np.ndarray:
+        pos = np.searchsorted(sorted_bodies, values)
+        pos_clipped = np.minimum(pos, len(sorted_bodies) - 1)
+        hit = sorted_bodies[pos_clipped] == values
+        out = np.where(hit, order[pos_clipped], -1)
+        return out.astype(np.int64)
+
+    src = _lookup(pre)
+    dst = _lookup(post)
+    ok = (src >= 0) & (dst >= 0)
+    dropped = int((~ok).sum())
+    src, dst, count = src[ok], dst[ok], count[ok].astype(np.int64)
+    n = len(ids)
+    key = src * np.int64(n) + dst
+    uniq, inverse = np.unique(key, return_inverse=True)
+    counts = np.bincount(inverse, weights=count).astype(np.int64)
+    return (uniq // n).astype(np.int64), (uniq % n).astype(np.int64), counts, dropped, int(len(pre))
+
+
+def _reachable_mask(n: int, src: np.ndarray, dst: np.ndarray, starts: list[int]) -> np.ndarray:
+    reached = np.zeros(n, dtype=np.bool_)
+    if not starts:
+        return reached
+    order = np.argsort(src, kind="stable")
+    csr_dst = dst[order]
+    ptr = np.concatenate([[0], np.cumsum(np.bincount(src, minlength=n))])
+    frontier = np.unique(np.asarray(starts, dtype=np.int64))
+    reached[frontier] = True
+    while frontier.size:
+        starts_e = ptr[frontier]
+        counts_e = ptr[frontier + 1] - starts_e
+        total = int(counts_e.sum())
+        if not total:
+            break
+        offsets = np.repeat(starts_e - (np.cumsum(counts_e) - counts_e), counts_e)
+        targets = csr_dst[offsets + np.arange(total)]
+        fresh = np.unique(targets[~reached[targets]])
+        reached[fresh] = True
+        frontier = fresh
+    return reached
+
+
+def _component_count(n: int, src: np.ndarray, dst: np.ndarray) -> int:
+    """Undirected components by label propagation on arrays (no per-edge Python)."""
+    labels = np.arange(n, dtype=np.int64)
+    a = np.asarray(src, dtype=np.int64)
+    b = np.asarray(dst, dtype=np.int64)
+    while True:
+        low = np.minimum(labels[a], labels[b])
+        before = labels.copy()
+        np.minimum.at(labels, a, low)
+        np.minimum.at(labels, b, low)
+        labels = labels[labels]  # pointer jumping
+        if np.array_equal(before, labels):
+            break
+    return int(np.unique(labels).size)
+
+
+def _hash_arrays(ids: list[str], edge_arrays: dict[str, Any]) -> str:
+    digest = hashlib.sha256()
+    digest.update("\n".join(ids).encode())
+    for key in ("pre_body", "post_body", "synapse_count"):
+        digest.update(np.ascontiguousarray(edge_arrays[key]).tobytes())
+    return digest.hexdigest()
 
 
 def _undirected_components(n: int, src: list[int], dst: list[int]) -> list[list[int]]:

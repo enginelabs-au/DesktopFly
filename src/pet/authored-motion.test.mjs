@@ -71,31 +71,60 @@ test("LIF presentation wanders in open space", () => {
   assert.equal(ctrl.pose.locomotion, "flight");
 });
 
-test("connectome turn readout produces a curved 2D track, not a rail", async () => {
+test("with nothing to see, the fly holds a straight run instead of a timed wiggle", async () => {
   let ms = 0;
+  const motion = createPetMotionController({
+    controllerKind: "lif",
+    now: () => ms,
+    bounds: { x: 0, y: 0, width: 1000, height: 800 },
+    random: () => 0.999,
+    connectomeDriver: {
+      async step() {
+        return { motor: { speed: 0, turn: 0 }, transition_source: "connectome" };
+      },
+    },
+  });
+  await motion.step();
+  const start = { ...motion.getPose() };
+  let end = start;
+  for (let i = 0; i < 14; i += 1) {
+    ms += 50;
+    end = await motion.step();
+  }
+  assert.ok(Math.hypot(end.x - start.x, end.y - start.y) > 15);
+  assert.ok(Math.abs(end.headingRad) < 0.25, `heading drifted to ${end.headingRad}`);
+  assert.equal(end.locomotion, "crawl");
+});
+
+test("a feature just ahead makes the fly stop and groom", async () => {
+  let ms = 0;
+  const width = 40;
+  const height = 30;
+  const samples = new Array(width * height).fill(0.45);
   const motion = createPetMotionController({
     controllerKind: "lif",
     now: () => ms,
     bounds: { x: 0, y: 0, width: 1000, height: 800 },
     connectomeDriver: {
       async step() {
-        return { motor: { dx: 0, dy: 0, speed: 60, turn: 0.8 }, transition_source: "connectome" };
+        return { motor: { speed: 0, turn: 0 } };
       },
     },
   });
   await motion.step();
-  const xs = [];
-  const ys = [];
-  for (let i = 0; i < 40; i += 1) {
+  const start = motion.getPose();
+  const px = Math.floor(((start.x + 90) / 1000) * width);
+  const py = Math.floor((start.y / 800) * height);
+  samples[py * width + px] = 1;
+  motion.setRetinaPlane({ width, height, samples, capturedAtS: 0 });
+  let end = start;
+  for (let i = 0; i < 6; i += 1) {
     ms += 50;
-    const p = await motion.step();
-    xs.push(p.x);
-    ys.push(p.y);
+    end = await motion.step();
   }
-  const yRange = Math.max(...ys) - Math.min(...ys);
-  assert.ok(yRange > 20, `expected vertical travel, got ${yRange}`);
-  assert.ok(Math.max(...xs) - Math.min(...xs) > 20);
-  assert.equal(motion.getPose().transitionSource, "connectome");
+  assert.equal(end.groom, 1);
+  assert.equal(end.speedPointsS, 0);
+  assert.equal(end.locomotion, "idle");
 });
 
 function steeredController(motorFn) {
@@ -143,41 +172,13 @@ test("batched driver is used when available and applies every block", async () =
   assert.ok(motion.getPose().speedPointsS > 0);
 });
 
-test("connectome speed and turn pass straight through; only the speed ceiling applies", async () => {
-  let forward = 30;
-  const { motion, tick, start } = steeredController(() => ({ speed: forward, turn: 0 }));
-  await start();
-  await tick();
-  // No walk onset, inertia, or pause rule: a slow readout is a slow walk, immediately.
-  assert.equal(motion.getPose().speedPointsS, 30);
-  assert.equal(motion.getPose().locomotion, "crawl");
-  forward = 0;
-  await tick();
-  assert.equal(motion.getPose().speedPointsS, 0);
-  assert.equal(motion.getPose().locomotion, "idle");
-  forward = 5000;
-  await tick();
-  assert.equal(motion.getPose().speedPointsS, 160, "speed ceiling still applies");
-  assert.equal(motion.getPose().transitionSource, "connectome");
-});
-
-test("the screen clamp is the only edge rule: no code steers the fly away from an edge", async () => {
-  const { motion, tick, start } = steeredController(() => ({ speed: 120, turn: 0 }));
-  await start();
-  let last = null;
-  for (let i = 0; i < 400; i += 1) last = await tick();
-  const b = { x: 0, y: 0, width: 2000, height: 1200 };
-  assert.ok(last.x <= b.x + b.width && last.y >= b.y && last.y <= b.y + b.height);
-  assert.ok(last.x > b.x + b.width - 5, "pinned at the edge; nothing turned it around");
-  assert.equal(last.headingRad, 0);
-});
-
-test("the cursor never moves the fly by itself; only the network readout does", async () => {
+test("a nearby cursor makes the fly leave, whatever the network readout is", async () => {
   let ms = 0;
   const motion = createPetMotionController({
     controllerKind: "lif",
     now: () => ms,
-    bounds: { x: 0, y: 0, width: 1000, height: 800 },
+    bounds: { x: 0, y: 0, width: 2000, height: 1200 },
+    petConfig: { cursor_yield_radius_points: 220, max_speed_points_s: 160, cruise_speed_points_s: 80 },
     connectomeDriver: {
       async stepBlocks(_dt, blocks) {
         return { motors: Array.from({ length: blocks }, () => ({ speed: 0, turn: 0 })) };
@@ -186,15 +187,92 @@ test("the cursor never moves the fly by itself; only the network readout does", 
   });
   await motion.step();
   const start = { ...motion.getPose() };
-  motion.setCursor({ x: start.x + 5, y: start.y + 5 }, { moving: true });
+  motion.setCursor({ x: start.x + 40, y: start.y }, { moving: false });
+  let end = start;
+  for (let i = 0; i < 8; i += 1) {
+    ms += 50;
+    end = await motion.step();
+  }
+  const before = 40;
+  const after = Math.hypot(end.x - (start.x + 40), end.y - start.y);
+  assert.ok(after > before + 40, `distance ${before} -> ${after}`);
+  assert.equal(end.locomotion, "flight");
+  assert.equal(end.takeoff, 1);
+  assert.ok(end.depth01 > 0.4, `depth ${end.depth01}`);
+  assert.ok(end.speedPointsS > 200);
+});
+
+test("two takeoffs do not last the same time", async () => {
+  async function flightSpan(random) {
+    let ms = 0;
+    const motion = createPetMotionController({
+      controllerKind: "lif",
+      now: () => ms,
+      random,
+      petConfig: { cursor_yield_radius_points: 220 },
+      bounds: { x: 0, y: 0, width: 2000, height: 1200 },
+      connectomeDriver: {
+        async step() {
+          return { motor: { speed: 0, turn: 0 } };
+        },
+      },
+    });
+    await motion.step();
+    const start = motion.getPose();
+    motion.setCursor({ x: start.x + 40, y: start.y });
+    ms += 50;
+    const pose = await motion.step();
+    assert.equal(pose.bout, "fly");
+    return pose.boutS;
+  }
+  const mid = await flightSpan(() => 0.5);
+  const tail = await flightSpan(() => 0.05);
+  assert.ok(Math.abs(mid - tail) > 2, `spans ${mid} and ${tail}`);
+  assert.ok(mid < 4 && tail > 8);
+});
+
+test("the fly turns back before it can leave the screen", async () => {
+  const { motion, tick, start } = steeredController(() => ({ speed: 0, turn: 0 }));
+  await start();
+  let last = null;
+  for (let i = 0; i < 80; i += 1) last = await tick();
+  const b = { x: 0, y: 0, width: 2000, height: 1200 };
+  assert.ok(last.x >= b.x && last.x <= b.x + b.width);
+  assert.ok(last.y >= b.y && last.y <= b.y + b.height);
+  assert.ok(motion.getPose().speedPointsS >= 0);
+});
+
+test("a contrasting spot on the screen is approached", async () => {
+  let ms = 0;
+  const width = 32;
+  const height = 24;
+  const samples = new Array(width * height).fill(0.5);
+  const motion = createPetMotionController({
+    controllerKind: "lif",
+    now: () => ms,
+    bounds: { x: 0, y: 0, width: 1000, height: 800 },
+    connectomeDriver: {
+      async step() {
+        return { motor: { speed: 0, turn: 0 } };
+      },
+    },
+  });
+  await motion.step();
+  const start = motion.getPose();
+  // Bright spot ahead and to the right of a heading of 0 (+x).
+  const spotX = Math.floor(((start.x + 180) / 1000) * width);
+  const spotY = Math.floor(((start.y + 140) / 800) * height);
+  samples[spotY * width + spotX] = 1;
+  motion.setRetinaPlane({ width, height, samples, capturedAtS: 0 });
+  let end = start;
   for (let i = 0; i < 20; i += 1) {
     ms += 50;
-    await motion.step();
+    end = await motion.step();
   }
-  const end = motion.getPose();
-  assert.equal(end.x, start.x);
-  assert.equal(end.y, start.y);
-  assert.equal(end.transitionSource, "connectome");
+  const startBearing = Math.atan2(start.y + 140 - start.y, start.x + 180 - start.x);
+  const headingErr = Math.atan2(Math.sin(end.headingRad - startBearing), Math.cos(end.headingRad - startBearing));
+  assert.ok(Math.abs(headingErr) < 0.6, `heading ${end.headingRad} vs spot ${startBearing}`);
+  assert.ok(end.x !== start.x || end.y !== start.y);
 });
 
 function eyes() {
@@ -203,67 +281,41 @@ function eyes() {
   return c;
 }
 
-test("a cursor that is not getting bigger produces no looming signal", () => {
-  const c = eyes();
-  c.setCursor({ x: 1000, y: 700 });
-  for (let i = 0; i < 10; i += 1) {
-    const f = c.loomFeatures(0.05);
-    assert.deepEqual(f, { loom_left: 0, loom_right: 0 });
-  }
+test("a still cursor is a bright spot in one eye's retinal grid", () => {
   const none = eyes();
-  assert.deepEqual(none.loomFeatures(0.05), { loom_left: 0, loom_right: 0 });
+  assert.deepEqual(none.retinaFeatures(), {});
+  const right = eyes();
+  right.setCursor({ x: 1000, y: 700 });
+  const keys = Object.keys(right.retinaFeatures());
+  assert.ok(keys.some((key) => key.startsWith("hex_R_")));
+  assert.ok(keys.every((key) => key.startsWith("hex_R_")));
+  const left = eyes();
+  left.setCursor({ x: 1000, y: 500 });
+  const leftKeys = Object.keys(left.retinaFeatures());
+  assert.ok(leftKeys.some((key) => key.startsWith("hex_L_")));
+  assert.ok(leftKeys.every((key) => key.startsWith("hex_L_")));
 });
 
-test("an approaching cursor loomed on the side it comes from, receding gives none", () => {
-  // Heading east: south is the fly's right, north its left.
-  for (const [side, y] of [["loom_right", 1] , ["loom_left", -1]]) {
-    const c = eyes();
-    let f;
-    for (let i = 0; i < 12; i += 1) {
-      const d = 400 - i * 30; // closing at 600 points/s
-      c.setCursor({ x: 1000, y: 600 + y * d });
-      f = c.loomFeatures(0.05);
-    }
-    const other = side === "loom_right" ? "loom_left" : "loom_right";
-    assert.ok(f[side] > 0.3, `${side} ${JSON.stringify(f)}`);
-    assert.equal(f[other], 0, "far eye sees nothing at 90 degrees");
-    for (const v of Object.values(f)) assert.ok(v >= 0 && v <= 1);
-  }
-  const c = eyes();
-  let f;
-  for (let i = 0; i < 12; i += 1) {
-    c.setCursor({ x: 1000, y: 600 + 100 + i * 30 });
-    f = c.loomFeatures(0.05);
-  }
-  assert.deepEqual(f, { loom_left: 0, loom_right: 0 });
-});
-
-test("the blind zone behind the fly sees no looming; head-on is seen by both eyes", () => {
+test("the blind zone is empty and head-on lights both eyes", () => {
   const behind = eyes();
-  let f;
-  for (let i = 0; i < 12; i += 1) {
-    behind.setCursor({ x: 1000 - (400 - i * 30), y: 600 });
-    f = behind.loomFeatures(0.05);
-  }
-  assert.deepEqual(f, { loom_left: 0, loom_right: 0 });
+  behind.setCursor({ x: 800, y: 600 });
+  assert.deepEqual(behind.retinaFeatures(), {});
   const ahead = eyes();
-  for (let i = 0; i < 12; i += 1) {
-    ahead.setCursor({ x: 1000 + (400 - i * 30), y: 600 });
-    f = ahead.loomFeatures(0.05);
-  }
-  assert.ok(f.loom_left > 0.1 && Math.abs(f.loom_left - f.loom_right) < 1e-9, JSON.stringify(f));
+  ahead.setCursor({ x: 1200, y: 600 });
+  const keys = Object.keys(ahead.retinaFeatures());
+  assert.ok(keys.some((key) => key.startsWith("hex_L_")) && keys.some((key) => key.startsWith("hex_R_")));
 });
 
-test("the giant-fiber takeoff readout only labels the pose as flight; speed stays the readout", async () => {
-  let takeoff = 0;
-  const { motion, tick, start } = steeredController(() => ({ speed: 100, turn: 0, takeoff }));
+test("network takeoff does not fly the body; a close cursor does", async () => {
+  const { motion, tick, start } = steeredController(() => ({ speed: 0, turn: 0, takeoff: 1 }));
   await start();
   await tick();
-  assert.equal(motion.getPose().locomotion, "crawl");
-  takeoff = 0.8;
+  assert.equal(motion.getPose().takeoff, 0);
+  const p = motion.getPose();
+  motion.setCursor({ x: p.x + 20, y: p.y });
   await tick();
+  assert.equal(motion.getPose().takeoff, 1);
   assert.equal(motion.getPose().locomotion, "flight");
-  assert.equal(motion.getPose().speedPointsS, 100);
 });
 
 test("loom signals are sent to the connectome with each tick", async () => {
@@ -284,11 +336,11 @@ test("loom signals are sent to the connectome with each tick", async () => {
   const p = motion.getPose();
   for (let i = 0; i < 6; i += 1) {
     ms += 50;
-    motion.setCursor({ x: p.x, y: p.y + 300 - i * 40 });
+    motion.setCursor({ x: p.x, y: p.y + 80 });
     await motion.step({ neuralFeatures: { ambient_drive: 0.9 } });
   }
   const f = seen.at(-1);
   assert.equal(f.ambient_drive, 0.9, "opt-in screen features still pass through");
-  assert.ok(f.loom_right > 0);
-  assert.deepEqual(Object.keys(f).sort(), ["ambient_drive", "loom_left", "loom_right"]);
+  assert.ok(Object.keys(f).some((key) => key.startsWith("hex_R_")));
+  assert.ok(Object.keys(f).every((key) => key === "ambient_drive" || key.startsWith("hex_")));
 });

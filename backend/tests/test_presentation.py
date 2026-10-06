@@ -45,16 +45,23 @@ def test_connectome_engine_reports_committed_neural_ticks():
     assert engine.status()["committed_tick"] == engine.steps_per_block
 
 
-def test_connectome_motion_changes_over_ticks():
-    policy = load_policy_dict()
-    engine = ConnectomePresentationEngine.create(policy)
-    last = None
-    for _ in range(40):
-        last = engine.step(0.05)["motor"]
-    assert last["speed"] > 0
-    a = engine.step(0.05)["motor"]
-    b = engine.step(0.05)["motor"]
-    assert a != b or a["speed"] > 0
+def test_connectome_stays_still_until_an_eye_is_stimulated():
+    import json
+    from pathlib import Path
+
+    engine = ConnectomePresentationEngine.create(load_policy_dict())
+    quiet = [engine.step(0.005, {})["motor"]["speed"] for _ in range(8)]
+    assert max(quiet) == 0.0
+    meta = json.loads(
+        (Path(__file__).resolve().parents[2] / "data/derived/malecns-live-meta.json").read_text()
+    )
+    feat = {
+        r["feature_name"]: 1.0
+        for r in meta["sensory_map"]
+        if str(r["feature_name"]).startswith("hex_R_")
+    }
+    driven = [engine.step(0.005, feat)["motor"] for _ in range(30)]
+    assert any(m["speed"] > 0 or m["takeoff"] > 0 for m in driven)
 
 
 def test_malecns_fixture_is_not_synthetic_ids():
@@ -85,13 +92,22 @@ def test_decode_turn_is_bounded_signed_steering_from_left_right():
     assert "turn" in right.as_dict()
 
 
-def test_connectome_motor_reports_steering_over_time():
+def test_connectome_motor_reports_a_bounded_turn_from_the_right_eye():
+    import json
+    from pathlib import Path
+
+    meta = json.loads(
+        (Path(__file__).resolve().parents[2] / "data/derived/malecns-live-meta.json").read_text()
+    )
+    feat = {
+        r["feature_name"]: 1.0
+        for r in meta["sensory_map"]
+        if str(r["feature_name"]).startswith("hex_R_")
+    }
     engine = ConnectomePresentationEngine.create(load_policy_dict())
-    turns = []
-    for _ in range(600):
-        turns.append(engine.step(0.005)["motor"]["turn"])
-    assert max(turns) - min(turns) > 0.0
+    turns = [engine.step(0.005, feat)["motor"]["turn"] for _ in range(30)]
     assert all(abs(t) <= 3.0 for t in turns)
+    assert any(t != 0 for t in turns)
 
 
 def test_worker_gc_is_configured_outside_timed_blocks():
@@ -106,3 +122,44 @@ def test_worker_gc_is_configured_outside_timed_blocks():
     finally:
         if was_enabled:
             gc.enable()
+
+
+def test_fused_kernel_engine_selection_matches_numpy_engine():
+    import numpy as np
+
+    policy = load_policy_dict()
+    fused = ConnectomePresentationEngine.create({**policy, "fused_lif_min_neurons": 1, "fused_lif_threads": 2})
+    plain = ConnectomePresentationEngine.create({**policy, "fused_lif_min_neurons": 0})
+    assert fused.status()["lif_backend"] == "numba-fused-2t"
+    assert plain.status()["lif_backend"] == "numpy-lif"
+    assert fused.parallel_kernel is True and plain.parallel_kernel is False
+    assert fused.status()["committed_tick"] == 0  # warm-up does not advance the clock
+    meta = json.loads((REPO_ROOT / "data/derived/malecns-live-meta.json").read_text())
+    feat = {r["feature_name"]: 1.0 for r in meta["sensory_map"] if r["feature_name"].startswith("hex_R_")}
+    for _ in range(40):
+        a = fused.step(0.005, feat)
+        b = plain.step(0.005, feat)
+        assert a["technical"]["spike_count"] == b["technical"]["spike_count"]
+        assert np.isclose(a["motor"]["speed"], b["motor"]["speed"], atol=1e-3)
+        assert np.isclose(a["motor"]["turn"], b["motor"]["turn"], atol=1e-3)
+    fused.scheduled_reset()  # runs the full weight fingerprint check
+    plain.scheduled_reset()
+    assert fused.status()["committed_tick"] == plain.status()["committed_tick"]
+    assert fused.step(0.005, {})["technical"]["spike_count"] == plain.step(0.005, {})["technical"]["spike_count"]
+
+
+@pytest.mark.skipif(
+    not (REPO_ROOT / "data/derived/malecns-fullbrain-meta.json").is_file()
+    or __import__("os").environ.get("DESKTOPFLY_FULLBRAIN_TESTS") != "1",
+    reason="whole-brain tables take ~20 s to compile; set DESKTOPFLY_FULLBRAIN_TESTS=1",
+)
+def test_fullbrain_tables_compile_with_agreed_signs_and_reach_motor_neurons():
+    policy = {**load_policy_dict(), "reviewed_subset_name": "fullbrain", "fused_lif_min_neurons": 100_000}
+    engine = ConnectomePresentationEngine.create(policy)
+    st = engine.status()
+    assert st["lif_backend"].startswith("numba-fused-")
+    assert st["sim_neuron_count"] > 150_000
+    assert engine.report["sensory_to_readout_reachability"] is True
+    assert engine.report["orphan_readouts"] == []
+    out = engine.step(0.005, {})
+    assert out["technical"]["spike_count"] == 0  # no input, no spikes

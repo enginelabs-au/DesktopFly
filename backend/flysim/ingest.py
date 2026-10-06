@@ -42,8 +42,7 @@ def build_static_graph(ids, src, dst, counts, signs, blocked, gain=1.1):
     count = count0[keep].astype(np.float64)
     if len(src) == 0:
         raise ValueError("No eligible edges; use an explicit synthetic fixture")
-    pairs = np.stack([src, dst], axis=1)
-    if len(np.unique(pairs, axis=0)) != len(src):
+    if np.unique(src * np.int64(n) + dst).size != len(src):
         raise ValueError("Aggregate duplicate source/destination pairs first")
     magnitude = np.log1p(count)
     denominator = np.bincount(dst, weights=magnitude, minlength=n)

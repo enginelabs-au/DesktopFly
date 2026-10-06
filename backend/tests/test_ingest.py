@@ -192,3 +192,60 @@ def test_missing_real_connectome_files_are_technical_blockers():
 def test_refuses_mixed_identifier_namespaces():
     with pytest.raises(ValueError, match="Do not mix FlyWire"):
         assert_namespace("flywire:1", "male-cns:v1.0")
+
+
+def _numeric_tables():
+    """Synthetic tables with numeric ids so the integer edge-array path applies."""
+    tables = _tables()
+    rename = {
+        "synthetic:pre": "synthetic:11",
+        "synthetic:mid": "synthetic:12",
+        "synthetic:post": "synthetic:13",
+        "synthetic:clamped": "synthetic:14",
+        "synthetic:9007199254740993": "synthetic:9007199254740993",
+        "synthetic:excluded-mod": "synthetic:15",
+    }
+    for key in ("neurons", "review", "sensory_map", "motor_map"):
+        for row in tables[key]:
+            row["neuron_id"] = rename.get(row["neuron_id"], row["neuron_id"])
+    for row in tables["edges"]:
+        row["pre_id"] = rename.get(row["pre_id"], row["pre_id"])
+        row["post_id"] = rename.get(row["post_id"], row["post_id"])
+    return tables
+
+
+def test_edge_arrays_compile_matches_row_edges():
+    rows = _numeric_tables()
+    arrays = _numeric_tables()
+    body = lambda nid: int(nid.split(":")[1])  # noqa: E731
+    arrays["edge_arrays"] = {
+        "pre_body": np.array([body(e["pre_id"]) for e in arrays["edges"]] + [999_999], dtype=np.int64),
+        "post_body": np.array([body(e["post_id"]) for e in arrays["edges"]] + [12], dtype=np.int64),
+        "synapse_count": np.array([e["synapse_count"] for e in arrays["edges"]] + [5], dtype=np.int64),
+    }
+    arrays["edges"] = []
+    a = compile_reviewed_graph(rows)
+    b = compile_reviewed_graph(arrays)
+    assert a.selected_ids == b.selected_ids
+    np.testing.assert_array_equal(a.graph.src, b.graph.src)
+    np.testing.assert_array_equal(a.graph.dst, b.graph.dst)
+    np.testing.assert_allclose(a.graph.weights, b.graph.weights)
+    assert b.report["sensory_to_readout_reachability"] is True
+    assert b.report["orphan_readouts"] == a.report["orphan_readouts"]
+    assert b.report["disconnected_component_count"] == a.report["disconnected_component_count"]
+    assert b.report["input_edge_count"] == len(rows["edges"]) + 1  # unknown body counted then dropped
+    assert b.exclusion_counts["edges_not_in_subset"] == a.exclusion_counts["edges_not_in_subset"] + 1
+
+
+def test_edge_arrays_reject_non_positive_counts_and_mixed_sources():
+    tables = _numeric_tables()
+    tables["edge_arrays"] = {
+        "pre_body": np.array([11], dtype=np.int64),
+        "post_body": np.array([12], dtype=np.int64),
+        "synapse_count": np.array([0], dtype=np.int64),
+    }
+    with pytest.raises(ValueError, match="edge rows or edge arrays"):
+        compile_reviewed_graph(tables)
+    tables["edges"] = []
+    with pytest.raises(ValueError, match="positive integer"):
+        compile_reviewed_graph(tables)

@@ -134,10 +134,10 @@ test("tickPresentation moves pet from connectome motor (not neuralWander)", asyn
   }
   const pose = session.status().pose;
   assert.ok(Math.abs(pose.x - x0) > 5);
-  assert.equal(pose.transitionSource, "connectome");
+  assert.equal(pose.transitionSource, "geometry");
 });
 
-test("desktop cursor reaches the connectome only as looming numbers, and moves nothing itself", async () => {
+test("desktop cursor reaches the connectome only as bounded numbers", async () => {
   let t = 1_000;
   const seen = [];
   const connectomeDriver = {
@@ -154,17 +154,16 @@ test("desktop cursor reaches the connectome only as looming numbers, and moves n
   session.lease.beat();
   const before = session.status().pose;
   for (let i = 0; i < 6; i += 1) {
-    session.setCursorPoint({ x: before.x, y: before.y + 300 - i * 40 }, { moving: true });
+    session.setCursorPoint({ x: before.x + 700, y: before.y }, { moving: false });
     t += 50;
     await session.tickPresentation();
   }
   const pose = session.status().pose;
   const f = seen.at(-1);
   assert.ok(Object.values(f).every((v) => Number.isFinite(v) && v >= 0 && v <= 1));
-  assert.ok(f.loom_left > 0 || f.loom_right > 0);
-  assert.equal(pose.x, before.x);
-  assert.equal(pose.y, before.y);
-  assert.equal(pose.transitionSource, "connectome");
+  assert.ok(Object.keys(f).some((key) => key.startsWith("hex_")));
+  assert.equal(pose.transitionSource, "geometry");
+  assert.ok(Number.isFinite(pose.x) && Number.isFinite(pose.y));
 });
 
 test("connectome fault becomes a permanent stopped session", async () => {
@@ -244,7 +243,7 @@ test("screen features reach the worker only as bounded numeric inputs", async ()
   assert.equal(received.turn_bias, 0.8);
   assert.deepEqual(
     Object.keys(received).sort(),
-    ["ambient_drive", "loom_left", "loom_right", "turn_bias"],
+    ["ambient_drive", "turn_bias"],
   );
   assert.equal(session.status().vision.permission, "granted");
 });

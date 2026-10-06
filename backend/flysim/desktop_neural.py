@@ -94,6 +94,11 @@ def main() -> None:
                     result = engine.step(dt, features)
                     elapsed_s = time.perf_counter() - started
                     cpu_s = time.thread_time() - cpu_started
+                    if getattr(engine, "parallel_kernel", False):
+                        # Worker threads do most of the compute; the main
+                        # thread's CPU time under-measures it. Use wall time
+                        # for the strict budget check instead of hiding that.
+                        cpu_s = elapsed_s
                     result["technical"]["last_block_compute_s"] = elapsed_s
                     guard.observe(elapsed_s, cpu_s)
                     motors.append(result["motor"])

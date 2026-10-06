@@ -24,7 +24,8 @@ def decode_schema_motor(
     *,
     max_speed_points_s: float = 120.0,
     max_turn_rad_s: float = 3.0,
-    turn_gain: float = 8.0,
+    turn_gain: float = 1.25,
+    index: dict[str, int] | None = None,
 ) -> MotorCommand:
     """Decode rate/spike activity using schema channels left/right/forward.
 
@@ -32,7 +33,8 @@ def decode_schema_motor(
     normalized right-minus-left imbalance scaled by a fixed gain and clipped.
     It reuses the existing fixed gains; no new circuit mapping is introduced.
     """
-    index = {nid: i for i, nid in enumerate(neuron_ids)}
+    if index is None:
+        index = {nid: i for i, nid in enumerate(neuron_ids)}
     activity = np.asarray(activity, dtype=np.float32)
     if activity.shape != (len(neuron_ids),):
         raise ValueError("activity shape mismatch")
@@ -107,13 +109,19 @@ class ConnectomePresentationEngine:
     _intrinsic_mask: Any = None
     _last_block_compute_s: float = 0.0
     _last_spike_count: int = 0
+    _index: Any = None
 
     @classmethod
     def create(cls, policy: dict[str, Any] | None = None) -> ConnectomePresentationEngine:
         policy = policy or {}
         compiled, tables, graph_source, report = load_compiled_runtime(policy)
         n = len(compiled.selected_ids)
-        if prefer_torch_for_graph(n, policy):
+        fused_min = int(policy.get("fused_lif_min_neurons", 0) or 0)
+        if fused_min and n >= fused_min:
+            from flysim.lif_fused import start_fused_lif_worker
+
+            lif = start_fused_lif_worker(policy, graph=compiled.graph, graph_source=graph_source)
+        elif prefer_torch_for_graph(n, policy):
             lif = start_torch_lif_worker(
                 policy,
                 graph=compiled.graph,
@@ -137,6 +145,12 @@ class ConnectomePresentationEngine:
         )
         encoder = FixedSensoryEncoder(sensory, external_max=float(policy.get("external_input_max", 2.0)))
         steps = int(policy.get("neural_steps_per_block", 5))
+        if fused_min and n >= fused_min:
+            # Compile and warm the kernel now, outside any timed block. State is
+            # returned to the reviewed initial state afterwards.
+            lif.step(np.zeros(n, dtype=np.float32))
+            lif.reset_to_initial_state()
+            lif.committed_tick = 0
         return cls(
             worker=lif,
             encoder=encoder,
@@ -155,8 +169,15 @@ class ConnectomePresentationEngine:
 
     def scheduled_reset(self) -> None:
         """Return neurons to the reviewed initial state. Weights are not touched."""
+        verify = getattr(self.worker.lif, "verify_weights", None)
+        if callable(verify):
+            verify()  # full fingerprint check, between requests only
         self.worker.reset_to_initial_state()
         self._last_spike_count = 0
+
+    @property
+    def parallel_kernel(self) -> bool:
+        return bool(getattr(self.worker.lif, "threads", 0)) and type(self.worker.lif).__name__ == "FusedLIF"
 
     def _rate_ema_numpy(self) -> np.ndarray:
         state = self.worker.state
@@ -169,7 +190,9 @@ class ConnectomePresentationEngine:
         n = len(self.neuron_ids)
         e = int(len(self.worker.lif._src))
         backend = "numpy-lif"
-        if hasattr(self.worker.lif, "device"):
+        if type(self.worker.lif).__name__ == "FusedLIF":
+            backend = f"numba-fused-{getattr(self.worker.lif, 'threads', 1)}t"
+        elif hasattr(self.worker.lif, "device"):
             operator = getattr(self.worker.lif, "operator", "edge-index")
             backend = f"torch-{self.worker.lif.device.type}-{operator}"
         input_n = int(self.report.get("input_neuron_count", n))
@@ -218,11 +241,14 @@ class ConnectomePresentationEngine:
                 step_input = np.clip(external + noise, 0.0, self.external_max).astype(np.float32)
             self.worker.state, diag_last = self.worker.step(step_input)
         activity = self._rate_ema_numpy()
+        if self._index is None:
+            self._index = {nid: i for i, nid in enumerate(self.neuron_ids)}
         motor = decode_schema_motor(
             self.neuron_ids,
             self.motor_rows,
             activity,
             max_speed_points_s=120.0,
+            index=self._index,
         )
         elapsed_s = time.perf_counter() - started
         self._last_block_compute_s = elapsed_s

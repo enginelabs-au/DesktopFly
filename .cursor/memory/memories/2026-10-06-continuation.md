@@ -95,3 +95,17 @@
 - First live run hit the strict CPU check (4.36 ms) during an escape burst: fixed by making the LIF step spike-sparse (CSR by source), 1.33 to 0.65 ms per block, equivalence test added. Did not loosen the check. numpy chosen over MPS (MPS was 5.4 ms at this size): `torch_lif_min_neurons` 5000.
 - Evidence: backend 90 passed, Node 40 passed, foundations PASS; live 90 s run, 6/6 approaches escaped with the correct turn, worst CPU 2.0 ms, no fault.
 - Not verified: owner's visual judgement; behaviour with real mouse speeds; hours-long runs. Honest limits: no exploration generator, screen content not an input, readout engineered, glutamate sign is an assumption.
+
+## Follow-up: remove the remaining behaviour policies
+
+- Owner: zero code governing movement, the whole connectome, screen inspection, and random conscious-looking behaviour.
+- Removed from the live loop: looming derivative, contralateral turn-away flip, giant-fiber speed boost, flight-mode switch, and the noise amplitude 1.6 that forced a steady walk. Noise is 0. Eyes report object size only. Descending readout is same-side.
+- Measured with no behaviour rule: still at rest; left eye speed 64 turn -3 takeoff 0.82; right eye speed 52 turn +3 takeoff 0.72; both eyes speed 111 turn -0.76. Turns toward the stimulated side.
+- Full MaleCNS remains diagnostic-only (179 ms, GPU 43-46 ms, budget 4 ms). FlyWire not mixed. Screen pixels not neural input.
+- Tests: Node 40 passed. Backend presentation and world-input tests updated and passing. Not a consciousness claim.
+
+## Full-brain timing and the live slice
+
+- M2 Max, 64 GB. Spike-only full graph (24.7M agreed-sign edges): silent block 0.38 ms; 0.5% of neurons firing 6.8 ms; 2% firing 20 ms. The 4 ms live budget holds only while the brain is nearly silent. Recorded in `reports/full-brain-spike-timing.json`.
+- Live subset `reviewed_subset_name: live`: 4,714 neurons, 55,733 edges. Hex retina onto LC4/LPLC2, 61 descending neurons, 144 motor neurons. Quiet block 0.63 ms, driven about 1.3 ms. Right eye about 22–33 pt/s, turn −1.25, takeoff ~1. Left eye motor readout stays at 0 in this slice.
+- Sign rule settled in `backend/flysim/nt_signs.py` (agree or exclude). Sensory encode is sparse so the hex map does not build a dense current. Backend 89 passed. Node motion/desktop tests passed.

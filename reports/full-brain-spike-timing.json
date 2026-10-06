@@ -1,0 +1,45 @@
+{
+  "schema_version": 2,
+  "host": "Apple M2 Max, 12 cores, 64 GB, numba 0.68 workqueue layer, 8 threads",
+  "question": "Can a 5 ms slice of the whole MaleCNS graph finish in 4 ms, and does the whole graph behave?",
+  "whole_brain": {
+    "reviewed_subset_name": "fullbrain",
+    "neurons_total": 211577,
+    "neurons_with_agreed_sign": 155802,
+    "edges_after_aggregation": 23516326,
+    "excluded": { "no_agreed_sign": 47206, "modulatory": 8569 },
+    "retina": "lamina L1/L2/L3 by ommatidium column (1767/1767/892 cells, 1768 hex features), light-decrement drive gain 2.0",
+    "motor_readout": { "leg_nerve": 211, "wing_nerve": 30, "giant_fiber": 2 },
+    "cold_start_s": 18.6,
+    "kernel": "backend/flysim/lif_fused.py (compiled, spike-sparse CSR, parallel)",
+    "engine_block_s_normalized_weights": {
+      "dark": { "median": 0.00207, "worst": 0.0026 },
+      "one_eye_dark": { "median": 0.0035, "worst": 0.0148 },
+      "both_eyes_dark": { "median": 0.00375, "worst": 0.0043 }
+    },
+    "within_4ms": "median yes; worst blocks exceed 4 ms during strong whole-eye stimulation",
+    "behaviour_normalized_weights": "inert past the lamina: motor neurons never fire (incoming |weight| per neuron normalised to 1.1 so a cell needs most inputs active at once)",
+    "behaviour_per_synapse_weights": {
+      "model": "weight = w_s * synapse_count * sign, no per-neuron normalisation; w_s = 1/25.5 of threshold (the ratio used by the published whole-brain LIF model; verify against Shiu et al. 2024 before citing numbers)",
+      "result": "bistable: silent until any stimulus (even a 9-column dark spot), then ~1.2-1.9 % of neurons fire indefinitely with every motor channel saturated; never decays back; 4.3 ms median block (over budget)",
+      "sweep": {
+        "w_s_0.01_uncapped": "same persistent state at ~0.65 % activity",
+        "cap_incoming_2_3_5_10": "inert past lamina (cap 10 leaves a small local reverberation)",
+        "cap_incoming_20": "persistent global state again"
+      },
+      "conclusion": "a uniform point-neuron model of the whole connectome either does nothing or never stops; no stimulus-driven regime was found without inventing cell-specific parameters"
+    }
+  },
+  "live_slice": {
+    "reviewed_subset_name": "live",
+    "neurons": 4714,
+    "edges": 55733,
+    "within_4ms": true,
+    "quiet_block_s": 0.00068,
+    "driven_block_s": 0.0018,
+    "note": "default; retina -> LC4/LPLC2 -> descending neurons -> VNC motor neurons; responds to dark/bright objects and the cursor"
+  },
+  "supervision_note": "for the parallel kernel the main thread's CPU time under-measures compute, so the strict 4 ms check uses wall time (desktop_neural.py); for the numpy kernel it remains thread CPU time",
+  "sign_rule": "consensus_nt: acetylcholine +1; gaba -1; glutamate -1 (assumption); modulatory, conflicting, or unclear excluded",
+  "raw_data": "/tmp scratch scripts fb_engine.py and fb_persyn.py (not kept); numbers above are from runs on 2026-10-07"
+}

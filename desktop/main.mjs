@@ -51,6 +51,7 @@ export function createDesktopSession({
   let neuralStatus = "unavailable";
   let neuralError = null;
   let motionDriver = controller === "lif" ? "connectome-pending" : "authored-animation";
+  let visionSampleInFlight = false;
   let connectomeTechnical = null;
   let latestScreenFeatures = null;
   let visionError = null;
@@ -190,9 +191,9 @@ export function createDesktopSession({
     },
     stop(reason = "operator stop latch") {
       paused = true;
+      neuralError = neuralError || String(reason);
       driverRef.current?.shutdown?.();
       neuralStatus = controller === "lif" ? "stopped" : neuralStatus;
-      neuralError = neuralError || String(reason);
     },
     quit() {},
   };
@@ -202,7 +203,8 @@ export function createDesktopSession({
     connectomeTechnical = motion.getConnectomeTechnical?.() ?? connectomeTechnical;
     if (connectomeTechnical?.faulted) {
       neuralStatus = "stopped";
-      neuralError = connectomeTechnical.faultReason || "connectome worker fault";
+      neuralError =
+        neuralError || connectomeTechnical.faultReason || "connectome worker fault";
       motionDriver = "connectome-stopped";
     }
     return {
@@ -246,6 +248,8 @@ export function createDesktopSession({
         depth01: pose.depth01,
         locomotion: pose.locomotion,
         surfaceContact: pose.surfaceContact || "none",
+        takeoff: Number.isFinite(Number(pose.takeoff)) ? Number(pose.takeoff) : 0,
+        groom: pose.groom ? 1 : 0,
       },
     };
     return validatePoseFrame(frame);
@@ -280,17 +284,29 @@ export function createDesktopSession({
         return pose;
       }
       if (screenFeatures?.enabled) {
-        try {
-          await screenFeatures.sample();
-          latestScreenFeatures = screenFeatures.latestIfFresh?.() || null;
+        const fresh = screenFeatures.latestIfFresh?.() || null;
+        if (fresh) {
+          latestScreenFeatures = fresh;
           visionError = null;
-        } catch (error) {
-          latestScreenFeatures = null;
-          visionError = error instanceof Error ? error.message : String(error);
+        }
+        if (!visionSampleInFlight && typeof screenFeatures.sample === "function") {
+          visionSampleInFlight = true;
+          Promise.resolve(screenFeatures.sample())
+            .then(() => {
+              latestScreenFeatures = screenFeatures.latestIfFresh?.() || latestScreenFeatures;
+              visionError = null;
+            })
+            .catch((error) => {
+              visionError = error instanceof Error ? error.message : String(error);
+            })
+            .finally(() => {
+              visionSampleInFlight = false;
+            });
         }
       }
       motion.setBounds(presentationBounds);
       motion.setMode(mode);
+      motion.setRetinaPlane?.(screenFeatures?.latestLumaIfFresh?.() || null);
       motion.syncFocusSnapshot(focus.snapshot());
       pose = await motion.step({
         neuralFeatures: latestScreenFeatures
@@ -434,9 +450,24 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   }
 
   function refreshPresentationBounds() {
-    const primary = screen.getPrimaryDisplay();
-    session.setPresentationBounds(primary.bounds);
-    return primary.bounds;
+    const displays = screen.getAllDisplays();
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const display of displays) {
+      const b = display.bounds;
+      minX = Math.min(minX, b.x);
+      minY = Math.min(minY, b.y);
+      maxX = Math.max(maxX, b.x + b.width);
+      maxY = Math.max(maxY, b.y + b.height);
+    }
+    const bounds =
+      Number.isFinite(minX) && maxX > minX
+        ? { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
+        : screen.getPrimaryDisplay().bounds;
+    session.setPresentationBounds(bounds);
+    return bounds;
   }
 
   // Latest committed pose; the glide timer extrapolates it between 20 Hz ticks
@@ -705,8 +736,10 @@ if (isElectronMain || isNodeDirect) {
     (process.env.DESKTOPFLY_OPEN_HEALTH === undefined &&
       petConfig.open_health_by_default === true);
   launchElectronApp({ autoQuitMs })
-    .then(({ openHealthWindow }) => {
+    .then(async ({ openHealthWindow, session }) => {
       if (openHealthOnStart) openHealthWindow();
+      // Owner asked the pet to use the screen. Fails closed if permission is denied.
+      await session.actions.enableVision().catch(() => {});
       console.error(
         "DesktopFly pet running — menu-bar Fly icon; tray/menu Find fly recenters the pet",
       );

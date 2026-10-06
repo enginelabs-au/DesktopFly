@@ -62,6 +62,9 @@ class Policy(BaseModel):
     reviewed_subset_name: str = Field(default="", pattern=r"^[a-z0-9-]{0,32}$")
     max_edges_initial: int = Field(ge=1, le=100_000_000)
     torch_lif_min_neurons: int = Field(ge=1, default=256)
+    # Compiled parallel CPU kernel for graphs at or above this size (0 = never).
+    fused_lif_min_neurons: int = Field(ge=0, le=10_000_000, default=0)
+    fused_lif_threads: int = Field(ge=1, le=64, default=8)
     device: Literal["mps", "cpu"]
     allow_cpu_fallback: bool
     runtime_dtype: Literal["float32"]
