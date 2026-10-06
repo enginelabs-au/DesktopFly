@@ -46,3 +46,4 @@
 - Added worker deadline enforcement, committed tick reporting, permanent fault handling, and Electron in-flight/heartbeat protection. A missed deadline or neural error stops the worker and cannot auto-resume.
 - Timing report: `reports/connectome-timing.json`; 40 blocks passed with max 0.000333 s against the 0.004 s budget.
 - Validation: backend 56 passed; Node 22 passed; foundations and launch validation passed; policy tests 19 passed; Electron 5-second smoke launch exited 0.
+- Added `scripts/run-full-sim.sh` / `scripts/run_full_connectome.py` for bounded full-connectome diagnostics without changing the safe desktop policy. Verified full MaleCNS: 211,577 neurons, 25,074,842 synapses, 86.77 s load, 178.97 ms first block, and a 4 ms budget miss.

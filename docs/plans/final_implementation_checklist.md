@@ -25,6 +25,7 @@ Neural / LIF **enabled**. Agent closeout finished everything that does not need 
 - [x] MaleCNS v1.0 downloaded locally and full derived graph built — 211,577 neurons / 26,028,386 edges; `data/derived/malecns-full-meta.json`
 - [x] Bounded reviewed MaleCNS runtime subset built — 256 neurons / 2,021 edges; `data/derived/malecns-subset-meta.json`
 - [x] Local timing report passes the 4 ms block budget on the configured subset; full-graph timing remains unsuitable — `reports/connectome-timing.json`
+- [x] Bounded full-connectome diagnostic launcher — `scripts/run-full-sim.sh`
 - [x] FlyWire v783 proofread connectivity and v3.2.0 annotations downloaded, checksummed, and materialized — 15,091,983 aggregated pairs / 139,248 annotations; separate `flywire:` namespace
 - [x] Asyncio loopback WebSocket bridge
 - [x] Device report (`reports/device.json`) — MPS unavailable on Linux CI

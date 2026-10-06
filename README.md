@@ -74,3 +74,14 @@ uv run python ../scripts/measure_connectome_timing.py --samples 40
 This is a connectome-informed bounded controller, not a complete or
 biologically faithful fly nervous system. Full-graph execution remains an
 offline experiment until it has separate timing evidence.
+
+To run a bounded full-connectome diagnostic without changing the safe desktop
+policy:
+
+```bash
+./scripts/run-full-sim.sh --blocks 5
+```
+
+The launcher uses the local full MaleCNS graph, keeps CPU fallback disabled,
+limits the run to 120 blocks, and reports when blocks exceed the 4 ms desktop
+budget. It is an offline diagnostic; it does not claim real-time behavior.
