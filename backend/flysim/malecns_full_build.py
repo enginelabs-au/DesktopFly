@@ -8,6 +8,7 @@ from typing import Any
 
 import numpy as np
 import pyarrow as pa
+import pyarrow.compute as pc
 import pyarrow.feather as feather
 import pyarrow.parquet as pq
 
@@ -48,6 +49,7 @@ def _region_role(region: str | None, cell_type: str | None) -> str:
 def auto_review_and_maps(
     neurons: list[dict[str, Any]],
     modulatory_bodies: set[int],
+    edges: pa.Table | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     reviews: list[dict[str, Any]] = []
     sensory_map: list[dict[str, Any]] = []
@@ -92,27 +94,48 @@ def auto_review_and_maps(
     if not readout_ids:
         readout_ids = [n["neuron_id"] for n in neurons[-min(512, len(neurons)) :]]
 
+    if edges is not None and sensory_ids and readout_ids:
+        sensory_set = pa.array(sensory_ids)
+        readout_set = pa.array(readout_ids)
+        connected = edges.filter(
+            pc.and_(
+                pc.is_in(edges.column("pre_id"), value_set=sensory_set),
+                pc.is_in(edges.column("post_id"), value_set=readout_set),
+            )
+        )
+        if connected.num_rows:
+            sensory_ids = sorted(set(connected.column("pre_id").to_pylist()))
+            readout_ids = sorted(set(connected.column("post_id").to_pylist()))
+
     stride = max(1, len(sensory_ids) // 64)
     for i, nid in enumerate(sensory_ids[::stride][:64]):
         sensory_map.append(
             {
                 "feature_name": "ambient_drive" if i % 2 == 0 else "turn_bias",
                 "neuron_id": nid,
-                "fixed_gain": 0.02,
-                "evidence": "full-graph engineered sensory pool",
+                "fixed_gain": 1.0,
+                "evidence": "full-graph engineered sensory pool; normalized drive",
                 "mapping_kind": "engineered",
             }
         )
 
     channels = ("left", "right", "forward")
-    stride_m = max(1, len(readout_ids) // 96)
-    for i, nid in enumerate(readout_ids[::stride_m][:96]):
+    # Keep the presentation loop live even when the biological readout pool
+    # is too sparsely driven by the selected sensory cells. The added sensory
+    # IDs are an explicit engineered presentation bridge; they do not alter
+    # the MaleCNS graph or authorize any connector.
+    motor_pool = list(readout_ids[:64])
+    bridge_ids = [row["neuron_id"] for row in sensory_map]
+    motor_pool.extend(nid for nid in bridge_ids if nid not in motor_pool)
+    motor_pool = motor_pool[:96]
+    stride_m = max(1, len(motor_pool) // 96)
+    for i, nid in enumerate(motor_pool[::stride_m][:96]):
         motor_map.append(
             {
                 "neuron_id": nid,
                 "output_channel": channels[i % 3],
                 "fixed_gain": 0.15,
-                "evidence": "full-graph engineered motor pool",
+                "evidence": "full-graph engineered motor pool and sensory presentation bridge",
                 "mapping_kind": "engineered",
             }
         )
@@ -184,7 +207,11 @@ def build_full_tables(raw_dir: Path | None = None) -> dict[str, Any]:
     bodies = neuron_table.column("source_body_id").to_numpy()
     modulatory = _load_nt_modulatory(adapter)
     edges = load_all_edges(adapter, bodies)
-    review, sensory_map, motor_map = auto_review_and_maps(neuron_rows, modulatory)
+    review, sensory_map, motor_map = auto_review_and_maps(
+        neuron_rows,
+        modulatory,
+        edges,
+    )
     neurons = _canonical_neurons(neuron_rows)
     return {
         "fixture_kind": "malecns-full",

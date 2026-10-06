@@ -8,6 +8,7 @@
 ## Current Status
 
 - **Product merged.** Mac GUI/AppKit/MPS proof is recorded in `reports/mac-verification.json`.
+- MaleCNS v1.0 and FlyWire v783 data are downloaded locally, checksummed, materialized, and covered by the separate adapters.
 - Context-optimization: implementation complete. Security gate PASS. Project lead CONDITIONAL (fresh-session W1 + owner W5).
 - Hook fix [PR #6](https://github.com/enginelabs-au/DesktopFly/pull/6) is on `main`: read-only `merge-base`/`merge-tree` and paths containing `-merge-` no longer trip the identity check.
 
@@ -27,7 +28,7 @@
 
 ## Active Role and Gate
 
-- Product validation on `main` (2026-10-06): backend pytest 52 passed / 2 skipped; node 45 passed; foundations PASS; launch validation PASS.
+- Product validation on the dataset integration branch (2026-10-06): backend pytest 55 passed; node 47 passed; foundations PASS; launch validation PASS.
 - Context-optimization: `project-lead-subagent` CONDITIONAL. Owner decision pending.
 
 ## Owner Decision
@@ -49,6 +50,7 @@
 - Pack v1.4: `docs/handover/agentic-context-runbook/` and `GPT-REVIEW-PROMPT.md`.
 - Owner handoff: `docs/workstreams/20260917-context-optimization/delivery/owner-handoff.md`
 - Cost operator setup: `docs/handover/cursor-cost-operator-setup.md`
+- Dataset setup: `scripts/download_malecns.py`, `scripts/download_flywire.py`, and `provenance/flywire-v783.json`.
 - All former project branches are merged or superseded and have been removed from the remote.
 
 ## Open Blockers
@@ -58,8 +60,8 @@
 
 ## Next Actions
 
-- Owner: fresh chat W1; W5 if needed; GPT review of pack v1.4.
+- Owner: review the dataset integration PR; fresh chat W1; W5 if needed; GPT review of pack v1.4.
 
 ## Last Updated
 
-- 2026-10-06: PRs #2, #6, and #7 merged; all former project branches removed; `main` re-validated.
+- 2026-10-06: PRs #2, #6, #7, and #8 merged; all former project branches removed; `main` re-validated. Dataset integration is prepared on `cursor/dataset-integration-0433`.

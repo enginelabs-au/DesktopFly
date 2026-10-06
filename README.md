@@ -14,7 +14,7 @@ DesktopFly is a **modified** derivative of [fly-connectome-template](https://git
 
 Built with [fly-connectome-template](https://github.com/cobanov/fly-connectome-template) by [Mert Cobanov](https://github.com/cobanov).
 
-Connectome tables downloaded for the default graph path come from **Male CNS v1.0**, **[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)** ([`LICENSE.maleCNS`](LICENSE.maleCNS), [official download page](https://male-cns.janelia.org/download/)). Provenance: [`provenance/malecns-v1.0.json`](provenance/malecns-v1.0.json).
+Connectome tables downloaded for the default graph path come from **Male CNS v1.0**, **[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)** ([`LICENSE.maleCNS`](LICENSE.maleCNS), [official download page](https://male-cns.janelia.org/download/)). Provenance: [`provenance/malecns-v1.0.json`](provenance/malecns-v1.0.json). FlyWire v783 is also available as a separate, non-default female-brain adapter; its IDs are never mixed into MaleCNS.
 
 Full index: [`docs/attribution-and-licenses.md`](docs/attribution-and-licenses.md) and [`NOTICE`](NOTICE).
 
@@ -42,4 +42,12 @@ node --test src/pet/*.test.mjs src/live/*.test.mjs src/telemetry/*.test.mjs src/
 ```bash
 python scripts/download_malecns.py
 # writes data/raw/*.feather + provenance/malecns-v1.0.json
+```
+
+## FlyWire setup
+
+```bash
+python scripts/download_flywire.py
+# writes source files to data/raw/, canonical parquet to data/derived/,
+# and provenance/flywire-v783.json
 ```

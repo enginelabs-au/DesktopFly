@@ -22,6 +22,8 @@ Neural / LIF **enabled**. Agent closeout finished everything that does not need 
 - [x] `src/live/`, `src/telemetry/` (health UI), `src/workbench/`
 - [x] `desktop/capabilities/`, `desktop/connectors/`, `layers.mjs`, `scene.mjs`
 - [x] MaleCNS download script + local feathers + `provenance/malecns-v1.0.json` (feathers gitignored)
+- [x] MaleCNS v1.0 downloaded locally and full derived graph built — 211,577 neurons / 26,028,386 edges; `data/derived/malecns-full-meta.json`
+- [x] FlyWire v783 proofread connectivity and v3.2.0 annotations downloaded, checksummed, and materialized — 15,091,983 aggregated pairs / 139,248 annotations; separate `flywire:` namespace
 - [x] Asyncio loopback WebSocket bridge
 - [x] Device report (`reports/device.json`) — MPS unavailable on Linux CI
 - [x] Mac verification runbook: `docs/handover/mac-verification-runbook.md`
@@ -34,12 +36,11 @@ Neural / LIF **enabled**. Agent closeout finished everything that does not need 
 - [x] Confirm Torch **MPS** probe on Cam’s Mac (`reports/mac-verification.json`) — mps selected, probe_ok
 - [ ] Optional: Screen Recording only if screen-vision profile enabled later
 - [ ] Legal/license review of cobanov template (recorded, not lawyer-reviewed)
-- [ ] Owner merge of [DesktopFly#2](https://github.com/enginelabs-au/DesktopFly/pull/2)
 
 ## Not Cam-blocked
 
-- MaleCNS feathers downloaded on agent host and hashed; re-run `python scripts/download_malecns.py` on Cam’s machine if `data/raw/` empty.
-- FlyWire files not downloaded (separate adapter; missing files correctly hard-fail until pinned).
+- Raw MaleCNS and FlyWire files remain gitignored and are reproducible through the two downloader scripts.
+- FlyWire remains a separate adapter and is not mixed into the default MaleCNS runtime graph.
 
 ## Neural policy
 
