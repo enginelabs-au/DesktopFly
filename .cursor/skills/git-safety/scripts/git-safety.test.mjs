@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
+import { execFileSync, spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 import {
   CURSOR_ANONYMOUS_EMAIL,
@@ -94,4 +99,43 @@ test("token-aware merge detection: read-only merge-* allowed, real merges blocke
   assert.equal(isGitCommitCreating("git checkout fix-commit-hook"), false);
   assert.equal(isGitCommitCreating("git pull origin main"), true);
   assert.equal(isGitCommitCreating("git rebase origin/main"), true);
+});
+
+test("allows GitHub web committer address", () => {
+  assert.equal(isAllowedAnonymousEmail("noreply@github.com"), true);
+  assert.equal(isAllowedAnonymousEmail("me@gmail.com"), false);
+});
+
+test("pre-push only inspects commits the server does not have", () => {
+  const dir = mkdtempSync(join(tmpdir(), "gs-push-"));
+  const script = fileURLToPath(new URL("./git-safety.mjs", import.meta.url));
+  const git = (args, email) =>
+    execFileSync("git", args, {
+      cwd: dir,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        GIT_AUTHOR_NAME: "t",
+        GIT_COMMITTER_NAME: "t",
+        GIT_AUTHOR_EMAIL: email,
+        GIT_COMMITTER_EMAIL: email,
+      },
+    }).trim();
+  const push = (sha) =>
+    spawnSync("node", [script, "push"], {
+      cwd: dir,
+      input: `refs/heads/x ${sha} refs/heads/x ${"0".repeat(40)}\n`,
+      encoding: "utf8",
+    });
+  try {
+    git(["init", "-q", "-b", "main"], "a@private.example");
+    git(["commit", "-q", "--allow-empty", "-m", "published"], "a@private.example");
+    git(["update-ref", "refs/remotes/origin/main", "HEAD"], "a@private.example");
+    git(["commit", "-q", "--allow-empty", "-m", "new anonymous"], CURSOR_ANONYMOUS_EMAIL);
+    assert.equal(push(git(["rev-parse", "HEAD"], CURSOR_ANONYMOUS_EMAIL)).status, 0);
+    git(["commit", "-q", "--allow-empty", "-m", "new private"], "a@private.example");
+    assert.equal(push(git(["rev-parse", "HEAD"], CURSOR_ANONYMOUS_EMAIL)).status, 1);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

@@ -6,6 +6,8 @@ import { pathToFileURL } from "node:url";
 
 export const CURSOR_ANONYMOUS_NAME = "Cursor Agent";
 export const CURSOR_ANONYMOUS_EMAIL = "cursoragent@noreply.github.com";
+// Committer GitHub records for web-UI merges and squashes; not a private inbox.
+export const GITHUB_WEB_COMMITTER_EMAIL = "noreply@github.com";
 
 const MAX_SCAN_BYTES = 1_000_000;
 const PEM_BEGIN = `-----${"BEGIN"}`;
@@ -43,6 +45,7 @@ export function isAllowedAnonymousEmail(email) {
   const value = stripQuotes(email).toLowerCase();
   return (
     value === CURSOR_ANONYMOUS_EMAIL ||
+    value === GITHUB_WEB_COMMITTER_EMAIL ||
     /^[a-z0-9._+-]+@users\.noreply\.github\.com$/.test(value)
   );
 }
@@ -268,7 +271,7 @@ export function assertPushIdentities(range) {
   if (!range) return;
   const output = execFileSync(
     "git",
-    ["log", "--format=%ae%n%ce", range],
+    ["log", "--format=%ae%n%ce", ...(Array.isArray(range) ? range : [range])],
     { encoding: "utf8" },
   );
   const emails = output
@@ -291,12 +294,11 @@ function checkPushStdin() {
     const parts = line.trim().split(/\s+/);
     if (parts.length < 4) continue;
     const localSha = parts[1];
-    const remoteSha = parts[3];
     if (/^0+$/.test(localSha)) continue;
-    const range = /^0+$/.test(remoteSha)
-      ? localSha
-      : `${remoteSha}..${localSha}`;
-    assertPushIdentities(range);
+    // Only inspect commits the server does not have yet. Published history
+    // (including GitHub web-merge commits) cannot be unpublished and must not
+    // block new branches or branches that absorb main.
+    assertPushIdentities([localSha, "--not", "--remotes"]);
   }
 }
 
