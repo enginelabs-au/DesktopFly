@@ -20,15 +20,12 @@
 - Fix: the push check now inspects only commits not on any remote ref (`<sha> --not --remotes`), and `noreply@github.com` (GitHub's web committer) is an allowed address. Private inboxes in new commits are still rejected. Regression test builds a temp repo (published private-email commit passes; new private-email commit fails).
 - Node tests: 47 pass, 0 fail.
 
-## Stale remote branches (owner to delete)
+## Stale remote branches (completed)
 
-- `cursor/rename-lauch-to-launch-8c4d` (squash-merged PR #1)
-- `cursor/context-optimization-r2-0433` (PR #3)
-- `cursor/codeowners-latest-0433` (PR #5)
-- `cursor/codeowners-0433` (closed PR #4, typo `@cam-dogulas`)
-- `fix/git-safety-merge-detection` (PR #6)
-- `cursor/phase-0-foundations-a5d1` (PR #2)
+- Deleted after verification: `cursor/rename-lauch-to-launch-8c4d`, `cursor/context-optimization-r2-0433`, `cursor/codeowners-latest-0433`, `fix/git-safety-merge-detection`, and `cursor/phase-0-foundations-a5d1`.
+- Deleted as superseded: `cursor/codeowners-0433` (closed PR #4, old typo `@cam-dogulas`).
+- Deleted after merge: `cursor/closeout-state-0433` (PR #7).
 
 ## Notes
 
-- The agent's local checkout still ran the old hook until it pulls `main`; the shared `agent-instructions/.cursor` was synced from the fixed tree.
+- Local `main` is fast-forwarded to `b8b6172`; the shared `agent-instructions/.cursor` was synced from the fixed tree.

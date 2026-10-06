@@ -49,7 +49,7 @@
 - Pack v1.4: `docs/handover/agentic-context-runbook/` and `GPT-REVIEW-PROMPT.md`.
 - Owner handoff: `docs/workstreams/20260917-context-optimization/delivery/owner-handoff.md`
 - Cost operator setup: `docs/handover/cursor-cost-operator-setup.md`
-- Stale remote branches to delete (owner): see the 2026-10-06 continuation log.
+- All former project branches are merged or superseded and have been removed from the remote.
 
 ## Open Blockers
 
@@ -58,8 +58,8 @@
 
 ## Next Actions
 
-- Owner: delete stale branches; fresh chat W1; W5 if needed; GPT review of pack v1.4.
+- Owner: fresh chat W1; W5 if needed; GPT review of pack v1.4.
 
 ## Last Updated
 
-- 2026-10-06: PRs #2 and #6 merged; `main` re-validated.
+- 2026-10-06: PRs #2, #6, and #7 merged; all former project branches removed; `main` re-validated.
