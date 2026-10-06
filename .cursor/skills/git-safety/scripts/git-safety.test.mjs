@@ -80,3 +80,18 @@ test("detects secret content without needing to print it", () => {
   assert.deepEqual(scanTextForSecretRuleIds(pem), ["private-key"]);
   assert.deepEqual(scanTextForSecretRuleIds("const token = 'not-a-secret'"), []);
 });
+
+test("token-aware merge detection: read-only merge-* allowed, real merges blocked", () => {
+  assert.equal(isGitCommitCreating("git merge-base origin/main HEAD"), false);
+  assert.equal(isGitCommitCreating("git merge-tree --write-tree a b"), false);
+  assert.equal(isGitCommitCreating("git worktree add /tmp/x-merge-0433 origin/main"), false);
+  assert.equal(isGitCommitCreating("git merge origin/main"), true);
+  assert.equal(isGitCommitCreating("git merge --no-ff origin/main"), true);
+  assert.equal(isGitCommitCreating("git merge --ff-only origin/main"), false);
+  assert.equal(isGitCommitCreating("git merge-base a b && git merge origin/main"), true);
+  assert.equal(isGitCommitCreating("git -C /tmp/r merge origin/main"), true);
+  assert.equal(isGitCommitCreating("git commit -m test"), true);
+  assert.equal(isGitCommitCreating("git checkout fix-commit-hook"), false);
+  assert.equal(isGitCommitCreating("git pull origin main"), true);
+  assert.equal(isGitCommitCreating("git rebase origin/main"), true);
+});

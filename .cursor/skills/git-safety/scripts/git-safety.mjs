@@ -111,19 +111,13 @@ export function isGitCommitCreating(command) {
   ) {
     return false;
   }
-  if (/\bgit\b[\s\S]*\b(?:commit(?:-tree)?|cherry-pick|\bam\b)\b/i.test(value)) {
-    return true;
-  }
-  if (/\bgit\b[\s\S]*\brebase\b/i.test(value)) return true;
-  if (/\bgit\b[\s\S]*\bmerge\b/i.test(value) && !hasFlag(value, "--ff-only")) {
-    return true;
-  }
-  if (/\bgit\b[\s\S]*\bpull\b/i.test(value) && !hasFlag(value, "--ff-only")) {
-    return true;
-  }
-  if (/\bgit\b[\s\S]*\btag\b/i.test(value) && /\s-(?:a|s|u)\b/.test(value)) {
-    return true;
-  }
+  const word = (name) =>
+    new RegExp(`\\bgit\\b[\\s\\S]*(?<![\\w./-])${name}(?![\\w./-])`, "i");
+  if (word("(?:commit(?:-tree)?|cherry-pick|am)").test(value)) return true;
+  if (word("rebase").test(value)) return true;
+  if (word("merge").test(value) && !hasFlag(value, "--ff-only")) return true;
+  if (word("pull").test(value) && !hasFlag(value, "--ff-only")) return true;
+  if (word("tag").test(value) && /\s-(?:a|s|u)\b/.test(value)) return true;
   if (/\bgit\b[\s\S]*\bnotes\s+add\b/i.test(value)) return true;
   return false;
 }
