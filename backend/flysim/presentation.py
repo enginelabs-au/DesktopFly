@@ -14,7 +14,7 @@ from flysim.lif import LifWorkerHandle, start_lif_worker
 from flysim.lif_torch import prefer_torch_for_graph, start_torch_lif_worker
 from flysim.motor import MotorCommand
 from flysim.runtime_loader import load_compiled_runtime
-from flysim.sensory import FixedSensoryEncoder, build_sensory_map
+from flysim.sensory import FixedSensoryEncoder, build_sensory_map, world_bridge_rows
 
 
 def decode_schema_motor(
@@ -93,7 +93,9 @@ class ConnectomePresentationEngine:
     steps_per_block: int
     external_max: float
     max_block_compute_s: float
-    _phase: float = 0.0
+    resting_drive: float = 0.0
+    noise_amplitude: float = 0.0
+    _rng: Any = None
     _last_block_compute_s: float = 0.0
     _last_spike_count: int = 0
 
@@ -114,7 +116,10 @@ class ConnectomePresentationEngine:
                 graph=compiled.graph,
                 graph_source=graph_source,
             )
-        sensory = build_sensory_map(compiled.selected_ids, tables.get("sensory_map", []))
+        base_rows = list(tables.get("sensory_map", []))
+        sensory = build_sensory_map(
+            compiled.selected_ids, [*base_rows, *world_bridge_rows(base_rows)]
+        )
         encoder = FixedSensoryEncoder(sensory, external_max=float(policy.get("external_input_max", 2.0)))
         steps = int(policy.get("neural_steps_per_block", 5))
         return cls(
@@ -127,12 +132,14 @@ class ConnectomePresentationEngine:
             steps_per_block=max(1, steps),
             external_max=float(policy.get("external_input_max", 2.0)),
             max_block_compute_s=float(policy["max_block_compute_s"]),
+            resting_drive=float(policy.get("resting_drive", 0.0)),
+            noise_amplitude=float(policy.get("intrinsic_noise_amplitude", 0.0)),
+            _rng=np.random.default_rng(int(policy.get("intrinsic_noise_seed", 0))),
         )
 
     def scheduled_reset(self) -> None:
         """Return neurons to the reviewed initial state. Weights are not touched."""
         self.worker.reset_to_initial_state()
-        self._phase = 0.0
         self._last_spike_count = 0
 
     def _rate_ema_numpy(self) -> np.ndarray:
@@ -162,6 +169,8 @@ class ConnectomePresentationEngine:
             "fixture_kind": self.report.get("fixture_kind"),
             "committed_tick": int(getattr(self.worker, "committed_tick", 0)),
             "max_block_compute_s": self.max_block_compute_s,
+            "resting_drive": self.resting_drive,
+            "intrinsic_noise_amplitude": self.noise_amplitude,
             "last_block_compute_s": self._last_block_compute_s,
         }
 
@@ -173,15 +182,18 @@ class ConnectomePresentationEngine:
         if dt_s <= 0 or not math.isfinite(dt_s):
             raise ValueError("invalid dt_s")
         started = time.perf_counter()
-        self._phase += dt_s
         feat = dict(features or {})
-        # Weak autonomous drive so open-space motion is visible without screen capture.
-        feat.setdefault("ambient_drive", 1.4 + 0.35 * math.sin(self._phase * 0.7))
-        feat.setdefault("turn_bias", 0.45 * math.sin(self._phase * 1.3))
+        # No scripted drive: a constant resting input from the policy file unless
+        # a measured value (for example opt-in screen brightness) is supplied.
+        feat.setdefault("ambient_drive", self.resting_drive)
         external = self.encoder.encode(feat)
         diag_last: dict[str, Any] = {}
         for _ in range(self.steps_per_block):
-            self.worker.state, diag_last = self.worker.step(external)
+            step_input = external
+            if self.noise_amplitude > 0:
+                noise = self._rng.random(external.shape, dtype=np.float32) * self.noise_amplitude
+                step_input = np.clip(external + noise, 0.0, self.external_max).astype(np.float32)
+            self.worker.state, diag_last = self.worker.step(step_input)
         activity = self._rate_ema_numpy()
         motor = decode_schema_motor(
             self.neuron_ids,

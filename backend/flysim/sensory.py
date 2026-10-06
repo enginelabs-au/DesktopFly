@@ -46,6 +46,31 @@ def build_sensory_map(
     return SensoryMap(tuple(features), tuple(neuron_ids), gains)
 
 
+# Owner-approved (2026-10-06): the pet's surroundings are measured as plain
+# numbers relative to the fly's heading and fed to the network. The wiring below
+# is ENGINEERED, not anatomical: it assigns existing input-pool neurons to the
+# four world features in a fixed round-robin by sorted neuron ID. It makes no
+# claim that these neurons sense the cursor or edges in a real fly, and it is
+# not tuned toward any behaviour.
+WORLD_FEATURES: tuple[str, ...] = ("cursor_left", "cursor_right", "edge_left", "edge_right")
+WORLD_FIXED_GAIN = 2.0
+
+
+def world_bridge_rows(base_rows: list[Mapping[str, object]]) -> list[dict[str, object]]:
+    """Fixed engineered sensory rows for world features; empty if no input pool."""
+    pool = sorted({str(row["neuron_id"]) for row in base_rows})
+    return [
+        {
+            "feature_name": WORLD_FEATURES[i % len(WORLD_FEATURES)],
+            "neuron_id": neuron_id,
+            "fixed_gain": WORLD_FIXED_GAIN,
+            "evidence": "engineered world-input bridge; fixed round-robin over the input pool; not anatomical",
+            "mapping_kind": "engineered",
+        }
+        for i, neuron_id in enumerate(pool)
+    ]
+
+
 class FixedSensoryEncoder:
     """Map a feature vector to external current. Quiet zeros are valid forever."""
 

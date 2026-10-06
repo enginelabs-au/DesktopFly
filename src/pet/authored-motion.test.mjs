@@ -71,30 +71,6 @@ test("LIF presentation wanders in open space", () => {
   assert.equal(ctrl.pose.locomotion, "flight");
 });
 
-test("cursor yield is applied to connectome-driven presentation", async () => {
-  let ms = 0;
-  const motion = createPetMotionController({
-    controllerKind: "lif",
-    now: () => ms,
-    bounds: { x: 0, y: 0, width: 1000, height: 800 },
-    connectomeDriver: {
-      async step() {
-        return {
-          motor: { dx: 0, dy: 0 },
-          transition_source: "connectome",
-        };
-      },
-    },
-  });
-  motion.setCursor({ x: 490, y: 400 }, { moving: true });
-  await motion.step();
-  ms = 50;
-  const pose = await motion.step();
-  assert.ok(pose.speedPointsS > 0);
-  assert.equal(pose.transitionSource, "geometry");
-});
-
-
 test("connectome turn readout produces a curved 2D track, not a rail", async () => {
   let ms = 0;
   const motion = createPetMotionController({
@@ -122,44 +98,6 @@ test("connectome turn readout produces a curved 2D track, not a rail", async () 
   assert.equal(motion.getPose().transitionSource, "connectome");
 });
 
-test("a moving cursor makes the fly visibly flee within bounded speed", async () => {
-  let ms = 0;
-  const motion = createPetMotionController({
-    petConfig: {
-      cursor_yield_radius_points: 140,
-      cursor_yield_max_speed_points_s: 150,
-      cursor_yield_duration_ms: 600,
-      cursor_yield_cooldown_ms: 200,
-      max_speed_points_s: 160,
-    },
-    controllerKind: "lif",
-    now: () => ms,
-    bounds: { x: 0, y: 0, width: 1000, height: 800 },
-    connectomeDriver: {
-      async step() {
-        return { motor: { dx: 0, dy: 0, speed: 0, turn: 0 }, transition_source: "connectome" };
-      },
-    },
-  });
-  const start = motion.getPose();
-  motion.setCursor({ x: start.x - 60, y: start.y }, { moving: true });
-  await motion.step();
-  let maxSpeed = 0;
-  let sawGeometry = false;
-  for (let i = 0; i < 12; i += 1) {
-    ms += 50;
-    const p = await motion.step();
-    maxSpeed = Math.max(maxSpeed, p.speedPointsS);
-    if (p.transitionSource === "geometry") sawGeometry = true;
-  }
-  const end = motion.getPose();
-  const before = Math.hypot(start.x - (start.x - 60), 0);
-  const after = Math.hypot(end.x - (start.x - 60), end.y - start.y);
-  assert.ok(after - before > 40, `expected to move away, delta ${after - before}`);
-  assert.ok(maxSpeed <= 160 + 1e-6, `speed ${maxSpeed} exceeds cap`);
-  assert.ok(sawGeometry, "cursor yield should drive the pose while active");
-});
-
 function steeredController(motorFn) {
   let ms = 0;
   const motion = createPetMotionController({
@@ -174,72 +112,6 @@ function steeredController(motorFn) {
   });
   return { motion, tick: async () => { ms += 50; return motion.step(); }, start: () => motion.step() };
 }
-
-test("below the fixed walk onset the fly pauses; above it, it walks with inertia", async () => {
-  let forward = 30;
-  const { motion, tick, start } = steeredController(() => ({ speed: forward, turn: 0 }));
-  await start();
-  for (let i = 0; i < 6; i += 1) await tick();
-  assert.equal(motion.getPose().speedPointsS, 0);
-  assert.equal(motion.getPose().locomotion, "idle");
-
-  forward = 70;
-  await tick();
-  const first = motion.getPose().speedPointsS;
-  assert.ok(first > 0 && first < 70, `speed should ramp, got ${first}`);
-  for (let i = 0; i < 6; i += 1) await tick();
-  assert.ok(motion.getPose().speedPointsS > first);
-  assert.equal(motion.getPose().locomotion, "crawl", "ordinary walking is not flight");
-
-  forward = 30;
-  await tick();
-  const slowing = motion.getPose().speedPointsS;
-  assert.ok(slowing > 0, "stops with inertia, not instantly");
-  for (let i = 0; i < 8; i += 1) await tick();
-  assert.equal(motion.getPose().speedPointsS, 0);
-});
-
-test("fleeing turns the body at a bounded rate and is the only flight", async () => {
-  let ms = 0;
-  const motion = createPetMotionController({
-    petConfig: {
-      cursor_yield_radius_points: 140,
-      cursor_yield_max_speed_points_s: 150,
-      cursor_yield_duration_ms: 600,
-      cursor_yield_cooldown_ms: 200,
-      max_speed_points_s: 160,
-      yield_turn_rate_rad_s: 9,
-    },
-    controllerKind: "lif",
-    now: () => ms,
-    bounds: { x: 0, y: 0, width: 2000, height: 1200 },
-    connectomeDriver: {
-      async step() {
-        return { motor: { speed: 0, turn: 0 }, transition_source: "connectome" };
-      },
-    },
-  });
-  await motion.step();
-  const start = motion.getPose();
-  // Cursor on the +x side, so fleeing means turning toward heading pi.
-  motion.setCursor({ x: start.x + 60, y: start.y }, { moving: true });
-  let prev = start.headingRad;
-  let maxStep = 0;
-  let sawFlight = false;
-  for (let i = 0; i < 10; i += 1) {
-    ms += 50;
-    const p = await motion.step();
-    let d = Math.abs(p.headingRad - prev);
-    if (d > Math.PI) d = 2 * Math.PI - d;
-    maxStep = Math.max(maxStep, d);
-    prev = p.headingRad;
-    if (p.locomotion === "flight") sawFlight = true;
-  }
-  // 9 rad/s over a 50 ms tick is at most 0.45 rad (small float slack).
-  assert.ok(maxStep <= 0.46, `heading changed too fast: ${maxStep}`);
-  assert.ok(maxStep > 0.05, "should visibly turn");
-  assert.ok(sawFlight, "fast flee burst is flight");
-});
 
 test("batched driver is used when available and applies every block", async () => {
   let ms = 0;
@@ -269,4 +141,117 @@ test("batched driver is used when available and applies every block", async () =
   assert.ok(requests.length >= 1 && requests.length <= 6, "one request per tick");
   assert.ok(requests.every((n) => n === 10), `blocks per tick ${requests}`);
   assert.ok(motion.getPose().speedPointsS > 0);
+});
+
+test("connectome speed and turn pass straight through; only the speed ceiling applies", async () => {
+  let forward = 30;
+  const { motion, tick, start } = steeredController(() => ({ speed: forward, turn: 0 }));
+  await start();
+  await tick();
+  // No walk onset, inertia, or pause rule: a slow readout is a slow walk, immediately.
+  assert.equal(motion.getPose().speedPointsS, 30);
+  assert.equal(motion.getPose().locomotion, "crawl");
+  forward = 0;
+  await tick();
+  assert.equal(motion.getPose().speedPointsS, 0);
+  assert.equal(motion.getPose().locomotion, "idle");
+  forward = 5000;
+  await tick();
+  assert.equal(motion.getPose().speedPointsS, 160, "speed ceiling still applies");
+  assert.equal(motion.getPose().transitionSource, "connectome");
+});
+
+test("the screen clamp is the only edge rule: no code steers the fly away from an edge", async () => {
+  const { motion, tick, start } = steeredController(() => ({ speed: 120, turn: 0 }));
+  await start();
+  let last = null;
+  for (let i = 0; i < 400; i += 1) last = await tick();
+  const b = { x: 0, y: 0, width: 2000, height: 1200 };
+  assert.ok(last.x <= b.x + b.width && last.y >= b.y && last.y <= b.y + b.height);
+  assert.ok(last.x > b.x + b.width - 5, "pinned at the edge; nothing turned it around");
+  assert.equal(last.headingRad, 0);
+});
+
+test("cursor and edges are measured as numbers and never move the fly by themselves", async () => {
+  let ms = 0;
+  const motion = createPetMotionController({
+    controllerKind: "lif",
+    now: () => ms,
+    bounds: { x: 0, y: 0, width: 1000, height: 800 },
+    connectomeDriver: {
+      async stepBlocks(_dt, blocks) {
+        return { motors: Array.from({ length: blocks }, () => ({ speed: 0, turn: 0 })) };
+      },
+    },
+  });
+  await motion.step();
+  const start = { ...motion.getPose() };
+  motion.setCursor({ x: start.x + 5, y: start.y + 5 }, { moving: true });
+  for (let i = 0; i < 20; i += 1) {
+    ms += 50;
+    await motion.step();
+  }
+  const end = motion.getPose();
+  assert.equal(end.x, start.x);
+  assert.equal(end.y, start.y);
+  assert.equal(end.transitionSource, "connectome");
+});
+
+test("world features describe the surroundings relative to the fly's heading", () => {
+  const c = new AuthoredAnimationController({
+    bounds: { x: 0, y: 0, width: 1000, height: 800 },
+  });
+  // Heading east at the centre: south is the fly's right, north is its left.
+  c.pose = { ...c.pose, x: 500, y: 400, headingRad: 0 };
+  assert.deepEqual(c.worldSensoryFeatures(), {
+    cursor_left: 0,
+    cursor_right: 0,
+    edge_left: 0,
+    edge_right: 0,
+  });
+  c.setCursor({ x: 500, y: 500 });
+  let f = c.worldSensoryFeatures();
+  assert.ok(f.cursor_right > 0.3 && f.cursor_left === 0, JSON.stringify(f));
+  c.setCursor({ x: 500, y: 300 });
+  f = c.worldSensoryFeatures();
+  assert.ok(f.cursor_left > 0.3 && f.cursor_right === 0, JSON.stringify(f));
+  c.setCursor({ x: 500, y: 5000 });
+  assert.equal(c.worldSensoryFeatures().cursor_right, 0, "out of range is zero");
+  // Near the north edge while heading east: the edge is on the fly's left.
+  c.setCursor(null);
+  c.pose = { ...c.pose, y: 20 };
+  f = c.worldSensoryFeatures();
+  assert.ok(f.edge_left > 0.5 && f.edge_right === 0, JSON.stringify(f));
+  // Facing the east edge: both sides see it.
+  c.pose = { ...c.pose, x: 980, y: 400 };
+  f = c.worldSensoryFeatures();
+  assert.ok(f.edge_left > 0 && f.edge_right > 0 && f.edge_left === f.edge_right, JSON.stringify(f));
+  for (const v of Object.values(f)) assert.ok(v >= 0 && v <= 1);
+});
+
+test("measured surroundings are sent to the connectome with each tick", async () => {
+  let ms = 0;
+  const seen = [];
+  const motion = createPetMotionController({
+    controllerKind: "lif",
+    now: () => ms,
+    bounds: { x: 0, y: 0, width: 1000, height: 800 },
+    connectomeDriver: {
+      async stepBlocks(_dt, blocks, features) {
+        seen.push(features);
+        return { motors: Array.from({ length: blocks }, () => ({ speed: 0, turn: 0 })) };
+      },
+    },
+  });
+  await motion.step();
+  const p = motion.getPose();
+  motion.setCursor({ x: p.x, y: p.y + 100 });
+  ms += 50;
+  await motion.step({ neuralFeatures: { ambient_drive: 0.9 } });
+  const f = seen.at(-1);
+  assert.equal(f.ambient_drive, 0.9, "opt-in screen features still pass through");
+  assert.ok(f.cursor_right > 0);
+  assert.deepEqual(Object.keys(f).sort(), [
+    "ambient_drive", "cursor_left", "cursor_right", "edge_left", "edge_right",
+  ]);
 });

@@ -163,11 +163,8 @@ export class AuthoredMotionConfig {
     cursorYieldCooldownS = 0.75,
     depthTransitionS = 0.8,
     wingBeatHz = 8,
-    walkOnsetPointsS = 42,
-    walkGain = 2.5,
-    walkAccelPointsS2 = 450,
-    walkDecelPointsS2 = 900,
-    yieldTurnRateRadS = 9,
+    senseCursorRangePoints = 300,
+    senseEdgeRangePoints = 150,
   } = {}) {
     this.physicsDtS = physicsDtS;
     this.cruiseSpeedPointsS = cruiseSpeedPointsS;
@@ -179,11 +176,8 @@ export class AuthoredMotionConfig {
     this.cursorYieldCooldownS = cursorYieldCooldownS;
     this.depthTransitionS = depthTransitionS;
     this.wingBeatHz = wingBeatHz;
-    this.walkOnsetPointsS = walkOnsetPointsS;
-    this.walkGain = walkGain;
-    this.walkAccelPointsS2 = walkAccelPointsS2;
-    this.walkDecelPointsS2 = walkDecelPointsS2;
-    this.yieldTurnRateRadS = yieldTurnRateRadS;
+    this.senseCursorRangePoints = senseCursorRangePoints;
+    this.senseEdgeRangePoints = senseEdgeRangePoints;
   }
 
   static fromDesktopPet(data = {}) {
@@ -196,13 +190,8 @@ export class AuthoredMotionConfig {
       cursorYieldCooldownS: (Number(data.cursor_yield_cooldown_ms) || 750) / 1000,
       depthTransitionS: (Number(data.depth_transition_ms) || 800) / 1000,
       wingBeatHz: Number(data.wing_beat_hz) || 8,
-      walkOnsetPointsS: Number.isFinite(Number(data.walk_onset_speed_points_s))
-        ? Number(data.walk_onset_speed_points_s)
-        : 42,
-      walkGain: Number(data.walk_gain) || 2.5,
-      walkAccelPointsS2: Number(data.walk_accel_points_s2) || 450,
-      walkDecelPointsS2: Number(data.walk_decel_points_s2) || 900,
-      yieldTurnRateRadS: Number(data.yield_turn_rate_rad_s) || 9,
+      senseCursorRangePoints: Number(data.sense_cursor_range_points) || 300,
+      senseEdgeRangePoints: Number(data.sense_edge_range_points) || 150,
     });
   }
 }
@@ -247,7 +236,6 @@ export class AuthoredAnimationController {
     this._depthActive = false;
     this._hidden = false;
     this._accumulatorS = 0;
-    this._walkSpeed = 0;
   }
 
   setBounds(bounds) {
@@ -422,95 +410,82 @@ export class AuthoredAnimationController {
     return this._depthFrom + (this._depthTo - this._depthFrom) * easeSmoothstep(t);
   }
 
-  _applyConnectomeMotor(dtS, motor, transitionSource = "connectome") {
-    const cfg = this.config;
-    const steering = motor && Number.isFinite(Number(motor.turn));
-    const yieldVel = this._cursorYieldVelocity();
-    const yielding = Boolean(yieldVel.vx || yieldVel.vy);
-    let vx;
-    let vy;
-    let heading = this.pose.headingRad;
-    let walkSpeed = 0;
-    if (steering) {
-      // Steered walk. The fixed forward readout is shaped into stop-and-go
-      // bouts (walk only above a fixed onset) with inertia on start and stop,
-      // and heading integrates the connectome turn readout.
-      const forward = Math.max(0, Number(motor.speed) || 0);
-      const target = Math.max(0, (forward - cfg.walkOnsetPointsS) * cfg.walkGain);
-      const current = Math.max(0, this._walkSpeed || 0);
-      walkSpeed =
-        target > current
-          ? Math.min(target, current + cfg.walkAccelPointsS2 * dtS)
-          : Math.max(target, current - cfg.walkDecelPointsS2 * dtS);
-      this._walkSpeed = walkSpeed;
-      let turn = Number(motor.turn) || 0;
-      turn += this._edgeAvoidTurn(heading);
-      // Turning is easier when nearly stopped, as in a walking fly.
-      turn *= walkSpeed < 8 ? 1.6 : 1;
-      heading = wrapHeading(heading + turn * dtS);
-      vx = Math.cos(heading) * walkSpeed + yieldVel.vx;
-      vy = Math.sin(heading) * walkSpeed + yieldVel.vy;
-    } else {
-      vx = (Number(motor?.dx) || 0) + yieldVel.vx;
-      vy = (Number(motor?.dy) || 0) + yieldVel.vy;
-    }
-    let speed = Math.hypot(vx, vy);
-    if (speed > cfg.maxSpeedPointsS) {
-      const k = cfg.maxSpeedPointsS / speed;
-      vx *= k;
-      vy *= k;
-      speed = cfg.maxSpeedPointsS;
-    }
-    if (speed > 1e-3) {
-      if (!steering) {
-        heading = Math.atan2(vy, vx);
-      } else if (yielding) {
-        // Quick but bounded body turn away from the cursor, not a one-frame snap.
-        const err = wrapHeading(Math.atan2(vy, vx) - heading);
-        const maxStep = cfg.yieldTurnRateRadS * dtS;
-        heading = wrapHeading(heading + Math.max(-maxStep, Math.min(maxStep, err)));
+  /**
+   * Measured surroundings as plain numbers for the connectome, relative to the
+   * fly's heading: how close the cursor and the screen edges are on its left
+   * and right (0 = out of range, 1 = touching). This only describes the world;
+   * it never decides a response. The wiring into the network is fixed and
+   * engineered (backend/flysim/sensory.py), not a movement rule.
+   */
+  worldSensoryFeatures() {
+    const { x, y, headingRad } = this.pose;
+    const hx = Math.cos(headingRad);
+    const hy = Math.sin(headingRad);
+    // Right-hand side in screen coordinates (y grows downward).
+    const rx = -hy;
+    const ry = hx;
+    const out = { cursor_left: 0, cursor_right: 0, edge_left: 0, edge_right: 0 };
+    const add = (side, value) => {
+      out[side] = Math.min(1, out[side] + value);
+    };
+    const sense = (ux, uy, closeness) => {
+      if (closeness <= 0) return;
+      const fwd = Math.max(0, ux * hx + uy * hy);
+      const lateral = ux * rx + uy * ry;
+      return { fwd, lateral, closeness };
+    };
+    const apply = (prefix, s) => {
+      if (!s) return;
+      add(`${prefix}_left`, s.closeness * (0.5 * s.fwd + Math.max(0, -s.lateral)));
+      add(`${prefix}_right`, s.closeness * (0.5 * s.fwd + Math.max(0, s.lateral)));
+    };
+    if (this._cursor) {
+      const dx = this._cursor[0] - x;
+      const dy = this._cursor[1] - y;
+      const dist = Math.hypot(dx, dy);
+      const range = this.config.senseCursorRangePoints;
+      if (dist > 0 && dist < range) {
+        apply("cursor", sense(dx / dist, dy / dist, 1 - dist / range));
       }
     }
-    // Walking is "crawl"; "flight" is reserved for fast flee bursts.
-    const locomotion =
-      yielding && speed > 90 ? "flight" : speed > 2 ? "crawl" : speed > 0.2 ? "crawl" : "idle";
-    // integratePose applies the turn first, then moves along the new heading.
+    const b = this.bounds;
+    const range = this.config.senseEdgeRangePoints;
+    const edges = [
+      [-1, 0, x - b.x],
+      [1, 0, b.x + b.width - x],
+      [0, -1, y - b.y],
+      [0, 1, b.y + b.height - y],
+    ];
+    for (const [ux, uy, dist] of edges) {
+      if (dist < range) apply("edge", sense(ux, uy, 1 - Math.max(0, dist) / range));
+    }
+    return out;
+  }
+
+  /**
+   * Connectome-driven motion. Speed and turn come straight from the network
+   * readout. The only code bounds are the speed ceiling and the screen clamp.
+   * No shaping, steering, flee, or edge rule is applied here.
+   */
+  _applyConnectomeMotor(dtS, motor, transitionSource = "connectome") {
+    const cfg = this.config;
+    const speed = Math.min(cfg.maxSpeedPointsS, Math.max(0, Number(motor?.speed) || 0));
+    const turn = Number(motor?.turn) || 0;
     this.pose = integratePose(this.pose, {
       dtS,
       speedPointsS: speed,
-      turnRateRadS: wrapHeading(heading - this.pose.headingRad) / Math.max(dtS, 1e-6),
+      turnRateRadS: turn,
       bounds: this.bounds,
-      locomotion,
+      locomotion: speed > 0.2 ? "crawl" : "idle",
       depth01: this.pose.depth01,
-      transitionSource: yielding ? "geometry" : transitionSource,
+      transitionSource,
     });
     this.pose.surfaceContact = detectSurfaceContact({
       pose: this.pose,
       bounds: this.bounds,
       hostRect: this._hostRect,
     });
-    const hostSurfaceId = this._hostRect ? "host-window" : null;
-    this.pose.hostSurfaceId = hostSurfaceId;
-  }
-
-  /**
-   * Bounded geometry rule: within a margin of the screen edge and heading
-   * outward, steer back toward the screen center. Not a need or avoidance.
-   */
-  _edgeAvoidTurn(heading, margin = 60, maxTurnRadS = 3) {
-    const b = this.bounds;
-    const { x, y } = this.pose;
-    const nearEdge =
-      x - b.x < margin ||
-      b.x + b.width - x < margin ||
-      y - b.y < margin ||
-      b.y + b.height - y < margin;
-    if (!nearEdge) return 0;
-    const cx = b.x + b.width * 0.5;
-    const cy = b.y + b.height * 0.5;
-    const err = wrapHeading(Math.atan2(cy - y, cx - x) - heading);
-    if (Math.abs(err) < 0.35) return 0;
-    return Math.max(-maxTurnRadS, Math.min(maxTurnRadS, err * 3));
+    this.pose.hostSurfaceId = this._hostRect ? "host-window" : null;
   }
 
   _cursorYieldVelocity() {
@@ -568,18 +543,20 @@ export function createPetMotionController({
         const blocks = Math.floor(motion._accumulatorS / block + 1e-9);
         if (blocks <= 0) return motion.pose;
         motion._accumulatorS -= blocks * block;
+        // Measured surroundings plus any opt-in screen features; numbers only.
+        const features = { ...neuralFeatures, ...motion.worldSensoryFeatures() };
         try {
           let motors = [];
           let source = "connectome";
           if (typeof connectomeDriver.stepBlocks === "function") {
             // One request per tick; the worker times every block separately.
-            const msg = await connectomeDriver.stepBlocks(block, blocks, neuralFeatures);
+            const msg = await connectomeDriver.stepBlocks(block, blocks, features);
             motors =
               Array.isArray(msg.motors) && msg.motors.length ? msg.motors : [msg.motor];
             source = msg.transition_source || source;
           } else {
             for (let i = 0; i < blocks; i += 1) {
-              const msg = await connectomeDriver.step(block, neuralFeatures);
+              const msg = await connectomeDriver.step(block, features);
               motors.push(msg.motor);
               source = msg.transition_source || source;
             }
@@ -590,7 +567,6 @@ export function createPetMotionController({
           }
         } catch {
           lastConnectomeMotor = null;
-          motion._walkSpeed = 0;
           motion.pose = {
             ...motion.pose,
             speedPointsS: 0,

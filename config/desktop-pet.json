@@ -16,11 +16,6 @@
   "cursor_yield_max_speed_points_s": 150,
   "cursor_yield_duration_ms": 600,
   "cursor_yield_cooldown_ms": 200,
-  "walk_onset_speed_points_s": 42,
-  "walk_gain": 2.5,
-  "walk_accel_points_s2": 450,
-  "walk_decel_points_s2": 900,
-  "yield_turn_rate_rad_s": 9,
   "depth_transition_ms": 800,
   "wing_beat_hz": 8,
   "geometry_poll_hz": 20,
@@ -34,5 +29,7 @@
   "screen_feature_stale_after_ms": 500,
   "accessibility_read_enabled": false,
   "vision_text_boxes_enabled": false,
-  "cloud_capabilities_enabled": false
+  "cloud_capabilities_enabled": false,
+  "sense_cursor_range_points": 300,
+  "sense_edge_range_points": 150
 }

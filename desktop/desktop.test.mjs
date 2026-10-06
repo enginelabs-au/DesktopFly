@@ -137,11 +137,13 @@ test("tickPresentation moves pet from connectome motor (not neuralWander)", asyn
   assert.equal(pose.transitionSource, "connectome");
 });
 
-test("desktop cursor geometry reaches the connectome presentation boundary", async () => {
+test("desktop cursor position reaches the connectome only as measured numbers", async () => {
   let t = 1_000;
+  const seen = [];
   const connectomeDriver = {
-    async step() {
-      return { motor: { dx: 0, dy: 0 }, transition_source: "connectome" };
+    async step(_dtS, features) {
+      seen.push(features);
+      return { motor: { speed: 0, turn: 0 }, transition_source: "connectome" };
     },
     status() {
       return { motion_driver: "connectome-lif", connectome_mode: true };
@@ -150,13 +152,19 @@ test("desktop cursor geometry reaches the connectome presentation boundary", asy
   const session = createDesktopSession({ now: () => t, connectomeDriver });
   await session.attachConnectomeDriver(connectomeDriver);
   session.lease.beat();
-  session.setCursorPoint({ x: 710, y: 450 }, { moving: true });
+  const before = session.status().pose;
+  session.setCursorPoint({ x: before.x + 10, y: before.y + 40 }, { moving: true });
   t += 50;
   await session.tickPresentation();
   t += 50;
   await session.tickPresentation();
-  assert.equal(session.status().pose.transitionSource, "geometry");
-  assert.ok(session.status().pose.speedPointsS > 0);
+  const pose = session.status().pose;
+  assert.ok(Object.values(seen.at(-1)).every((v) => Number.isFinite(v) && v >= 0 && v <= 1));
+  assert.ok(seen.at(-1).cursor_right > 0 || seen.at(-1).cursor_left > 0);
+  // No code moves the fly: the network readout was 0, so it stays put.
+  assert.equal(pose.x, before.x);
+  assert.equal(pose.y, before.y);
+  assert.equal(pose.transitionSource, "connectome");
 });
 
 test("connectome fault becomes a permanent stopped session", async () => {
@@ -190,7 +198,7 @@ test("screen features reach the worker only as bounded numeric inputs", async ()
     async step(_dtS, features) {
       received = features;
       return {
-        motor: { dx: 10, dy: 0, heading: 0, speed: 10 },
+        motor: { speed: 10, turn: 0 },
         transition_source: "connectome",
       };
     },
@@ -232,7 +240,12 @@ test("screen features reach the worker only as bounded numeric inputs", async ()
   await session.tickPresentation();
   t += 50;
   await session.tickPresentation();
-  assert.deepEqual(received, { ambient_drive: 1.2, turn_bias: 0.8 });
+  assert.equal(received.ambient_drive, 1.2);
+  assert.equal(received.turn_bias, 0.8);
+  assert.deepEqual(
+    Object.keys(received).sort(),
+    ["ambient_drive", "cursor_left", "cursor_right", "edge_left", "edge_right", "turn_bias"],
+  );
   assert.equal(session.status().vision.permission, "granted");
 });
 

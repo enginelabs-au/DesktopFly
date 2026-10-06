@@ -87,3 +87,10 @@
 - Evidence: backend 80 passed (includes a 300-simulated-second worker reset test), Node 36 passed, foundations and launch validation PASS, 330 s live soak no fault (13 slow blocks, worst 6.95 ms), screenshot shows the rendered fly turning between frames.
 - Not verified: owner's visual judgement of realism and cursor chase; multi-hour runs; behavior of the reset visible on screen (fly may briefly settle after each reset).
 
+## Third owner decision: 100 percent network-driven behaviour
+
+- Cam chose: real-world inputs through a new engineered wiring, fixed intrinsic noise, keep safety bounds. Evidence first: the raw network is silent with no input, walks a near-straight line at a steady speed with constant input, and `turn_bias` had no effect at constant values; all earlier variety came from my sine waves and shaping code.
+- Implemented: `world_bridge_rows` (round-robin over the sorted 64-neuron input pool, fixed gain 2.0, evidence says not anatomical); policy `resting_drive=1.0`, `intrinsic_noise_amplitude=1.0`, `intrinsic_noise_seed=7` (chosen by measurement: stable across seeds 1-4, neither silent nor saturated; higher noise saturates at the 120 cap); JS `worldSensoryFeatures` and a pure-readout `_applyConnectomeMotor`; removed walk/yield/edge config and tests, added tests.
+- Evidence: backend 88 passed, Node 37 passed, 60 s live run no fault: steady 56 points/s, net turn about 0.29 rad/s, never pinned at an edge; cursor held on its right raised speed to 75 and turned the fly left.
+- Not verified: how it looks to the owner; whether a steady arc reads as fly-like. Honest limit: this engineered 256-neuron readout does not produce stop-and-go bouts or a rich repertoire; that would need a different readout or a larger reviewed circuit, which is a separate decision.
+

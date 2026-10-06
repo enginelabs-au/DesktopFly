@@ -88,6 +88,12 @@ class Policy(BaseModel):
     # Owner decision: slow wall-clock blocks caused by the host OS are counted
     # and reported but are not a stop. Real compute time stays strictly checked.
     late_block_wall_fault: bool = Field(default=True, strict=True)
+    # Owner decision (2026-10-06): behaviour comes from the network. The only
+    # code-set inputs are a constant resting input and small bounded noise,
+    # both fixed here and recorded as model assumptions.
+    resting_drive: float = Field(default=0.0, ge=0, le=2.0)
+    intrinsic_noise_amplitude: float = Field(default=0.0, ge=0, le=2.0)
+    intrinsic_noise_seed: int = Field(default=0, ge=0, le=2**31 - 1)
     # Owner decision: planned clean start of neuron state after this much
     # simulated time. 0 disables it. Never used to recover from a fault.
     scheduled_state_reset_s: float = Field(default=0.0, ge=0, le=3600)
@@ -145,6 +151,9 @@ class Policy(BaseModel):
         "late_block_max_per_second",
         "late_block_hard_cap_s",
         "scheduled_state_reset_s",
+        "resting_drive",
+        "intrinsic_noise_amplitude",
+        "intrinsic_noise_seed",
         mode="before",
     )
     @classmethod
