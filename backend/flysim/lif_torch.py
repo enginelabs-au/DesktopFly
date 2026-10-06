@@ -119,6 +119,7 @@ class TorchLifWorkerHandle:
     state: TorchNeuralState
     graph_source: str
     running: bool = True
+    committed_tick: int = 0
 
     def step(self, external: np.ndarray | None = None) -> tuple[Any, dict[str, Any]]:
         if not self.running:
@@ -126,6 +127,7 @@ class TorchLifWorkerHandle:
         if external is None:
             external = np.zeros(self.lif.n, dtype=np.float32)
         self.state, diag = self.lif.candidate(self.state, external)
+        self.committed_tick += 1
         return self.state, diag
 
     def stop(self) -> None:

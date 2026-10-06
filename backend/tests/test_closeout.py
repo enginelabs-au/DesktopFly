@@ -71,6 +71,26 @@ def test_flywire_missing_is_technical_blocker():
         FlyWireAdapter(raw_dir=RAW).require_files()
 
 
+def test_flywire_materialized_tables_stay_in_separate_namespace():
+    adapter = FlyWireAdapter()
+    try:
+        adapter.require_files()
+    except FileNotFoundError as exc:
+        pytest.skip(str(exc))
+    connectivity = adapter.load_connectivity()
+    annotations = adapter.load_annotations()
+    assert connectivity.num_rows > 1_000_000
+    assert annotations.num_rows > 100_000
+    assert all(
+        str(value).startswith("flywire:")
+        for value in connectivity.column("pre_id").slice(0, 10).to_pylist()
+    )
+    assert all(
+        str(value).startswith("flywire:")
+        for value in annotations.column("neuron_id").slice(0, 10).to_pylist()
+    )
+
+
 def test_sensory_and_motor_roundtrip():
     ids = ["synthetic:a", "synthetic:b"]
     sensory = build_sensory_map(

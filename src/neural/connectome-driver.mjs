@@ -34,11 +34,23 @@ export async function startConnectomeDriver({ timeoutMs = 600000 } = {}) {
   let lastTechnical = null;
   let pending = null;
   const queue = [];
+  let faulted = false;
+  let faultReason = null;
 
   const flush = () => {
-    if (pending || queue.length === 0) return;
+    if (faulted || pending || queue.length === 0) return;
     pending = queue.shift();
     child.stdin.write(`${pending.line}\n`);
+  };
+
+  const rejectQueued = (error) => {
+    if (pending) {
+      pending.reject(error);
+      pending = null;
+    }
+    while (queue.length) {
+      queue.shift().reject(error);
+    }
   };
 
   rl.on("line", (line) => {
@@ -46,9 +58,9 @@ export async function startConnectomeDriver({ timeoutMs = 600000 } = {}) {
     try {
       msg = JSON.parse(line);
     } catch {
-      if (pending) pending.reject(new Error(`invalid neural json: ${line}`));
-      pending = null;
-      flush();
+      faulted = true;
+      faultReason = `invalid neural json: ${line}`;
+      rejectQueued(new Error(faultReason));
       return;
     }
     if (msg.event === "ready" && msg.technical) {
@@ -57,9 +69,15 @@ export async function startConnectomeDriver({ timeoutMs = 600000 } = {}) {
     if (msg.technical) lastTechnical = msg.technical;
     if (pending) {
       if (msg.ok) pending.resolve(msg);
-      else pending.reject(new Error(msg.error || "neural step failed"));
-      pending = null;
-      flush();
+      else {
+        faulted = true;
+        faultReason = msg.error || "neural step failed";
+        rejectQueued(new Error(faultReason));
+      }
+      if (!faulted) {
+        pending = null;
+        flush();
+      }
     }
   });
 
@@ -111,9 +129,16 @@ export async function startConnectomeDriver({ timeoutMs = 600000 } = {}) {
 
   return {
     status() {
-      return lastTechnical;
+      return {
+        ...(lastTechnical || {}),
+        faulted,
+        faultReason,
+      };
     },
     async step(dtS, features = undefined) {
+      if (faulted) {
+        throw new Error(faultReason || "connectome worker is permanently stopped");
+      }
       const msg = await request({
         op: "step",
         dt_s: dtS,
@@ -123,6 +148,9 @@ export async function startConnectomeDriver({ timeoutMs = 600000 } = {}) {
       return msg;
     },
     shutdown() {
+      faulted = true;
+      faultReason = faultReason || "operator_stop";
+      rejectQueued(new Error(faultReason));
       try {
         child.stdin.write(`${JSON.stringify({ op: "shutdown" })}\n`);
       } catch {

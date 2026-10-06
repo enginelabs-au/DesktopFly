@@ -32,6 +32,18 @@ for UI placement rules.
 Feather files live under `data/raw/` and are gitignored. Redistributing those
 files or substantial excerpts requires CC BY 4.0 compliance.
 
+## FlyWire v783 connectome data
+
+- **Dataset:** FlyWire FAFB v783.0 proofread connections and v3.2.0 annotations
+- **License:** CC BY 4.0
+- **Connectivity source:** [FlyWire Whole-brain Connectome Connectivity Data](https://zenodo.org/records/10676866)
+- **Annotation source:** [flyconnectome/flywire_annotations v3.2.0](https://github.com/flyconnectome/flywire_annotations/releases/tag/v3.2.0)
+- **Download provenance:** [`provenance/flywire-v783.json`](../provenance/flywire-v783.json) (written by `scripts/download_flywire.py`)
+
+FlyWire is a female adult brain atlas with a separate `flywire:` identifier
+namespace. It is available through `FlyWireAdapter`, but is not the default
+runtime graph and must not be mixed with MaleCNS identifiers.
+
 ## Combined index
 
 | Material | File |

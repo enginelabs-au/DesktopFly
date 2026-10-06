@@ -31,4 +31,4 @@ Implement the independent supervisor, plain-language health mapping, stop latch,
 
 ## 4. Next
 
-Closure items are in `docs/plans/final_implementation_checklist.md` (MaleCNS download, Mac Electron/Swift/MPS). No further numbered phase plan required unless Cam opens a new scope.
+Closure items are in `docs/plans/final_implementation_checklist.md`. MaleCNS v1.0 and the separate FlyWire v783 adapter are now downloaded, materialized, and validated. No further numbered phase plan is required unless Cam opens a new scope.

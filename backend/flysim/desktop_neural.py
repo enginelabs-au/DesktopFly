@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from typing import Any
 
 from flysim.config import load_policy_dict
-from flysim.presentation import ConnectomePresentationEngine
+from flysim.presentation import BlockDeadlineExceeded, ConnectomePresentationEngine
 
 
 def _reply(payload: dict[str, Any]) -> None:
@@ -47,10 +48,37 @@ def main() -> None:
             dt = float(msg.get("dt_s", 0.005))
             features = msg.get("features") if isinstance(msg.get("features"), dict) else {}
             try:
+                started = time.perf_counter()
                 result = engine.step(dt, features)
+                elapsed_s = time.perf_counter() - started
+                budget_s = float(policy["max_block_compute_s"])
+                result["technical"]["last_block_compute_s"] = elapsed_s
+                if elapsed_s > budget_s:
+                    engine.worker.stop()
+                    raise BlockDeadlineExceeded(elapsed_s, budget_s)
+            except BlockDeadlineExceeded as exc:
+                _reply(
+                    {
+                        "ok": False,
+                        "error": str(exc),
+                        "fault": "deadline_exceeded",
+                        "faulted": True,
+                        "technical": engine.status(),
+                    }
+                )
+                break
             except Exception as exc:  # noqa: BLE001
-                _reply({"ok": False, "error": str(exc)})
-                continue
+                engine.worker.stop()
+                _reply(
+                    {
+                        "ok": False,
+                        "error": str(exc),
+                        "fault": "neural_worker_error",
+                        "faulted": True,
+                        "technical": engine.status(),
+                    }
+                )
+                break
             _reply({"ok": True, **result})
             continue
         _reply({"ok": False, "error": f"unknown op {op!r}"})

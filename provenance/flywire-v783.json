@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "dataset": "flywire:v783",
+  "source_release": "FlyWire v783.0",
+  "annotation_release": "flywire_annotations v3.2.0",
+  "license": "CC-BY-4.0",
+  "source_page": "https://zenodo.org/records/10676866",
+  "annotation_page": "https://github.com/flyconnectome/flywire_annotations/releases/tag/v3.2.0",
+  "retrieved_at": "2026-10-06T08:15:48.680460+00:00",
+  "files": [
+    {
+      "filename": "data/raw/flywire-proofread_connections_783.feather",
+      "url": "https://zenodo.org/api/records/10676866/files/proofread_connections_783.feather/content",
+      "bytes": 852022274,
+      "sha256": "24f960ae3e7d4f8cd30db3b62e99fb5179cc3d1e76d8c155bfb441e9737d3faf"
+    },
+    {
+      "filename": "data/raw/flywire-v783-neuron-annotations.tsv",
+      "url": "https://raw.githubusercontent.com/flyconnectome/flywire_annotations/v3.2.0/supplemental_files/Supplemental_file1_neuron_annotations.tsv",
+      "bytes": 31720298,
+      "sha256": "b214970b55d2fbe0853bba536fdcb9e28730f4eb7ab06f600491df795da683cd"
+    },
+    {
+      "filename": "data/derived/flywire-v783-connectivity.parquet",
+      "url": "derived from proofread_connections_783.feather",
+      "bytes": 275221262,
+      "sha256": "23c96147746d8ccc31b96059cac24151bc0686e41039ff362b09844079b43e9a"
+    },
+    {
+      "filename": "data/derived/flywire-v783-annotations.parquet",
+      "url": "derived from Supplemental_file1_neuron_annotations.tsv",
+      "bytes": 1644914,
+      "sha256": "4bab70e1441a3a1583c02ab2b0e0e81ed240d02753afe7ca47dadf33dce0b380"
+    }
+  ],
+  "integration": {
+    "default_runtime": false,
+    "id_namespace": "flywire:",
+    "male_cns_mix_allowed": false
+  }
+}

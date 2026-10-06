@@ -15,12 +15,12 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 MALECNS_FULL_DEV = REPO_ROOT / "backend" / "fixtures" / "malecns-full-dev.json"
 
 
-def test_runtime_loader_uses_malecns_full_when_enabled():
+def test_runtime_loader_uses_reviewed_malecns_subset_when_enabled():
     policy = load_policy_dict()
     assert policy["real_graph_enabled"] is True
-    assert policy.get("graph_mode") == "full"
+    assert policy.get("graph_mode") == "reviewed_subset"
     compiled, tables, source, report = load_compiled_runtime(policy)
-    assert source == "malecns-full"
+    assert source == "malecns-reviewed-subset"
     assert report["connectome_mode"] is True
     assert compiled.graph.ids[0].startswith("male-cns:")
 
@@ -36,6 +36,13 @@ def test_connectome_engine_steps_produce_motion():
     assert out["transition_source"] == "connectome"
     motor = out["motor"]
     assert motor["speed"] >= 0
+
+
+def test_connectome_engine_reports_committed_neural_ticks():
+    engine = ConnectomePresentationEngine.create(load_policy_dict())
+    assert engine.status()["committed_tick"] == 0
+    engine.step(0.005)
+    assert engine.status()["committed_tick"] == engine.steps_per_block
 
 
 def test_connectome_motion_changes_over_ticks():

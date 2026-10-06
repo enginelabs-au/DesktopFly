@@ -22,8 +22,13 @@ Neural / LIF **enabled**. Agent closeout finished everything that does not need 
 - [x] `src/live/`, `src/telemetry/` (health UI), `src/workbench/`
 - [x] `desktop/capabilities/`, `desktop/connectors/`, `layers.mjs`, `scene.mjs`
 - [x] MaleCNS download script + local feathers + `provenance/malecns-v1.0.json` (feathers gitignored)
+- [x] MaleCNS v1.0 downloaded locally and full derived graph built — 211,577 neurons / 26,028,386 edges; `data/derived/malecns-full-meta.json`
+- [x] Bounded reviewed MaleCNS runtime subset built — 256 neurons / 2,021 edges; `data/derived/malecns-subset-meta.json`
+- [x] Local timing report passes the 4 ms block budget on the configured subset; full-graph timing remains unsuitable — `reports/connectome-timing.json`
+- [x] FlyWire v783 proofread connectivity and v3.2.0 annotations downloaded, checksummed, and materialized — 15,091,983 aggregated pairs / 139,248 annotations; separate `flywire:` namespace
 - [x] Asyncio loopback WebSocket bridge
 - [x] Device report (`reports/device.json`) — MPS unavailable on Linux CI
+- [x] CPU fallback disabled for the desktop profile; missed neural deadlines permanently stop the worker
 - [x] Mac verification runbook: `docs/handover/mac-verification-runbook.md`
 - [x] Linux tests green
 
@@ -34,12 +39,12 @@ Neural / LIF **enabled**. Agent closeout finished everything that does not need 
 - [x] Confirm Torch **MPS** probe on Cam’s Mac (`reports/mac-verification.json`) — mps selected, probe_ok
 - [ ] Optional: Screen Recording only if screen-vision profile enabled later
 - [ ] Legal/license review of cobanov template (recorded, not lawyer-reviewed)
-- [ ] Owner merge of [DesktopFly#2](https://github.com/enginelabs-au/DesktopFly/pull/2)
+- [ ] Full MaleCNS graph performance optimization and biological circuit validation
 
 ## Not Cam-blocked
 
-- MaleCNS feathers downloaded on agent host and hashed; re-run `python scripts/download_malecns.py` on Cam’s machine if `data/raw/` empty.
-- FlyWire files not downloaded (separate adapter; missing files correctly hard-fail until pinned).
+- Raw MaleCNS and FlyWire files remain gitignored and are reproducible through the two downloader scripts.
+- FlyWire remains a separate adapter and is not mixed into the default MaleCNS runtime graph.
 
 ## Neural policy
 

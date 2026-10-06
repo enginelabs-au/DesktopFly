@@ -137,6 +137,31 @@ test("tickPresentation moves pet from connectome motor (not neuralWander)", asyn
   assert.equal(pose.transitionSource, "connectome");
 });
 
+test("connectome fault becomes a permanent stopped session", async () => {
+  let shutdowns = 0;
+  const connectomeDriver = {
+    async step() {
+      throw new Error("deadline exceeded");
+    },
+    status() {
+      return {
+        connectome_mode: true,
+        faulted: true,
+        faultReason: "deadline exceeded",
+      };
+    },
+    shutdown() {
+      shutdowns += 1;
+    },
+  };
+  const session = createDesktopSession({ connectomeDriver });
+  await session.attachConnectomeDriver(connectomeDriver);
+  assert.equal(session.status().neuralWorker, "stopped");
+  assert.throws(() => session.actions.resume(), /deadline exceeded/);
+  session.actions.stop();
+  assert.equal(shutdowns, 1);
+});
+
 test("menu template requires typed actions", () => {
   const session = createDesktopSession();
   const template = buildApplicationMenuTemplate(session.actions);

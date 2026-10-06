@@ -105,12 +105,20 @@ if (policy) {
   if (policy.dataset !== "male-cns:v1.0") errors.push("dataset must be male-cns:v1.0");
   if (policy.screen_capture_enabled !== false) errors.push("screen_capture_enabled must be false");
   if (policy.network_bind !== "127.0.0.1") errors.push("network_bind must be 127.0.0.1");
-  if (policy.graph_mode !== "full") errors.push("graph_mode must be full (Cam full MaleCNS)");
-  if (policy.max_neurons_initial < 200000) {
+  if (!["full", "reviewed_subset"].includes(policy.graph_mode)) {
+    errors.push("graph_mode must be full or reviewed_subset");
+  }
+  if (policy.graph_mode === "full" && policy.max_neurons_initial < 200000) {
     errors.push("max_neurons_initial must be >= 200000 for full MaleCNS");
   }
-  if (policy.max_edges_initial < 1000000) {
+  if (policy.graph_mode === "full" && policy.max_edges_initial < 1000000) {
     errors.push("max_edges_initial must be >= 1000000 for full MaleCNS");
+  }
+  if (
+    policy.graph_mode === "reviewed_subset" &&
+    policy.require_reviewed_subset !== true
+  ) {
+    errors.push("reviewed_subset graph mode requires require_reviewed_subset true");
   }
   if (policy.auto_restart_after_hard_fault !== false) {
     errors.push("auto_restart_after_hard_fault must be false");

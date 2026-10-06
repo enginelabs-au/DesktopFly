@@ -28,4 +28,13 @@
 
 ## Notes
 
-- Local `main` is fast-forwarded to `b8b6172`; the shared `agent-instructions/.cursor` was synced from the fixed tree.
+- Local `main` is fast-forwarded to `cf6c267`; the shared `agent-instructions/.cursor` was synced from the fixed tree.
+
+## Dataset integration
+
+- MaleCNS v1.0 downloaded from the pinned Janelia GCS URLs. Full derived tables built locally: 211,577 neurons and 26,028,386 edges. Updated `provenance/malecns-v1.0.json`.
+- FlyWire v783 proofread connectivity downloaded from Zenodo record `10676866` and verified against its published MD5. v3.2.0 annotations downloaded from the pinned FlyConnectome Git tag.
+- FlyWire materialized tables: 15,091,983 aggregated neuron-pair rows and 139,248 annotations. Provenance: `provenance/flywire-v783.json`.
+- `FlyWireAdapter` now loads the canonical derived parquet tables while preserving the `flywire:` namespace and keeping FlyWire out of the default MaleCNS runtime.
+- Full backend suite: 55 passed. The full MaleCNS presentation test initially exposed zero motion with the downloaded graph; the derived map builder now selects connected pools and adds an explicit engineered sensory presentation bridge. Regression test passes.
+- Changes are on `cursor/dataset-integration-0433`; raw and derived data remain gitignored and are reproducible through the downloader scripts.
