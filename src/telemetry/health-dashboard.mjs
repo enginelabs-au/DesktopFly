@@ -79,6 +79,9 @@ export function describeKeepingUp(timing) {
   if (!Number.isFinite(late) || late <= 0) return "on time";
   const worstMs = Math.round(Number(timing.worst_late_block_s || 0) * 1000);
   const word = late === 1 ? "moment" : "moments";
+  if (timing.late_blocks_are_fatal === false) {
+    return `on time, with ${late} brief late ${word} so far (longest ${worstMs} ms); these come from a busy computer and are only logged, not a stop`;
+  }
   return `on time, with ${late} brief late ${word} so far (longest ${worstMs} ms); more than ${timing.late_block_max_in_a_row ?? 0} in a row stops the fly`;
 }
 

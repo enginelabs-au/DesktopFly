@@ -35,7 +35,12 @@ class BlockDeadlineExceeded(RuntimeError):
         self.elapsed_s = elapsed_s
         self.budget_s = budget_s
         self.reason = reason
-        if reason == "budget":
+        if reason == "compute":
+            message = (
+                f"neural block used too much compute: "
+                f"{elapsed_s:.6f}s of CPU time > {budget_s:.6f}s"
+            )
+        elif reason == "budget":
             message = (
                 f"neural block exceeded compute budget: "
                 f"{elapsed_s:.6f}s > {budget_s:.6f}s"
@@ -60,9 +65,11 @@ class LateBlockGuard:
     max_consecutive: int
     max_per_window: int
     window_blocks: int
+    wall_fault: bool = True
     total_late: int = 0
     consecutive_late: int = 0
     worst_late_s: float = 0.0
+    worst_cpu_s: float = 0.0
     _recent: deque[bool] = field(default_factory=deque, repr=False)
 
     @classmethod
@@ -76,6 +83,7 @@ class LateBlockGuard:
             max_consecutive=int(policy.get("late_block_max_consecutive", 0)),
             max_per_window=int(policy.get("late_block_max_per_second", 0)),
             window_blocks=max(1, round(1.0 / physics)),
+            wall_fault=policy.get("late_block_wall_fault", True) is not False,
         )
 
     def __post_init__(self) -> None:
@@ -85,11 +93,32 @@ class LateBlockGuard:
             raise ValueError("late-block tolerances must not be negative")
         self._recent = deque(maxlen=self.window_blocks)
 
-    def observe(self, elapsed_s: float) -> bool:
+    def observe(self, elapsed_s: float, cpu_s: float | None = None) -> bool:
         """Record one committed block. Returns True if it was late.
+
+        ``cpu_s`` is the thread CPU time actually spent computing the block.
+        The compute budget is strict on it: real compute over budget is always
+        a hard fault, with no tolerance. ``elapsed_s`` is wall time, which also
+        includes time the OS paused the process; that is what the fixed
+        late-block tolerance below covers.
 
         Raises ``BlockDeadlineExceeded`` when a fixed limit is broken.
         """
+        if cpu_s is not None:
+            self.worst_cpu_s = max(self.worst_cpu_s, cpu_s)
+            if cpu_s > self.budget_s:
+                raise BlockDeadlineExceeded(cpu_s, self.budget_s, reason="compute")
+        if not self.wall_fault:
+            # Host-scheduling pauses are recorded, never hidden, but not fatal.
+            late = elapsed_s > self.budget_s
+            self._recent.append(late)
+            if late:
+                self.total_late += 1
+                self.consecutive_late += 1
+                self.worst_late_s = max(self.worst_late_s, elapsed_s)
+            else:
+                self.consecutive_late = 0
+            return late
         if elapsed_s > self.hard_cap_s:
             reason = "budget" if self.hard_cap_s == self.budget_s else "hard_cap"
             raise BlockDeadlineExceeded(elapsed_s, self.hard_cap_s, reason=reason)
@@ -126,7 +155,9 @@ class LateBlockGuard:
             "late_blocks_in_a_row": self.consecutive_late,
             "late_blocks_last_second": int(sum(self._recent)),
             "worst_late_block_s": self.worst_late_s,
+            "worst_block_cpu_s": self.worst_cpu_s,
             "late_block_max_in_a_row": self.max_consecutive,
             "late_block_max_per_second": self.max_per_window,
             "late_block_hard_cap_s": self.hard_cap_s,
+            "late_blocks_are_fatal": self.wall_fault,
         }

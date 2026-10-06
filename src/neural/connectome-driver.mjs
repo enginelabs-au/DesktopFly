@@ -147,6 +147,20 @@ export async function startConnectomeDriver({ timeoutMs = 600000 } = {}) {
       if (msg.technical) lastTechnical = msg.technical;
       return msg;
     },
+    /** Several blocks in one request; each is timed and checked separately. */
+    async stepBlocks(dtS, blocks, features = undefined) {
+      if (faulted) {
+        throw new Error(faultReason || "connectome worker is permanently stopped");
+      }
+      const msg = await request({
+        op: "step",
+        dt_s: dtS,
+        blocks,
+        features,
+      });
+      if (msg.technical) lastTechnical = msg.technical;
+      return msg;
+    },
     shutdown() {
       faulted = true;
       faultReason = faultReason || "operator_stop";

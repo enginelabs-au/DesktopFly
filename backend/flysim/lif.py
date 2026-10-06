@@ -174,6 +174,10 @@ class LifWorkerHandle:
         self.committed_tick += 1
         return self.state, diag
 
+    def reset_to_initial_state(self) -> None:
+        """Scheduled clean start: reviewed initial state, weights untouched."""
+        self.state = self.lif.initial_state()
+
     def stop(self) -> None:
         self.running = False
 

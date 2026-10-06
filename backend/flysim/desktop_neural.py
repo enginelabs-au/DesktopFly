@@ -16,6 +16,18 @@ from flysim.presentation import ConnectomePresentationEngine
 _GC_YOUNG_COLLECT_EVERY_BLOCKS = 200
 
 
+_MAX_BLOCKS_PER_REQUEST = 20
+
+
+def _clamp_blocks(value: Any) -> int:
+    """Blocks per request: default 1, bounded so one request cannot run long."""
+    try:
+        n = int(value) if value is not None else 1
+    except (TypeError, ValueError):
+        return 1
+    return max(1, min(_MAX_BLOCKS_PER_REQUEST, n))
+
+
 def configure_realtime_gc() -> None:
     """Keep the cyclic collector from pausing inside a timed neural block.
 
@@ -46,6 +58,10 @@ def main() -> None:
     configure_realtime_gc()
     guard = LateBlockGuard.from_policy(policy)
     blocks_since_collect = 0
+    physics_dt_s = float(policy["physics_dt_s"])
+    reset_every_s = float(policy.get("scheduled_state_reset_s", 0.0))
+    sim_since_reset_s = 0.0
+    scheduled_resets = 0
     _reply({"ok": True, "event": "ready", "technical": engine.status()})
     for line in sys.stdin:
         line = line.strip()
@@ -67,13 +83,31 @@ def main() -> None:
         if op == "step":
             dt = float(msg.get("dt_s", 0.005))
             features = msg.get("features") if isinstance(msg.get("features"), dict) else {}
+            blocks = _clamp_blocks(msg.get("blocks"))
+            motors: list[dict[str, float]] = []
             try:
-                started = time.perf_counter()
-                result = engine.step(dt, features)
-                elapsed_s = time.perf_counter() - started
-                result["technical"]["last_block_compute_s"] = elapsed_s
-                guard.observe(elapsed_s)
+                # Run the tick's blocks back-to-back (hot) instead of one cold
+                # wake per block. Every block is still timed and checked on its own.
+                for _ in range(blocks):
+                    started = time.perf_counter()
+                    cpu_started = time.thread_time()
+                    result = engine.step(dt, features)
+                    elapsed_s = time.perf_counter() - started
+                    cpu_s = time.thread_time() - cpu_started
+                    result["technical"]["last_block_compute_s"] = elapsed_s
+                    guard.observe(elapsed_s, cpu_s)
+                    motors.append(result["motor"])
                 result["technical"]["timing"] = guard.status()
+                sim_since_reset_s += blocks * physics_dt_s
+                if reset_every_s > 0 and sim_since_reset_s >= reset_every_s:
+                    # Planned clean start between requests, from the reviewed
+                    # initial state. Never runs after a fault (the loop exits).
+                    engine.scheduled_reset()
+                    sim_since_reset_s = 0.0
+                    scheduled_resets += 1
+                result["technical"]["scheduled_state_resets"] = scheduled_resets
+                result["technical"]["scheduled_state_reset_s"] = reset_every_s
+                result["motors"] = motors
             except BlockDeadlineExceeded as exc:
                 engine.worker.stop()
                 technical = engine.status()
@@ -101,7 +135,7 @@ def main() -> None:
                 )
                 break
             _reply({"ok": True, **result})
-            blocks_since_collect += 1
+            blocks_since_collect += blocks
             if blocks_since_collect >= _GC_YOUNG_COLLECT_EVERY_BLOCKS:
                 blocks_since_collect = 0
                 gc.collect(0)

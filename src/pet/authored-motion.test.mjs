@@ -159,3 +159,114 @@ test("a moving cursor makes the fly visibly flee within bounded speed", async ()
   assert.ok(maxSpeed <= 160 + 1e-6, `speed ${maxSpeed} exceeds cap`);
   assert.ok(sawGeometry, "cursor yield should drive the pose while active");
 });
+
+function steeredController(motorFn) {
+  let ms = 0;
+  const motion = createPetMotionController({
+    controllerKind: "lif",
+    now: () => ms,
+    bounds: { x: 0, y: 0, width: 2000, height: 1200 },
+    connectomeDriver: {
+      async step() {
+        return { motor: motorFn(), transition_source: "connectome" };
+      },
+    },
+  });
+  return { motion, tick: async () => { ms += 50; return motion.step(); }, start: () => motion.step() };
+}
+
+test("below the fixed walk onset the fly pauses; above it, it walks with inertia", async () => {
+  let forward = 30;
+  const { motion, tick, start } = steeredController(() => ({ speed: forward, turn: 0 }));
+  await start();
+  for (let i = 0; i < 6; i += 1) await tick();
+  assert.equal(motion.getPose().speedPointsS, 0);
+  assert.equal(motion.getPose().locomotion, "idle");
+
+  forward = 70;
+  await tick();
+  const first = motion.getPose().speedPointsS;
+  assert.ok(first > 0 && first < 70, `speed should ramp, got ${first}`);
+  for (let i = 0; i < 6; i += 1) await tick();
+  assert.ok(motion.getPose().speedPointsS > first);
+  assert.equal(motion.getPose().locomotion, "crawl", "ordinary walking is not flight");
+
+  forward = 30;
+  await tick();
+  const slowing = motion.getPose().speedPointsS;
+  assert.ok(slowing > 0, "stops with inertia, not instantly");
+  for (let i = 0; i < 8; i += 1) await tick();
+  assert.equal(motion.getPose().speedPointsS, 0);
+});
+
+test("fleeing turns the body at a bounded rate and is the only flight", async () => {
+  let ms = 0;
+  const motion = createPetMotionController({
+    petConfig: {
+      cursor_yield_radius_points: 140,
+      cursor_yield_max_speed_points_s: 150,
+      cursor_yield_duration_ms: 600,
+      cursor_yield_cooldown_ms: 200,
+      max_speed_points_s: 160,
+      yield_turn_rate_rad_s: 9,
+    },
+    controllerKind: "lif",
+    now: () => ms,
+    bounds: { x: 0, y: 0, width: 2000, height: 1200 },
+    connectomeDriver: {
+      async step() {
+        return { motor: { speed: 0, turn: 0 }, transition_source: "connectome" };
+      },
+    },
+  });
+  await motion.step();
+  const start = motion.getPose();
+  // Cursor on the +x side, so fleeing means turning toward heading pi.
+  motion.setCursor({ x: start.x + 60, y: start.y }, { moving: true });
+  let prev = start.headingRad;
+  let maxStep = 0;
+  let sawFlight = false;
+  for (let i = 0; i < 10; i += 1) {
+    ms += 50;
+    const p = await motion.step();
+    let d = Math.abs(p.headingRad - prev);
+    if (d > Math.PI) d = 2 * Math.PI - d;
+    maxStep = Math.max(maxStep, d);
+    prev = p.headingRad;
+    if (p.locomotion === "flight") sawFlight = true;
+  }
+  // 9 rad/s over a 50 ms tick is at most 0.45 rad (small float slack).
+  assert.ok(maxStep <= 0.46, `heading changed too fast: ${maxStep}`);
+  assert.ok(maxStep > 0.05, "should visibly turn");
+  assert.ok(sawFlight, "fast flee burst is flight");
+});
+
+test("batched driver is used when available and applies every block", async () => {
+  let ms = 0;
+  const requests = [];
+  const motion = createPetMotionController({
+    controllerKind: "lif",
+    now: () => ms,
+    bounds: { x: 0, y: 0, width: 2000, height: 1200 },
+    connectomeDriver: {
+      async stepBlocks(_dt, blocks) {
+        requests.push(blocks);
+        return {
+          motors: Array.from({ length: blocks }, () => ({ speed: 80, turn: 0 })),
+          transition_source: "connectome",
+        };
+      },
+      async step() {
+        throw new Error("per-block path must not be used");
+      },
+    },
+  });
+  await motion.step();
+  for (let i = 0; i < 6; i += 1) {
+    ms += 50;
+    await motion.step();
+  }
+  assert.ok(requests.length >= 1 && requests.length <= 6, "one request per tick");
+  assert.ok(requests.every((n) => n === 10), `blocks per tick ${requests}`);
+  assert.ok(motion.getPose().speedPointsS > 0);
+});

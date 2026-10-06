@@ -84,7 +84,13 @@ class Policy(BaseModel):
     # strict behavior (any late block is a hard fault) so absence never relaxes.
     late_block_max_consecutive: int = Field(default=0, ge=0, le=4)
     late_block_max_per_second: int = Field(default=0, ge=0, le=12)
-    late_block_hard_cap_s: float | None = Field(default=None, gt=0, le=0.05)
+    late_block_hard_cap_s: float | None = Field(default=None, gt=0, le=0.25)
+    # Owner decision: slow wall-clock blocks caused by the host OS are counted
+    # and reported but are not a stop. Real compute time stays strictly checked.
+    late_block_wall_fault: bool = Field(default=True, strict=True)
+    # Owner decision: planned clean start of neuron state after this much
+    # simulated time. 0 disables it. Never used to recover from a fault.
+    scheduled_state_reset_s: float = Field(default=0.0, ge=0, le=3600)
     heartbeat_timeout_s: float = Field(gt=0)
     cooperative_stop_grace_s: float = Field(gt=0)
     terminate_grace_s: float = Field(gt=0)
@@ -138,6 +144,7 @@ class Policy(BaseModel):
         "late_block_max_consecutive",
         "late_block_max_per_second",
         "late_block_hard_cap_s",
+        "scheduled_state_reset_s",
         mode="before",
     )
     @classmethod

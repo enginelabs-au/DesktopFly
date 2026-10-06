@@ -188,11 +188,11 @@ export function createDesktopSession({
       }
       paused = false;
     },
-    stop() {
+    stop(reason = "operator stop latch") {
       paused = true;
       driverRef.current?.shutdown?.();
       neuralStatus = controller === "lif" ? "stopped" : neuralStatus;
-      neuralError = neuralError || "operator stop latch";
+      neuralError = neuralError || String(reason);
     },
     quit() {},
   };
@@ -400,6 +400,25 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   let settingsWin = null;
   let lastCursorPoint = null;
   let cursorPollTimer = null;
+  let glideTimer = null;
+
+  function glidePetWindow() {
+    const petWin = desktopPetWindow;
+    const p = glide.pose;
+    if (!petWin || petWin.isDestroyed() || !p || !(p.speedPointsS > 0.5)) return;
+    if (session.status().paused) return;
+    const dtS = Math.min(0.08, (Date.now() - glide.atMs) / 1000);
+    petWin.setBounds(
+      overlayBoundsForPose(
+        {
+          x: p.x + Math.cos(p.headingRad) * p.speedPointsS * dtS,
+          y: p.y + Math.sin(p.headingRad) * p.speedPointsS * dtS,
+        },
+        overlaySize,
+        session.getPresentationBounds(),
+      ),
+    );
+  }
 
   function pollCursorPoint() {
     try {
@@ -420,10 +439,17 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
     return primary.bounds;
   }
 
+  // Latest committed pose; the glide timer extrapolates it between 20 Hz ticks
+  // so the window moves smoothly. Cosmetic only: it never feeds back into state.
+  const glide = { pose: null, atMs: 0 };
+
   function syncPetWindow(petWin) {
     if (!petWin || petWin.isDestroyed()) return null;
+    const current = session.status().pose;
+    glide.pose = { ...current };
+    glide.atMs = Date.now();
     const bounds = overlayBoundsForPose(
-      session.status().pose,
+      current,
       overlaySize,
       session.getPresentationBounds(),
     );
@@ -529,6 +555,7 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   refreshPresentationBounds();
   pollCursorPoint();
   cursorPollTimer = setInterval(pollCursorPoint, 50);
+  glideTimer = setInterval(glidePetWindow, 16);
   screen.on("display-metrics-changed", () => {
     refreshPresentationBounds();
     if (desktopPetWindow && !desktopPetWindow.isDestroyed()) {
@@ -584,6 +611,18 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
   );
   let tickInFlight = false;
   let tickStartedAt = 0;
+  let stopLogged = false;
+  // A stop is permanent by design; say why, once, so it is never silent.
+  function logStopOnce() {
+    if (stopLogged) return;
+    const current = session.status();
+    if (current.neuralWorker !== "stopped") return;
+    stopLogged = true;
+    console.error(
+      `DesktopFly neural worker stopped permanently: ${current.neuralError || "unknown reason"}`,
+      current.connectome?.timing ? JSON.stringify(current.connectome.timing) : "",
+    );
+  }
   const timer = setInterval(() => {
     session.lease.beat();
     if (tickInFlight) {
@@ -592,7 +631,10 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
         Math.round((session.policy.heartbeat_timeout_s || 0.25) * 1000),
       );
       if (Date.now() - tickStartedAt > timeoutMs) {
-        session.actions.stop();
+        session.actions.stop(
+          `presentation tick took longer than ${timeoutMs} ms (heartbeat limit)`,
+        );
+        logStopOnce();
       }
       return;
     }
@@ -603,16 +645,20 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
         syncPetWindow(win);
       }
     }).catch((err) => {
-      session.actions.stop();
-      console.error("DesktopFly neural loop stopped:", err);
+      session.actions.stop(
+        `neural loop error: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      logStopOnce();
     }).finally(() => {
       tickInFlight = false;
+      logStopOnce();
     });
   }, tickMs);
 
   app.on("before-quit", () => {
     clearInterval(timer);
     clearInterval(cursorPollTimer);
+    clearInterval(glideTimer);
   });
 
   app.on("activate", () => {

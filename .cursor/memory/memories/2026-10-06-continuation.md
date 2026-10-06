@@ -79,3 +79,11 @@
 - Evidence: backend 70 passed, JS 33 passed. Live Node-to-Python run for 120 s: no fault, moving 100 percent of ticks, track 404 x 415 points, 1 late block (4.7 ms) tolerated and reported.
 - Not verified: behavior over multi-hour sessions; behavior under heavy system load (a genuinely sustained slowdown is expected to hard-fault, by design).
 
+## Second owner decision: no wall-clock stop, planned 5-minute clean start
+
+- Evidence: 172 s soak stopped on 3 late blocks in a row (10 ms vs 4 ms) with CPU time under budget; host load average about 6 (Cursor renderer and Trend Micro each near 100 percent of a core).
+- Cam chose: no cap on the fly, with a reset after 5 minutes of its own clock. Implemented as `late_block_wall_fault=false` plus `scheduled_state_reset_s=300` in `config/policy.json` (schema: strict bool, 0..3600 s). Slow blocks stay counted and shown. Kept: strict CPU-time fault, Electron 0.25 s tick supervisor, stop latch, no auto-resume, `auto_restart_after_hard_fault=false`. The reset restores the reviewed initial neuron state only (weights untouched), runs between requests, never after a fault, and is not a recovery step.
+- Also done: ~60 Hz window glide in `desktop/main.mjs` (extrapolates the last pose, cosmetic only), renderer gait/wings/grooming in `desktop/renderer/pet.js`, dashboard wording for non-fatal late blocks.
+- Evidence: backend 80 passed (includes a 300-simulated-second worker reset test), Node 36 passed, foundations and launch validation PASS, 330 s live soak no fault (13 slow blocks, worst 6.95 ms), screenshot shows the rendered fly turning between frames.
+- Not verified: owner's visual judgement of realism and cursor chase; multi-hour runs; behavior of the reset visible on screen (fly may briefly settle after each reset).
+

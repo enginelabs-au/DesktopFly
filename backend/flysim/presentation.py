@@ -129,6 +129,12 @@ class ConnectomePresentationEngine:
             max_block_compute_s=float(policy["max_block_compute_s"]),
         )
 
+    def scheduled_reset(self) -> None:
+        """Return neurons to the reviewed initial state. Weights are not touched."""
+        self.worker.reset_to_initial_state()
+        self._phase = 0.0
+        self._last_spike_count = 0
+
     def _rate_ema_numpy(self) -> np.ndarray:
         state = self.worker.state
         if hasattr(state, "as_numpy"):

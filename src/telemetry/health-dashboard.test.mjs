@@ -26,6 +26,13 @@ test("late timing moments are shown in plain language, never hidden", () => {
   assert.match(text, /3 brief late moments/);
   assert.match(text, /6 ms/);
   assert.match(text, /more than 2 in a row stops the fly/);
+  const logged = describeKeepingUp({
+    late_blocks_total: 2,
+    worst_late_block_s: 0.04,
+    late_blocks_are_fatal: false,
+  });
+  assert.match(logged, /2 brief late moments/);
+  assert.match(logged, /only logged, not a stop/);
   const view = buildHealthDashboard({
     lifecycle: "RUNNING",
     health: { technical: { timing: { late_blocks_total: 1, worst_late_block_s: 0.005, late_block_max_in_a_row: 2 } } },
