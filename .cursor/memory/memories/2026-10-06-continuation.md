@@ -28,7 +28,7 @@
 
 ## Notes
 
-- Local `main` is fast-forwarded to `cf6c267`; the shared `agent-instructions/.cursor` was synced from the fixed tree.
+- Local `main` is fast-forwarded to `9becc5b`; the shared `agent-instructions/.cursor` was synced from the fixed tree.
 
 ## Dataset integration
 
@@ -37,4 +37,12 @@
 - FlyWire materialized tables: 15,091,983 aggregated neuron-pair rows and 139,248 annotations. Provenance: `provenance/flywire-v783.json`.
 - `FlyWireAdapter` now loads the canonical derived parquet tables while preserving the `flywire:` namespace and keeping FlyWire out of the default MaleCNS runtime.
 - Full backend suite: 55 passed. The full MaleCNS presentation test initially exposed zero motion with the downloaded graph; the derived map builder now selects connected pools and adds an explicit engineered sensory presentation bridge. Regression test passes.
-- Changes are on `cursor/dataset-integration-0433`; raw and derived data remain gitignored and are reproducible through the downloader scripts.
+- Changes were on `cursor/dataset-integration-0433`; PR #9 merged to `main` at `9becc5b`, and the remote branch was deleted. Raw and derived data remain gitignored and are reproducible through the downloader scripts.
+
+## Guarded simulation readiness
+
+- Full MaleCNS MPS timing measured approximately 60–175 ms per 5 ms block, missing the configured 4 ms budget.
+- Added a deterministic reviewed-subset builder. The default runtime now uses 256 reviewed MaleCNS neurons and 2,021 edges; CPU NumPy is selected for this bounded graph, with CPU fallback disabled for the MPS full-graph profile.
+- Added worker deadline enforcement, committed tick reporting, permanent fault handling, and Electron in-flight/heartbeat protection. A missed deadline or neural error stops the worker and cannot auto-resume.
+- Timing report: `reports/connectome-timing.json`; 40 blocks passed with max 0.000333 s against the 0.004 s budget.
+- Validation: backend 56 passed; Node 22 passed; foundations and launch validation passed; policy tests 19 passed; Electron 5-second smoke launch exited 0.

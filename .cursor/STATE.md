@@ -28,7 +28,7 @@
 
 ## Active Role and Gate
 
-- Product validation on the dataset integration branch (2026-10-06): backend pytest 55 passed; node 47 passed; foundations PASS; launch validation PASS.
+- Product validation on `main` after PR #9 (2026-10-06): backend pytest 56 passed; node 22 passed; foundations PASS; launch validation PASS; Electron 5-second smoke launch PASS.
 - Context-optimization: `project-lead-subagent` CONDITIONAL. Owner decision pending.
 
 ## Owner Decision
@@ -50,7 +50,8 @@
 - Pack v1.4: `docs/handover/agentic-context-runbook/` and `GPT-REVIEW-PROMPT.md`.
 - Owner handoff: `docs/workstreams/20260917-context-optimization/delivery/owner-handoff.md`
 - Cost operator setup: `docs/handover/cursor-cost-operator-setup.md`
-- Dataset setup: `scripts/download_malecns.py`, `scripts/download_flywire.py`, and `provenance/flywire-v783.json`.
+- Dataset setup: `scripts/download_malecns.py`, `scripts/download_flywire.py`, `scripts/build_malecns_subset.py`, and `provenance/flywire-v783.json`.
+- Default runtime: reviewed MaleCNS subset, 256 neurons / 2,021 edges; timing evidence is `reports/connectome-timing.json`. Full MaleCNS remains an offline graph until optimized and biologically validated.
 - All former project branches are merged or superseded and have been removed from the remote.
 
 ## Open Blockers
@@ -60,8 +61,8 @@
 
 ## Next Actions
 
-- Owner: review the dataset integration PR; fresh chat W1; W5 if needed; GPT review of pack v1.4.
+- Owner: fresh chat W1; W5 if needed; GPT review of pack v1.4; optional template-license legal review.
 
 ## Last Updated
 
-- 2026-10-06: PRs #2, #6, #7, and #8 merged; all former project branches removed; `main` re-validated. Dataset integration is prepared on `cursor/dataset-integration-0433`.
+- 2026-10-06: PRs #2, #6, #7, #8, and #9 merged; dataset branch removed; `main` re-validated. Guarded reviewed-subset simulation is ready for a bounded local run.
