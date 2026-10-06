@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import time
 from dataclasses import dataclass
 from typing import Any, Mapping
 
@@ -13,6 +14,18 @@ from flysim.lif_torch import prefer_torch_for_graph, start_torch_lif_worker
 from flysim.motor import MotorCommand
 from flysim.runtime_loader import load_compiled_runtime
 from flysim.sensory import FixedSensoryEncoder, build_sensory_map
+
+
+class BlockDeadlineExceeded(RuntimeError):
+    """Raised when a neural block misses the configured compute budget."""
+
+    def __init__(self, elapsed_s: float, budget_s: float) -> None:
+        self.elapsed_s = elapsed_s
+        self.budget_s = budget_s
+        super().__init__(
+            f"neural block exceeded compute budget: "
+            f"{elapsed_s:.6f}s > {budget_s:.6f}s"
+        )
 
 
 def decode_schema_motor(
@@ -73,7 +86,9 @@ class ConnectomePresentationEngine:
     report: dict[str, Any]
     steps_per_block: int
     external_max: float
+    max_block_compute_s: float
     _phase: float = 0.0
+    _last_block_compute_s: float = 0.0
 
     @classmethod
     def create(cls, policy: dict[str, Any] | None = None) -> ConnectomePresentationEngine:
@@ -104,6 +119,7 @@ class ConnectomePresentationEngine:
             report=report,
             steps_per_block=max(1, steps),
             external_max=float(policy.get("external_input_max", 2.0)),
+            max_block_compute_s=float(policy["max_block_compute_s"]),
         )
 
     def _rate_ema_numpy(self) -> np.ndarray:
@@ -129,7 +145,9 @@ class ConnectomePresentationEngine:
             "synapse_count": e,
             "dataset": self.report.get("dataset"),
             "fixture_kind": self.report.get("fixture_kind"),
-            "committed_tick": self.worker.lif.n,  # placeholder; ticks tracked in step
+            "committed_tick": int(getattr(self.worker, "committed_tick", 0)),
+            "max_block_compute_s": self.max_block_compute_s,
+            "last_block_compute_s": self._last_block_compute_s,
         }
 
     def step(
@@ -139,6 +157,7 @@ class ConnectomePresentationEngine:
     ) -> dict[str, Any]:
         if dt_s <= 0 or not math.isfinite(dt_s):
             raise ValueError("invalid dt_s")
+        started = time.perf_counter()
         self._phase += dt_s
         feat = dict(features or {})
         # Weak autonomous drive so open-space motion is visible without screen capture.
@@ -155,6 +174,8 @@ class ConnectomePresentationEngine:
             activity,
             max_speed_points_s=120.0,
         )
+        elapsed_s = time.perf_counter() - started
+        self._last_block_compute_s = elapsed_s
         st = self.status()
         st["spike_count"] = int(diag_last.get("spike_count", 0))
         return {

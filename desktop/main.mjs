@@ -148,14 +148,19 @@ export function createDesktopSession({
       paused = true;
     },
     resume() {
-      if (neuralStatus === "unavailable" && controller === "lif") {
-        throw new Error(neuralError || "cannot resume without LIF");
+      if (
+        controller === "lif" &&
+        (neuralStatus === "unavailable" || neuralStatus === "stopped")
+      ) {
+        throw new Error(neuralError || "cannot resume a stopped LIF session");
       }
       paused = false;
     },
     stop() {
       paused = true;
-      neuralStatus = neuralStatus === "running" ? "stopped" : neuralStatus;
+      driverRef.current?.shutdown?.();
+      neuralStatus = controller === "lif" ? "stopped" : neuralStatus;
+      neuralError = neuralError || "operator stop latch";
     },
     quit() {},
   };
@@ -163,6 +168,11 @@ export function createDesktopSession({
   function status() {
     const leaseStatus = lease.tick();
     connectomeTechnical = motion.getConnectomeTechnical?.() ?? connectomeTechnical;
+    if (connectomeTechnical?.faulted) {
+      neuralStatus = "stopped";
+      neuralError = connectomeTechnical.faultReason || "connectome worker fault";
+      motionDriver = "connectome-stopped";
+    }
     return {
       controller,
       mode,
@@ -448,12 +458,31 @@ export async function launchElectronApp({ autoQuitMs = 0 } = {}) {
     16,
     Math.round(1000 / (session.petConfig.geometry_poll_hz || 20)),
   );
+  let tickInFlight = false;
+  let tickStartedAt = 0;
   const timer = setInterval(() => {
     session.lease.beat();
+    if (tickInFlight) {
+      const timeoutMs = Math.max(
+        1,
+        Math.round((session.policy.heartbeat_timeout_s || 0.25) * 1000),
+      );
+      if (Date.now() - tickStartedAt > timeoutMs) {
+        session.actions.stop();
+      }
+      return;
+    }
+    tickInFlight = true;
+    tickStartedAt = Date.now();
     void session.tickPresentation().then(() => {
       if (!win.isDestroyed()) {
         syncPetWindow(win);
       }
+    }).catch((err) => {
+      session.actions.stop();
+      console.error("DesktopFly neural loop stopped:", err);
+    }).finally(() => {
+      tickInFlight = false;
     });
   }, tickMs);
 

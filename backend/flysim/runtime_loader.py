@@ -28,8 +28,8 @@ def _load_tables(path: Path) -> dict[str, Any]:
 def _tables_from_derived_meta(meta_path: Path) -> tuple[dict[str, Any], str]:
     meta = json.loads(meta_path.read_text(encoding="utf-8"))
     derived = meta_path.parent
-    neuron_path = derived / "neurons.parquet"
-    edge_path = derived / "edges.parquet"
+    neuron_path = derived / meta.get("neurons_path", "neurons.parquet")
+    edge_path = derived / meta.get("edges_path", "edges.parquet")
     if not neuron_path.is_file() or not edge_path.is_file():
         raise FileNotFoundError("derived subset meta present but parquet tables missing")
     import pyarrow.parquet as pq
@@ -38,11 +38,15 @@ def _tables_from_derived_meta(meta_path: Path) -> tuple[dict[str, Any], str]:
     edges_table = pq.read_table(edge_path)
     neurons = neurons_table.to_pylist()
     edges = edges_table.to_pylist()
-    review = meta.get("review") or []
+    review_path = derived / meta.get("review_path", "")
+    if review_path.is_file():
+        review = pq.read_table(review_path).to_pylist()
+    else:
+        review = meta.get("review") or []
     sensory_map = meta.get("sensory_map") or []
     motor_map = meta.get("motor_map") or []
     tables = {
-        "fixture_kind": "malecns-derived",
+        "fixture_kind": str(meta.get("fixture_kind", "malecns-derived")),
         "dataset": meta.get("dataset", "male-cns:v1.0"),
         "source_annotation_revision": meta.get(
             "source_annotation_revision", "male-cns-v1.0-minconf-0.5"
@@ -53,7 +57,7 @@ def _tables_from_derived_meta(meta_path: Path) -> tuple[dict[str, Any], str]:
         "sensory_map": sensory_map,
         "motor_map": motor_map,
     }
-    return tables, "malecns-derived"
+    return tables, str(meta.get("fixture_kind", "malecns-derived"))
 
 
 def _tables_from_full_meta(meta_path: Path) -> tuple[dict[str, Any], str]:
